@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <!-- Black background -->
+  <rect width="192" height="192" fill="#1a1a1a" rx="38"/>
+  <!-- Gold accent line top -->
+  <rect x="40" y="32" width="112" height="3" fill="#dab97f" rx="1.5"/>
+  <!-- Letter R in cream/white -->
+  <text x="96" y="125" 
+    font-family="Georgia, serif" 
+    font-size="96" 
+    font-weight="400"
+    text-anchor="middle" 
+    fill="#faf7f4"
+    letter-spacing="-2">R</text>
+  <!-- Gold accent line bottom -->
+  <rect x="40" y="157" width="112" height="3" fill="#dab97f" rx="1.5"/>
+</svg>

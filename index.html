@@ -6,8 +6,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="SIRA">
-<meta name="theme-color" content="#faf7f4">
+<meta name="theme-color" content="#1a1a1a">
+<link rel="manifest" href="manifest.json">
 <title>SIRA</title>
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -277,6 +280,19 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
 .empty-icon{font-size:36px;margin-bottom:8px;opacity:.35}
 .empty-text{font-size:13px}
 .version-tag{text-align:center;font-size:10px;color:var(--text3);margin-top:28px;letter-spacing:1.5px}
+.marca-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;background:linear-gradient(135deg,var(--burg),var(--wine));border-radius:var(--r2);padding:18px 16px}
+.marca-logo{width:44px;height:44px;border-radius:13px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:22px;color:white;flex-shrink:0}
+.marca-title{font-family:"Cormorant Garamond",serif;font-size:18px;color:white;font-weight:400}
+.marca-sub{font-size:10px;color:rgba(255,255,255,.55);margin-top:2px;letter-spacing:.5px}
+.pedido-card{background:var(--white);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:var(--r2);padding:13px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;box-shadow:0 1px 5px var(--shadow)}
+.pedido-info{flex:1}
+.pedido-prod{font-size:13px;font-weight:500}
+.pedido-det{font-size:11px;color:var(--text3);margin-top:2px}
+.pedido-cant{font-family:"Cormorant Garamond",serif;font-size:22px;color:var(--gold2);flex-shrink:0}
+.pedido-actions{display:flex;gap:6px}
+.btn-mini{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:500;cursor:pointer;border:none;transition:all .15s}
+.btn-mini.ok{background:rgba(61,138,96,.12);color:var(--ok)}
+.btn-mini.del{background:rgba(192,57,43,.1);color:var(--danger)}
 .divider{height:1px;background:var(--border);margin:18px 0}
 
 /* month selector */
@@ -486,12 +502,35 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
       </div>
       <div id="r-mensual"></div>
     </div>
+
+    <!-- MI MARCA -->
+    <div class="screen" id="ow-marca">
+      <div class="marca-header">
+        <div class="marca-logo">✦</div>
+        <div><div class="marca-title">Mi Línea de Productos</div><div class="marca-sub">Inventario exclusivo · Dueño &amp; CEO</div></div>
+      </div>
+      <div class="stats-grid" style="margin-bottom:16px">
+        <div class="stat-card sc-burg"><div class="stat-icon">💄</div><div class="stat-val" id="m-total">0</div><div class="stat-lbl">Productos</div></div>
+        <div class="stat-card sc-danger"><div class="stat-icon">🚨</div><div class="stat-val" id="m-alertas">0</div><div class="stat-lbl">Stock bajo</div></div>
+        <div class="stat-card sc-ok"><div class="stat-icon">✅</div><div class="stat-val" id="m-ok">0</div><div class="stat-lbl">En orden</div></div>
+        <div class="stat-card sc-gold"><div class="stat-icon">📦</div><div class="stat-val" id="m-total-u">0</div><div class="stat-lbl">Unidades</div></div>
+      </div>
+      <p class="sec-title">Productos de la marca</p>
+      <div class="prod-list" id="marca-prod-list"></div>
+      <div style="margin-top:16px"><button class="btn-p" onclick="openModal('nuevo-marca')">+ Agregar producto</button></div>
+      <p class="sec-title">Pedidos pendientes</p>
+      <div id="marca-pedidos-list"></div>
+      <div style="margin-top:10px"><button class="btn-s" style="background:var(--warm);border:1px solid var(--border)" onclick="openModal('nuevo-pedido')">+ Registrar pedido</button></div>
+      <p class="sec-title">Movimientos recientes</p>
+      <div id="marca-movs-list"></div>
+    </div>
   </div>
   <nav class="bottom-nav">
     <div class="nav-item active" id="onav-inicio" onclick="owNav('inicio')"><span class="nav-icon">🏠</span><span class="nav-lbl">Inicio</span></div>
     <div class="nav-item" id="onav-stock" onclick="owNav('stock')"><span class="nav-icon">📦</span><span class="nav-lbl">Stock</span></div>
     <div class="nav-item" id="onav-movs" onclick="owNav('movs')"><span class="nav-icon">📋</span><span class="nav-lbl">Historial</span></div>
     <div class="nav-item" id="onav-equipo" onclick="owNav('equipo')"><span class="nav-icon">👥</span><span class="nav-lbl">Equipo</span></div>
+    <div class="nav-item" id="onav-marca" onclick="owNav('marca')"><span class="nav-icon">✦</span><span class="nav-lbl">Mi Marca</span></div>
     <div class="nav-item" id="onav-reportes" onclick="owNav('reportes')"><span class="nav-icon">📊</span><span class="nav-lbl">Reportes</span></div>
   </nav>
 </div>
@@ -546,11 +585,34 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
       <p class="sec-title">Historial completo</p>
       <div id="ceo-mov-list"></div>
     </div>
+
+    <!-- MI MARCA CEO -->
+    <div class="screen" id="ceo-marca">
+      <div class="marca-header">
+        <div class="marca-logo">✦</div>
+        <div><div class="marca-title">Mi Línea de Productos</div><div class="marca-sub">Inventario exclusivo · Dueño &amp; CEO</div></div>
+      </div>
+      <div class="stats-grid" style="margin-bottom:16px">
+        <div class="stat-card sc-burg"><div class="stat-icon">💄</div><div class="stat-val" id="cm-total">0</div><div class="stat-lbl">Productos</div></div>
+        <div class="stat-card sc-danger"><div class="stat-icon">🚨</div><div class="stat-val" id="cm-alertas">0</div><div class="stat-lbl">Stock bajo</div></div>
+        <div class="stat-card sc-ok"><div class="stat-icon">✅</div><div class="stat-val" id="cm-ok">0</div><div class="stat-lbl">En orden</div></div>
+        <div class="stat-card sc-gold"><div class="stat-icon">📦</div><div class="stat-val" id="cm-total-u">0</div><div class="stat-lbl">Unidades</div></div>
+      </div>
+      <p class="sec-title">Productos de la marca</p>
+      <div class="prod-list" id="cmarca-prod-list"></div>
+      <div style="margin-top:16px"><button class="btn-p" onclick="openModal('nuevo-marca')">+ Agregar producto</button></div>
+      <p class="sec-title">Pedidos pendientes</p>
+      <div id="cmarca-pedidos-list"></div>
+      <div style="margin-top:10px"><button class="btn-s" style="background:var(--warm);border:1px solid var(--border)" onclick="openModal('nuevo-pedido')">+ Registrar pedido</button></div>
+      <p class="sec-title">Movimientos recientes</p>
+      <div id="cmarca-movs-list"></div>
+    </div>
   </div>
   <nav class="bottom-nav">
     <div class="nav-item active" id="cnav-inicio" onclick="ceoNav('inicio')"><span class="nav-icon">🏠</span><span class="nav-lbl">Inicio</span></div>
     <div class="nav-item" id="cnav-stock" onclick="ceoNav('stock')"><span class="nav-icon">📦</span><span class="nav-lbl">Stock</span></div>
     <div class="nav-item" id="cnav-movs" onclick="ceoNav('movs')"><span class="nav-icon">📋</span><span class="nav-lbl">Historial</span></div>
+    <div class="nav-item" id="cnav-marca" onclick="ceoNav('marca')"><span class="nav-icon">✦</span><span class="nav-lbl">Mi Marca</span></div>
   </nav>
 </div>
 
@@ -671,6 +733,72 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
     </div>
     <button class="btn-p" onclick="agregarProducto()">Guardar producto</button>
     <button class="btn-s" onclick="closeModal('nuevo-producto')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL NUEVO PRODUCTO MARCA -->
+<div class="modal-ov" id="modal-nuevo-marca">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💄 Nuevo Producto de Marca</div>
+    <div class="form-group"><div class="form-label">Nombre del producto</div>
+      <input type="text" class="form-input" id="nm-nombre" placeholder="Ej: Gel fijador de cejas"></div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Stock actual</div>
+        <input type="number" class="form-input" id="nm-stock" placeholder="0" min="0"></div>
+      <div class="form-group"><div class="form-label">Stock mínimo</div>
+        <input type="number" class="form-input" id="nm-min" placeholder="0" min="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Precio de venta ($)</div>
+        <input type="number" class="form-input" id="nm-precio" placeholder="0.00" step="0.01"></div>
+      <div class="form-group"><div class="form-label">Unidad</div>
+        <select class="form-input" id="nm-unidad">
+          <option>Unidad</option><option>Caja</option><option>Kit</option><option>Set</option>
+        </select></div>
+    </div>
+    <button class="btn-p" onclick="agregarProductoMarca()">Guardar producto</button>
+    <button class="btn-s" onclick="closeModal('nuevo-marca')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL MOV MARCA -->
+<div class="modal-ov" id="modal-mov-marca">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="mov-marca-title">Movimiento</div>
+    <div class="form-group"><div class="form-label">Producto</div>
+      <select class="form-input" id="mm-prod"></select></div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Cantidad</div>
+        <input type="number" class="form-input" id="mm-cant" placeholder="0" min="1"></div>
+      <div class="form-group"><div class="form-label">Responsable</div>
+        <select class="form-input" id="mm-resp">
+          <option>Humberto</option><option>Mikaela</option>
+        </select></div>
+    </div>
+    <button class="btn-p" onclick="doMovMarca()">Confirmar</button>
+    <button class="btn-s" onclick="closeModal('mov-marca')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL PEDIDO -->
+<div class="modal-ov" id="modal-nuevo-pedido">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📋 Registrar Pedido</div>
+    <div class="form-group"><div class="form-label">Producto</div>
+      <select class="form-input" id="np2-prod"></select></div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Cantidad pedida</div>
+        <input type="number" class="form-input" id="np2-cant" placeholder="0" min="1"></div>
+      <div class="form-group"><div class="form-label">Proveedor</div>
+        <input type="text" class="form-input" id="np2-prov" placeholder="Nombre"></div>
+    </div>
+    <div class="form-group"><div class="form-label">Fecha estimada de llegada</div>
+      <input type="date" class="form-input" id="np2-fecha"></div>
+    <button class="btn-p" onclick="agregarPedido()">Guardar pedido</button>
+    <button class="btn-s" onclick="closeModal('nuevo-pedido')">Cancelar</button>
   </div>
 </div>
 
@@ -845,6 +973,7 @@ function owNav(s){
   if(s==='movs')   renderMovs('ow');
   if(s==='equipo') renderEquipo();
   if(s==='reportes') renderReportes();
+  if(s==='marca') renderMarca('ow');
 }
 function ceoNav(s){
   document.querySelectorAll('#app-ceo .screen').forEach(x=>x.classList.remove('active'));
@@ -854,6 +983,7 @@ function ceoNav(s){
   if(s==='inicio') renderCEOInicio();
   if(s==='stock')  renderStock('ceo');
   if(s==='movs')   renderMovs('ceo');
+  if(s==='marca')  renderMarca('ceo');
 }
 
 // ══ RENDER INICIO ═══════════════════════════════════════════
@@ -1008,6 +1138,7 @@ function populateSelects(){
 
 function openModal(t){
   if(t==='entrada'||t==='salida') populateSelects();
+  if(t==='nuevo-pedido') poblarModalPedido();
   document.getElementById('modal-'+t).classList.add('open');
 }
 function closeModal(t){
@@ -1064,6 +1195,121 @@ function refreshAll(){
   if(currentUser.rol==='owner'){renderOwnerInicio();renderStock('ow');renderMovs('ow');renderReportes();}
   else if(currentUser.rol==='ceo'){renderCEOInicio();renderStock('ceo');renderMovs('ceo');}
   else renderStaffHoy();
+}
+
+// ══ MARCA DATA ════════════════════════════════════════════════
+let productosMarca = [
+  {id:1,nombre:'Gel fijador de cejas',stock:15,min:5,precio:12.00,unidad:'Unidad'},
+  {id:2,nombre:'Tinte de cejas kit',  stock:8, min:3,precio:18.00,unidad:'Kit'},
+  {id:3,nombre:'Sérum de pestañas',   stock:4, min:3,precio:22.00,unidad:'Unidad'},
+  {id:4,nombre:'Mascarilla facial',   stock:10,min:4,precio:15.00,unidad:'Unidad'},
+  {id:5,nombre:'Aceite de cejas',     stock:6, min:3,precio:14.00,unidad:'Unidad'},
+];
+let pedidosMarca=[];
+let movsMarca=[];
+let tipoMovMarca='entrada';
+
+function renderMarca(prefix){
+  const alertas=productosMarca.filter(p=>p.stock<=p.min);
+  const ok=productosMarca.filter(p=>p.stock>p.min);
+  const totalU=productosMarca.reduce((s,p)=>s+p.stock,0);
+  const pre=prefix==='ow';
+  const ids=pre?['m-total','m-alertas','m-ok','m-total-u']:['cm-total','cm-alertas','cm-ok','cm-total-u'];
+  const listId=pre?'marca-prod-list':'cmarca-prod-list';
+  const pedId=pre?'marca-pedidos-list':'cmarca-pedidos-list';
+  const movId=pre?'marca-movs-list':'cmarca-movs-list';
+  ids.forEach((id,i)=>{ const el=document.getElementById(id); if(el) el.textContent=[productosMarca.length,alertas.length,ok.length,totalU][i]; });
+  const list=document.getElementById(listId);
+  if(list) list.innerHTML=productosMarca.map(p=>{
+    const st=p.stock===0?'danger':p.stock<=p.min?'warn':'ok';
+    const col=p.stock===0?'var(--danger)':p.stock<=p.min?'var(--warn)':'var(--ok)';
+    return`<div class="prod-card st-${st}"><div class="prod-av">💄</div>
+      <div class="prod-info"><div class="prod-name">${p.nombre}</div><div class="prod-meta">${p.unidad} · $${p.precio.toFixed(2)}</div></div>
+      <div class="prod-stk"><div class="prod-stk-n" style="color:${col}">${p.stock}</div><div class="prod-stk-l">unid.</div></div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-left:4px">
+        <button class="btn-mini ok" onclick="abrirMovMarca(${p.id},'entrada')">+</button>
+        <button class="btn-mini del" onclick="abrirMovMarca(${p.id},'salida')">−</button>
+      </div></div>`;
+  }).join('');
+  const pedList=document.getElementById(pedId);
+  if(pedList) pedList.innerHTML=pedidosMarca.length===0
+    ?'<div class="empty" style="padding:16px"><div class="empty-text">Sin pedidos pendientes</div></div>'
+    :pedidosMarca.map((p,i)=>`<div class="pedido-card">
+      <div class="pedido-info"><div class="pedido-prod">${p.producto}</div><div class="pedido-det">Proveedor: ${p.proveedor} · Llega: ${p.fecha}</div></div>
+      <div class="pedido-cant">${p.cantidad}</div>
+      <div class="pedido-actions">
+        <button class="btn-mini ok" onclick="recibirPedido(${i})">✓</button>
+        <button class="btn-mini del" onclick="cancelarPedido(${i})">✗</button>
+      </div></div>`).join('');
+  const movList=document.getElementById(movId);
+  if(movList) movList.innerHTML=movsMarca.length===0
+    ?'<div class="empty" style="padding:16px"><div class="empty-text">Sin movimientos aún</div></div>'
+    :[...movsMarca].reverse().slice(0,10).map(m=>`<div class="mov-card">
+      <div class="mov-badge ${m.tipo}">${m.tipo==='entrada'?'📥':'📤'}</div>
+      <div class="mov-info"><div class="mov-prod">${m.producto}</div><div class="mov-det">${m.resp} · ${m.fecha}</div></div>
+      <div class="mov-qty ${m.tipo}">${m.tipo==='entrada'?'+':'-'}${m.cant}</div></div>`).join('');
+}
+function abrirMovMarca(pid,tipo){
+  tipoMovMarca=tipo;
+  document.getElementById('mov-marca-title').textContent=tipo==='entrada'?'📥 Entrada de Producto':'📤 Salida de Producto';
+  document.getElementById('mm-prod').innerHTML=productosMarca.map(p=>`<option value="${p.id}" ${p.id===pid?'selected':''}>${p.nombre} (stock: ${p.stock})</option>`).join('');
+  document.getElementById('mm-cant').value='';
+  openModal('mov-marca');
+}
+function doMovMarca(){
+  const pid=parseInt(document.getElementById('mm-prod').value);
+  const cant=parseInt(document.getElementById('mm-cant').value);
+  const resp=document.getElementById('mm-resp').value;
+  if(!cant||cant<=0){showToast('⚠️ Ingresá una cantidad válida');return}
+  const prod=productosMarca.find(p=>p.id===pid);
+  if(!prod) return;
+  if(tipoMovMarca==='salida'&&cant>prod.stock){showToast('Sin stock suficiente');return}
+  prod.stock+=tipoMovMarca==='entrada'?cant:-cant;
+  movsMarca.push({tipo:tipoMovMarca,producto:prod.nombre,cant,resp,fecha:hoy()});
+  closeModal('mov-marca');
+  showToast(tipoMovMarca==='entrada'?`✅ +${cant} ${prod.nombre}`:`✅ -${cant} ${prod.nombre}`);
+  renderMarca(currentUser.rol==='owner'?'ow':'ceo');
+}
+function agregarProductoMarca(){
+  const nombre=document.getElementById('nm-nombre').value.trim();
+  const stock=parseInt(document.getElementById('nm-stock').value)||0;
+  const min=parseInt(document.getElementById('nm-min').value)||0;
+  const precio=parseFloat(document.getElementById('nm-precio').value)||0;
+  const unidad=document.getElementById('nm-unidad').value;
+  if(!nombre){showToast('⚠️ Ingresá el nombre');return}
+  productosMarca.push({id:Date.now(),nombre,stock,min,precio,unidad});
+  closeModal('nuevo-marca');
+  ['nm-nombre','nm-stock','nm-min','nm-precio'].forEach(id=>document.getElementById(id).value='');
+  showToast('✅ '+nombre+' agregado');
+  renderMarca(currentUser.rol==='owner'?'ow':'ceo');
+}
+function poblarModalPedido(){
+  document.getElementById('np2-prod').innerHTML=productosMarca.map(p=>`<option>${p.nombre}</option>`).join('');
+}
+function agregarPedido(){
+  const prod=document.getElementById('np2-prod').value;
+  const cant=parseInt(document.getElementById('np2-cant').value);
+  const prov=document.getElementById('np2-prov').value.trim()||'Sin especificar';
+  const fecha=document.getElementById('np2-fecha').value||'Sin fecha';
+  if(!cant||cant<=0){showToast('⚠️ Ingresá una cantidad');return}
+  pedidosMarca.push({producto:prod,cantidad:cant,proveedor:prov,fecha});
+  closeModal('nuevo-pedido');
+  ['np2-cant','np2-prov','np2-fecha'].forEach(id=>document.getElementById(id).value='');
+  showToast('✅ Pedido registrado');
+  renderMarca(currentUser.rol==='owner'?'ow':'ceo');
+}
+function recibirPedido(idx){
+  const p=pedidosMarca[idx];
+  const prod=productosMarca.find(x=>x.nombre===p.producto);
+  if(prod){prod.stock+=p.cantidad;movsMarca.push({tipo:'entrada',producto:prod.nombre,cant:p.cantidad,resp:'Sistema',fecha:hoy()});}
+  pedidosMarca.splice(idx,1);
+  showToast('✅ Pedido recibido — stock actualizado');
+  renderMarca(currentUser.rol==='owner'?'ow':'ceo');
+}
+function cancelarPedido(idx){
+  pedidosMarca.splice(idx,1);
+  showToast('Pedido cancelado');
+  renderMarca(currentUser.rol==='owner'?'ow':'ceo');
 }
 
 // ══ SHEET SYNC ════════════════════════════════════════════════
