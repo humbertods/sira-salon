@@ -1170,9 +1170,11 @@ function doMov(tipo){
   const unidadLabel=tipoUnidad?` · ${tipoUnidad}`:'';
   movimientos.push({tipo,producto:prod.nombre,cant,resp,area:area||prod.area,fecha:hoy(),tipoUnidad});
   closeModal(tipo);
-  showToast(tipo==='entrada'?`✅ +${cant} ${prod.nombre}`:`✅ -${cant} ${cant===1?tipoUnidad||'unid.':tipoUnidad+'s'||'unid.'}`);
+  showToast(tipo==='entrada'?`✅ +${cant} ${prod.nombre}`:`✅ -${cant} ${prod.nombre}`);
   refreshAll();
-  enviarAlSheet(tipo,prod.nombre,cant,resp,area||prod.area);
+  populateSelects();
+  enviarAlSheet(tipo,prod.nombre,cant,resp,area||prod.area,tipoUnidad);
+  actualizarStockEnSheet(prod.nombre, prod.stock);
 }
 
 function agregarProducto(){
@@ -1190,8 +1192,12 @@ function agregarProducto(){
   productos.push(newProd);
   closeModal('nuevo-producto');
   ['np-nombre','np-stock','np-min','np-costo','np-notas'].forEach(id=>document.getElementById(id).value='');
-  showToast(`✅ ${nombre} agregado`);
+  showToast(`✅ ${nombre} guardando en Drive...`);
+  guardarProductoEnSheet(newProd).then(()=>{
+    showToast(`✅ ${nombre} guardado en Drive`);
+  });
   refreshAll();
+  populateSelects();
 }
 
 function refreshAll(){
