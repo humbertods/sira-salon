@@ -1329,8 +1329,12 @@ async function cargarProductosDesdeSheet(){
   if(!SHEET_URL) return;
   try{
     showSyncBadge('Sincronizando...');
-    const resp = await fetch(SHEET_URL + '?t=' + Date.now());
-    const data = await resp.json();
+    const resp = await fetch(SHEET_URL + '?t=' + Date.now(), {
+      method: 'GET',
+      headers: {'Content-Type': 'text/plain'},
+    });
+    const text = await resp.text();
+    const data = JSON.parse(text);
     if(data.ok && data.productos && data.productos.length > 0){
       // Convertir productos del Sheet al formato de la app
       productos = data.productos.map((p,i) => ({
@@ -1361,7 +1365,7 @@ async function cargarProductosDesdeSheet(){
 }
 
 // ══ SHEET SYNC ════════════════════════════════════════════════
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycby5zPF-yzMC5CEiDx0DMWgTgOWZxXTTaGkD4G-BbAKksFMpQOuK16Y7oXzVwMcyGWVarQ/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyclcqAzrXPnf12PpDkqPO617B7zy_2HuCaJ51A4aVqJ14YPQUrkCH5TjBgvkFVDnjqrQ/exec';
 
 async function enviarAlSheet(tipo,producto,cantidad,responsable,area){
   if(!SHEET_URL) return;
