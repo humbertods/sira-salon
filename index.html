@@ -27,7 +27,7 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
 .layer.hidden{opacity:0;pointer-events:none;transform:scale(.98)}
 
 /* ══ LOGIN ══ */
-#login{overflow-y:auto;display:flex;flex-direction:column;align-items:stretch}
+#login{overflow-y:auto;display:block}
 .login-hero{width:100%;min-height:240px;position:relative;flex-shrink:0;
   background:linear-gradient(155deg,#5b0a25 0%,#7a1035 40%,#c9a45a 100%);
   display:flex;flex-direction:column;justify-content:flex-end;padding:24px 24px 28px}
@@ -37,7 +37,7 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
 .hero-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:5px}
 .hero-title{font-family:'Cormorant Garamond',serif;font-size:46px;font-weight:300;color:white;letter-spacing:5px;line-height:1}
 .hero-sub{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:2px;margin-top:3px}
-.login-body{padding:24px 20px 60px;flex:1}
+.login-body{padding:24px 20px 60px}
 .login-sec{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
 .role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
 .role-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r2);
@@ -327,7 +327,7 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
 .no-data{font-size:13px;color:var(--text3);text-align:center;padding:20px}
 
 /* 3-tab role grid */
-.role-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:24px;width:100%}
+.role-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:24px}
 .role-card3{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r2);
   padding:16px 10px 14px;cursor:pointer;text-align:center;transition:all .2s;
   box-shadow:0 2px 10px var(--shadow)}
@@ -931,17 +931,14 @@ function enterApp(){
   if(currentUser.rol==='owner'){
     renderOwnerInicio(); renderStock('ow'); renderMovs('ow'); renderEquipo(); renderReportes();
     document.getElementById('app-owner').classList.remove('hidden');
-    cargarProductosDesdeSheet();
   } else if(currentUser.rol==='ceo'){
     renderCEOInicio(); renderStock('ceo'); renderMovs('ceo');
     document.getElementById('app-ceo').classList.remove('hidden');
-    cargarProductosDesdeSheet();
   } else {
     document.getElementById('staff-user-lbl').textContent=currentUser.nombre+' · '+currentUser.cargo;
     document.getElementById('staff-name-disp').textContent=currentUser.nombre;
     renderStaffHoy();
     document.getElementById('app-staff').classList.remove('hidden');
-    cargarProductosDesdeSheet();
   }
 }
 
@@ -1170,11 +1167,9 @@ function doMov(tipo){
   const unidadLabel=tipoUnidad?` · ${tipoUnidad}`:'';
   movimientos.push({tipo,producto:prod.nombre,cant,resp,area:area||prod.area,fecha:hoy(),tipoUnidad});
   closeModal(tipo);
-  showToast(tipo==='entrada'?`✅ +${cant} ${prod.nombre}`:`✅ -${cant} ${prod.nombre}`);
+  showToast(tipo==='entrada'?`✅ +${cant} ${prod.nombre}`:`✅ -${cant} ${cant===1?tipoUnidad||'unid.':tipoUnidad+'s'||'unid.'}`);
   refreshAll();
-  populateSelects();
-  enviarAlSheet(tipo,prod.nombre,cant,resp,area||prod.area,tipoUnidad);
-  actualizarStockEnSheet(prod.nombre, prod.stock);
+  enviarAlSheet(tipo,prod.nombre,cant,resp,area||prod.area);
 }
 
 function agregarProducto(){
@@ -1192,12 +1187,8 @@ function agregarProducto(){
   productos.push(newProd);
   closeModal('nuevo-producto');
   ['np-nombre','np-stock','np-min','np-costo','np-notas'].forEach(id=>document.getElementById(id).value='');
-  showToast(`✅ ${nombre} guardando en Drive...`);
-  guardarProductoEnSheet(newProd).then(()=>{
-    showToast(`✅ ${nombre} guardado en Drive`);
-  });
+  showToast(`✅ ${nombre} agregado`);
   refreshAll();
-  populateSelects();
 }
 
 function refreshAll(){
@@ -1330,48 +1321,8 @@ function cancelarPedido(idx){
   renderMarca(currentUser.rol==='owner'?'ow':'ceo');
 }
 
-// ══ CARGAR PRODUCTOS DESDE SHEET ════════════════════════════
-async function cargarProductosDesdeSheet(){
-  if(!SHEET_URL) return;
-  try{
-    showSyncBadge('Sincronizando...');
-    const resp = await fetch(SHEET_URL + '?t=' + Date.now(), {
-      method: 'GET',
-      headers: {'Content-Type': 'text/plain'},
-    });
-    const text = await resp.text();
-    const data = JSON.parse(text);
-    if(data.ok && data.productos && data.productos.length > 0){
-      // Convertir productos del Sheet al formato de la app
-      productos = data.productos.map((p,i) => ({
-        id: p.id || (i+1),
-        nombre: p.nombre,
-        area: p.area || 'Sin área',
-        unidad: p.unidad || 'Unidad',
-        stock: parseInt(p.stock) || 0,
-        min: parseInt(p.min) || 0,
-        costo: parseFloat(p.costo) || 0,
-        notas: p.notas || ''
-      }));
-      // Refresh all visible screens
-      if(currentUser){
-        if(currentUser.rol==='owner'){ renderOwnerInicio(); renderStock('ow'); renderReportes(); }
-        else if(currentUser.rol==='ceo'){ renderCEOInicio(); renderStock('ceo'); }
-        else { renderStaffHoy(); }
-      }
-      showSyncBadge('✓ Sincronizado');
-      setTimeout(()=>hideSyncBadge(), 2000);
-    } else {
-      hideSyncBadge();
-    }
-  }catch(e){
-    showSyncBadge('Sin conexión');
-    setTimeout(()=>hideSyncBadge(), 2000);
-  }
-}
-
 // ══ SHEET SYNC ════════════════════════════════════════════════
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyclcqAzrXPnf12PpDkqPO617B7zy_2HuCaJ51A4aVqJ14YPQUrkCH5TjBgvkFVDnjqrQ/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxpG40nKndfSkfE25mH9DWXjtQPvBQTMScjSBSkNUvQAYkadBCtTk1i00zqufFf7WYxRQ/exec';
 
 async function enviarAlSheet(tipo,producto,cantidad,responsable,area){
   if(!SHEET_URL) return;
