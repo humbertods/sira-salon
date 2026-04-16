@@ -555,7 +555,7 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
         <div class="stat-card sc-burg"><div class="stat-icon">📦</div><div class="stat-val" id="ceo-total">0</div><div class="stat-lbl">Productos</div></div>
         <div class="stat-card sc-danger"><div class="stat-icon">🚨</div><div class="stat-val" id="ceo-alertas">0</div><div class="stat-lbl">Stock bajo</div></div>
         <div class="stat-card sc-ok"><div class="stat-icon">✅</div><div class="stat-val" id="ceo-ok">0</div><div class="stat-lbl">En orden</div></div>
-        <div class="stat-card sc-gold"><div class="stat-icon">💰</div><div class="stat-val" id="ceo-valor">$0</div><div class="stat-lbl">Valor stock</div></div>
+
       </div>
       <p class="sec-title">Alertas urgentes</p>
       <div id="ceo-alerts"></div>
@@ -997,7 +997,7 @@ function renderDashboard(prefix){
   document.getElementById(prefix+'-total').textContent=productos.length;
   document.getElementById(prefix+'-alertas').textContent=alertas.length;
   document.getElementById(prefix+'-ok').textContent=ok.length;
-  document.getElementById(prefix+'-valor').textContent='$'+Math.round(valor);
+  if(prefix!=='ceo') document.getElementById(prefix+'-valor').textContent='$'+Math.round(valor);
   const list=document.getElementById(prefix+'-alerts');
   if(!list) return;
   if(alertas.length===0){list.innerHTML=`<div class="ok-banner">✅ Todo el stock está en orden</div>`;return;}
