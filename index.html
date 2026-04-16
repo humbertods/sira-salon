@@ -643,6 +643,11 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
         <div class="ah-sub">Usé un producto en un servicio</div>
       </div>
       <p class="sec-title">Mis movimientos de hoy</p>
+      <div class="action-hero" style="background:linear-gradient(135deg,#fff9ef,#fff6e8);border:1px solid rgba(218,185,127,.35)" onclick="openModal('combos')">
+        <div class="ah-icon">☕</div>
+        <div class="ah-title">Registrar Bebida</div>
+        <div class="ah-sub">Café o té servido a un cliente</div>
+      </div>
       <div id="staff-movs-hoy"></div>
     </div>
   </div>
@@ -671,6 +676,35 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
   </div>
 </div>
 
+
+<div class="modal-ov" id="modal-combos">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">☕ Registrar Bebida</div>
+    <div class="form-group"><div class="form-label">Bebida servida</div>
+      <select class="form-input" id="combo-sel">
+        <option value="">Seleccioná una bebida</option>
+        <option value="Capuccino frio">☕ Capuccino frío</option>
+        <option value="Capuccino caliente">☕ Capuccino caliente</option>
+        <option value="Cafe negro">☕ Café negro</option>
+        <option value="Te de manzanilla c/m">🍵 Té de manzanilla c/m</option>
+        <option value="Te de manzanilla">🍵 Té de manzanilla</option>
+        <option value="Te de anis">🍵 Té de anís</option>
+        <option value="Te de frutos rojos">🍵 Té de frutos rojos</option>
+        <option value="Te de frutos rojos c/J">🍵 Té de frutos rojos c/J</option>
+        <option value="Te relajante">🍵 Té relajante</option>
+        <option value="Te de manzana con canela">🍵 Té de manzana con canela</option>
+        <option value="Te de hierva luisa">🍵 Té de hierva luisa</option>
+        <option value="Te de jamaica">🍵 Té de jamaica</option>
+      </select>
+    </div>
+    <div id="combo-preview" style="background:var(--warm);border-radius:var(--r);padding:10px 14px;margin:8px 0;font-size:12px;color:var(--text2);display:none">
+      Se descontará: <span id="combo-preview-txt"></span>
+    </div>
+    <button class="btn-p" onclick="doCombo()">Confirmar bebida</button>
+    <button class="btn-s" onclick="closeModal('combos')">Cancelar</button>
+  </div>
+</div>
 <div class="modal-ov" id="modal-salida">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -1155,6 +1189,68 @@ function closeModal(t){
 document.querySelectorAll('.modal-ov').forEach(o=>{
   o.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open')});
 });
+
+// ══ COMBOS BEBIDAS ═══════════════════════════════════════════
+const COMBOS = {
+  'Capuccino frio':         ['Capuccino frio','Servilleta logo','Galleta'],
+  'Capuccino caliente':     ['Capuccino caliente','Servilleta logo','Galleta'],
+  'Cafe negro':             ['Cafe negro','Servilleta logo','Galleta'],
+  'Te de manzanilla c/m':  ['Te de manzanilla c/m','Servilleta logo','Galleta'],
+  'Te de manzanilla':      ['Te de manzanilla','Servilleta logo','Galleta'],
+  'Te de anis':            ['Te de anis','Servilleta logo','Galleta'],
+  'Te de frutos rojos':    ['Te de frutos rojos','Servilleta logo','Galleta'],
+  'Te de frutos rojos c/J':['Te de frutos rojos c/J','Servilleta logo','Galleta'],
+  'Te relajante':          ['Te relajante','Servilleta logo','Galleta'],
+  'Te de manzana con canela':['Te de manzana con canela','Servilleta logo','Galleta'],
+  'Te de hierva luisa':    ['Te de hierva luisa','Servilleta logo','Galleta'],
+  'Te de jamaica':         ['Te de jamaica','Servilleta logo','Galleta'],
+};
+
+document.addEventListener('change', function(e){
+  if(e.target.id==='combo-sel'){
+    const val = e.target.value;
+    const preview = document.getElementById('combo-preview');
+    const txt = document.getElementById('combo-preview-txt');
+    if(val && COMBOS[val]){
+      txt.textContent = COMBOS[val].join(' + ');
+      preview.style.display='block';
+    } else {
+      preview.style.display='none';
+    }
+  }
+});
+
+function doCombo(){
+  const bebida = document.getElementById('combo-sel').value;
+  if(!bebida){ showToast('⚠️ Seleccioná una bebida'); return; }
+  const items = COMBOS[bebida];
+  if(!items){ showToast('⚠️ Combo no encontrado'); return; }
+  const resp = currentUser ? currentUser.nombre : '—';
+  const fecha = hoy();
+  let errores = [];
+  // Verificar stock antes de descontar
+  items.forEach(nombre => {
+    const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
+    if(!p){ errores.push(nombre + ' (no existe)'); }
+    else if(p.stock <= 0){ errores.push(nombre + ' (sin stock)'); }
+  });
+  if(errores.length > 0){ showToast('⚠️ Sin stock: ' + errores.join(', ')); return; }
+  // Descontar cada producto
+  items.forEach(nombre => {
+    const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
+    if(p){
+      p.stock = Math.max(0, p.stock - 1);
+      movimientos.push({tipo:'salida',producto:p.nombre,cant:1,resp,area:'Coffee',fecha,tipoUnidad:'Unidad'});
+      enviarAlSheet('salida',p.nombre,1,resp,'Coffee','Unidad');
+      actualizarStockEnSheet(p.nombre, p.stock);
+    }
+  });
+  closeModal('combos');
+  document.getElementById('combo-sel').value='';
+  document.getElementById('combo-preview').style.display='none';
+  showToast('☕ ' + bebida + ' registrado');
+  refreshAll();
+}
 
 function doMov(tipo){
   const c=tipo[0];
