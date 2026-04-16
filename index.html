@@ -662,6 +662,7 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
     <div class="modal-handle"></div>
     <div class="modal-title">📥 Registrar Entrada</div>
     <div class="form-group"><div class="form-label">Producto</div>
+      <input type="text" class="form-input" id="e-search" placeholder="🔍 Buscar producto..." oninput="filtrarSelect('e-prod',this.value)" style="margin-bottom:6px">
       <select class="form-input" id="e-prod"><option value="">Seleccioná un producto</option></select></div>
     <div class="form-row">
       <div class="form-group"><div class="form-label">Cantidad</div>
@@ -710,6 +711,7 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
     <div class="modal-handle"></div>
     <div class="modal-title">📤 Registrar Salida</div>
     <div class="form-group"><div class="form-label">Producto</div>
+      <input type="text" class="form-input" id="s-search" placeholder="🔍 Buscar producto..." oninput="filtrarSelect('s-prod',this.value)" style="margin-bottom:6px">
       <select class="form-input" id="s-prod"><option value="">Seleccioná un producto</option></select></div>
     <div class="form-row">
       <div class="form-group"><div class="form-label">Cantidad</div>
@@ -1179,6 +1181,8 @@ function openModal(t){
   if(t==='entrada'||t==='salida') populateSelects();
   if(t==='nuevo-pedido') poblarModalPedido();
   document.getElementById('modal-'+t).classList.add('open');
+  if(t==='entrada'){ const s=document.getElementById('e-search'); if(s){s.value='';filtrarSelect('e-prod','');} }
+  if(t==='salida'){  const s=document.getElementById('s-search'); if(s){s.value='';filtrarSelect('s-prod','');} }
 }
 function closeModal(t){
   document.getElementById('modal-'+t).classList.remove('open');
@@ -1189,6 +1193,18 @@ function closeModal(t){
 document.querySelectorAll('.modal-ov').forEach(o=>{
   o.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open')});
 });
+
+
+// ══ BUSCADOR EN SELECTS ══════════════════════════════════════
+function filtrarSelect(selectId, query){
+  const select = document.getElementById(selectId);
+  const q = query.toLowerCase().trim();
+  const opts = productos
+    .filter(p => !q || p.nombre.toLowerCase().includes(q))
+    .sort((a,b) => a.nombre.localeCompare(b.nombre));
+  select.innerHTML = '<option value="">Seleccioná un producto</option>' +
+    opts.map(p => `<option value="${p.id}">${p.nombre} (${p.stock} ${p.unidad})</option>`).join('');
+}
 
 // ══ COMBOS BEBIDAS ═══════════════════════════════════════════
 const COMBOS = {
