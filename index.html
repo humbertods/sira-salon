@@ -932,10 +932,12 @@ function enterApp(){
     renderOwnerInicio(); renderStock('ow'); renderMovs('ow'); renderEquipo(); renderReportes();
     document.getElementById('app-owner').classList.remove('hidden');
     cargarProductosDesdeSheet();
+    cargarMarcaDesdeSheet();
   } else if(currentUser.rol==='ceo'){
     renderCEOInicio(); renderStock('ceo'); renderMovs('ceo');
     document.getElementById('app-ceo').classList.remove('hidden');
     cargarProductosDesdeSheet();
+    cargarMarcaDesdeSheet();
   } else {
     document.getElementById('staff-user-lbl').textContent=currentUser.nombre+' · '+currentUser.cargo;
     document.getElementById('staff-name-disp').textContent=currentUser.nombre;
@@ -1287,6 +1289,9 @@ function doMovMarca(){
   closeModal('mov-marca');
   showToast(tipoMovMarca==='entrada'?`✅ +${cant} ${prod.nombre}`:`✅ -${cant} ${prod.nombre}`);
   renderMarca(currentUser.rol==='owner'?'ow':'ceo');
+  // Sincronizar stock al Sheet
+  fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'actualizarStockMarca',nombre:prod.nombre,stock:prod.stock})});
 }
 function agregarProductoMarca(){
   const nombre=document.getElementById('nm-nombre').value.trim();
@@ -1295,11 +1300,15 @@ function agregarProductoMarca(){
   const precio=parseFloat(document.getElementById('nm-precio').value)||0;
   const unidad=document.getElementById('nm-unidad').value;
   if(!nombre){showToast('⚠️ Ingresá el nombre');return}
-  productosMarca.push({id:Date.now(),nombre,stock,min,precio,unidad});
+  const newProd={id:Date.now(),nombre,stock,min,precio,unidad};
+  productosMarca.push(newProd);
   closeModal('nuevo-marca');
   ['nm-nombre','nm-stock','nm-min','nm-precio'].forEach(id=>document.getElementById(id).value='');
   showToast('✅ '+nombre+' agregado');
   renderMarca(currentUser.rol==='owner'?'ow':'ceo');
+  // Guardar en Sheet
+  fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'nuevoProductoMarca',id:newProd.id,nombre,stock,min,precio,unidad})});
 }
 function poblarModalPedido(){
   document.getElementById('np2-prod').innerHTML=productosMarca.map(p=>`<option>${p.nombre}</option>`).join('');
@@ -1328,6 +1337,20 @@ function cancelarPedido(idx){
   pedidosMarca.splice(idx,1);
   showToast('Pedido cancelado');
   renderMarca(currentUser.rol==='owner'?'ow':'ceo');
+}
+
+// ══ CARGAR MARCA DESDE SHEET ════════════════════════════════
+async function cargarMarcaDesdeSheet(){
+  if(!SHEET_URL) return;
+  try{
+    const resp = await fetch(SHEET_URL + '?action=getMarca&t=' + Date.now(), {method:'GET'});
+    const text = await resp.text();
+    const data = JSON.parse(text);
+    if(data.ok && data.productos && data.productos.length > 0){
+      productosMarca = data.productos;
+      renderMarca(currentUser.rol==='owner'?'ow':'ceo');
+    }
+  }catch(e){ console.log('Marca sync error:',e); }
 }
 
 // ══ CARGAR PRODUCTOS DESDE SHEET ════════════════════════════
