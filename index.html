@@ -274,6 +274,13 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
   background:var(--text);border-radius:50px;padding:10px 20px;font-size:13px;color:var(--cream);
   z-index:999;opacity:0;transition:all .3s;white-space:nowrap;box-shadow:0 5px 20px rgba(44,24,16,.2)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.confirm-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(44,24,16,.45);opacity:0;pointer-events:none;transition:opacity .25s}
+.confirm-overlay.show{opacity:1;pointer-events:all}
+.confirm-box{background:white;border-radius:24px;padding:32px 28px;text-align:center;max-width:280px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,.2);transform:scale(.9);transition:transform .25s}
+.confirm-overlay.show .confirm-box{transform:scale(1)}
+.confirm-icon{font-size:52px;margin-bottom:12px}
+.confirm-msg{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--text);line-height:1.3}
+.confirm-sub{font-size:13px;color:var(--text3);margin-top:6px}
 
 /* ══ MISC ══ */
 .empty{text-align:center;padding:40px 20px;color:var(--text3)}
@@ -845,6 +852,13 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
   </div>
 </div>
 
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon" id="confirm-icon">✅</div>
+    <div class="confirm-msg" id="confirm-msg">Registrado</div>
+    <div class="confirm-sub" id="confirm-sub"></div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1319,7 +1333,7 @@ function doMov(tipo){
   const unidadLabel=tipoUnidad?` · ${tipoUnidad}`:'';
   movimientos.push({tipo,producto:prod.nombre,cant,resp,area:area||prod.area,fecha:hoy(),tipoUnidad});
   closeModal(tipo);
-  showToast(tipo==='entrada'?`✅ +${cant} ${prod.nombre}`:`✅ -${cant} ${prod.nombre}`);
+  showConfirm(tipo==='entrada'?'📥':'✅', tipo==='entrada'?'Entrada registrada':'Salida registrada', (tipo==='entrada'?'+':'-')+cant+' '+prod.nombre);
   refreshAll();
   populateSelects();
   enviarAlSheet(tipo,prod.nombre,cant,resp,area||prod.area,tipoUnidad);
@@ -1667,6 +1681,15 @@ function showSyncBadge(msg){
 function hideSyncBadge(){
   const badge = document.getElementById('sync-badge');
   if(badge) badge.style.opacity = '0';
+}
+
+function showConfirm(icon, msg, sub=''){
+  document.getElementById('confirm-icon').textContent = icon;
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-sub').textContent = sub;
+  const ov = document.getElementById('confirm-overlay');
+  ov.classList.add('show');
+  setTimeout(()=>ov.classList.remove('show'), 2500);
 }
 
 function showToast(msg){
