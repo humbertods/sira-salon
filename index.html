@@ -274,6 +274,9 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
   background:var(--text);border-radius:50px;padding:10px 20px;font-size:13px;color:var(--cream);
   z-index:999;opacity:0;transition:all .3s;white-space:nowrap;box-shadow:0 5px 20px rgba(44,24,16,.2)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.kit-num{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r2);padding:14px 0;font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--text);cursor:pointer;text-align:center;transition:all .15s}
+.kit-num:active{transform:scale(.91)}
+.kit-num.selected{border-color:var(--gold);background:linear-gradient(135deg,#fff9f0,#fff);color:var(--burg);font-weight:600}
 .confirm-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(44,24,16,.45);opacity:0;pointer-events:none;transition:opacity .25s}
 .confirm-overlay.show{opacity:1;pointer-events:all}
 .confirm-box{background:white;border-radius:24px;padding:32px 28px;text-align:center;max-width:280px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,.2);transform:scale(.9);transition:transform .25s}
@@ -656,7 +659,7 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
         <div class="ah-sub">Café o té servido a un cliente</div>
       </div>
       <div id="kit-lashista-btn" style="display:none">
-        <div class="action-hero" style="background:linear-gradient(135deg,#e8f0fe,#f0f4ff);border:1px solid rgba(66,133,244,.25)" onclick="doKitLashista()">
+        <div class="action-hero" style="background:linear-gradient(135deg,#e8f0fe,#f0f4ff);border:1px solid rgba(66,133,244,.25)" onclick="openModal('kit')">
           <div class="ah-icon">👁</div>
           <div class="ah-title">Kit Lashista</div>
           <div class="ah-sub">Frasco + Funda + Tarjeta pestaña</div>
@@ -692,6 +695,25 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
 </div>
 
 
+<div class="modal-ov" id="modal-kit">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👁 Kit Lashista</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Frasco para shampo · Funda kit pestaña · Tarjeta pestaña</p>
+    <div class="form-group"><div class="form-label">¿Cuántos kits?</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:6px">
+        <div class="kit-num" onclick="selectKit(1)">1</div>
+        <div class="kit-num" onclick="selectKit(2)">2</div>
+        <div class="kit-num" onclick="selectKit(3)">3</div>
+        <div class="kit-num" onclick="selectKit(4)">4</div>
+        <div class="kit-num" onclick="selectKit(5)">5</div>
+      </div>
+      <input type="hidden" id="kit-cantidad" value="0">
+    </div>
+    <button class="btn-p" id="kit-confirm-btn" onclick="doKitLashista()" style="opacity:.35;pointer-events:none">Confirmar kit</button>
+    <button class="btn-s" onclick="closeModal('kit')">Cancelar</button>
+  </div>
+</div>
 <div class="modal-ov" id="modal-combos">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -1224,7 +1246,17 @@ function filtrarSelect(selectId, query){
 
 
 // ══ KIT LASHISTA ═════════════════════════════════════════════
+function selectKit(n){
+  document.querySelectorAll('.kit-num').forEach(el=>el.classList.remove('selected'));
+  event.target.classList.add('selected');
+  document.getElementById('kit-cantidad').value = n;
+  const btn = document.getElementById('kit-confirm-btn');
+  btn.style.opacity='1'; btn.style.pointerEvents='all';
+}
+
 function doKitLashista(){
+  const cant = parseInt(document.getElementById('kit-cantidad').value) || 0;
+  if(!cant){ showToast('⚠️ Seleccioná la cantidad'); return; }
   const KIT = ['Frasco para shampo','Funda kit pestaña','Tarjeta pestaña'];
   const resp = currentUser ? currentUser.nombre : '—';
   const fecha = hoy();
@@ -1232,20 +1264,25 @@ function doKitLashista(){
   KIT.forEach(nombre => {
     const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
     if(!p){ errores.push(nombre + ' (no existe)'); }
-    else if(p.stock <= 0){ errores.push(nombre + ' (sin stock)'); }
+    else if(p.stock < cant){ errores.push(nombre + ' (stock insuficiente)'); }
   });
-  if(errores.length > 0){ showToast('⚠️ Sin stock: ' + errores.join(', ')); return; }
+  if(errores.length > 0){ showToast('⚠️ ' + errores.join(', ')); return; }
   KIT.forEach(nombre => {
     const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
     if(p){
-      p.stock = Math.max(0, p.stock - 1);
-      movimientos.push({tipo:'salida',producto:p.nombre,cant:1,resp,area:'Pestañas',fecha,tipoUnidad:'Unidad'});
-      enviarAlSheet('salida',p.nombre,1,resp,'Pestañas','Unidad');
+      p.stock = Math.max(0, p.stock - cant);
+      movimientos.push({tipo:'salida',producto:p.nombre,cant,resp,area:'Pestañas',fecha,tipoUnidad:'Unidad'});
+      enviarAlSheet('salida',p.nombre,cant,resp,'Pestañas','Unidad');
       actualizarStockEnSheet(p.nombre, p.stock);
     }
   });
+  closeModal('kit');
+  document.getElementById('kit-cantidad').value=0;
+  document.querySelectorAll('.kit-num').forEach(el=>el.classList.remove('selected'));
+  const btn=document.getElementById('kit-confirm-btn');
+  btn.style.opacity='0.35'; btn.style.pointerEvents='none';
   refreshAll();
-  setTimeout(()=>showConfirm('👁', 'Kit Lashista registrado', 'Frasco + Funda + Tarjeta descontados'), 300);
+  setTimeout(()=>showConfirm('👁', cant+' Kit'+(cant>1?'s':'')+' registrado'+(cant>1?'s':''), cant+' × Frasco + Funda + Tarjeta descontados'), 300);
 }
 
 // ══ COMBOS BEBIDAS ═══════════════════════════════════════════
@@ -1307,7 +1344,7 @@ function doCombo(){
   document.getElementById('combo-sel').value='';
   document.getElementById('combo-preview').style.display='none';
   refreshAll();
-  setTimeout(()=>showConfirm('☕', bebida + ' registrado', 'Bebida + Servilleta + Galleta descontados'), 300);
+  setTimeout(()=>showConfirm('☕', bebida, 'Bebida + Servilleta + Galleta descontados'), 300);
 }
 
 function doMov(tipo){
@@ -1677,19 +1714,20 @@ function hideSyncBadge(){
 }
 
 function showConfirm(icon, msg, sub=''){
-  const ov = document.getElementById('confirm-overlay');
-  const box = ov.querySelector('.confirm-box');
-  document.getElementById('confirm-icon').textContent = icon;
-  document.getElementById('confirm-msg').textContent = msg;
-  document.getElementById('confirm-sub').textContent = sub;
-  ov.style.opacity = '1';
-  ov.style.pointerEvents = 'all';
-  if(box) box.style.transform = 'scale(1)';
-  setTimeout(()=>{
-    ov.style.opacity = '0';
-    ov.style.pointerEvents = 'none';
-    if(box) box.style.transform = 'scale(.9)';
-  }, 2500);
+  // Remove old overlay if exists, create fresh
+  let ov = document.getElementById('confirm-overlay');
+  if(!ov){
+    ov = document.createElement('div');
+    ov.id = 'confirm-overlay';
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML = `<div style="background:white;border-radius:24px;padding:32px 28px;text-align:center;max-width:280px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,.25)">
+    <div style="font-size:52px;margin-bottom:12px">${icon}</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:#2c1810;line-height:1.3">${msg}</div>
+    <div style="font-size:13px;color:#8a7060;margin-top:6px">${sub}</div>
+  </div>`;
+  ov.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(44,24,16,.5)';
+  setTimeout(()=>{ ov.style.display='none'; }, 2500);
 }
 
 function showToast(msg){
