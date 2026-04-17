@@ -648,6 +648,13 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
         <div class="ah-title">Registrar Bebida</div>
         <div class="ah-sub">Café o té servido a un cliente</div>
       </div>
+      <div id="kit-lashista-btn" style="display:none">
+        <div class="action-hero" style="background:linear-gradient(135deg,#e8f0fe,#f0f4ff);border:1px solid rgba(66,133,244,.25)" onclick="doKitLashista()">
+          <div class="ah-icon">👁</div>
+          <div class="ah-title">Kit Lashista</div>
+          <div class="ah-sub">Frasco + Funda + Tarjeta pestaña</div>
+        </div>
+      </div>
       <div id="staff-movs-hoy"></div>
     </div>
   </div>
@@ -1094,6 +1101,8 @@ function renderMovs(prefix){
 }
 
 function renderStaffHoy(){
+  const kitBtn = document.getElementById('kit-lashista-btn');
+  if(kitBtn) kitBtn.style.display = (currentUser && currentUser.cargo==='Lashista') ? 'block' : 'none';
   const list=document.getElementById('staff-movs-hoy');
   if(!list) return;
   const mios=movimientos.filter(m=>m.resp===currentUser.nombre&&m.fecha===hoy());
@@ -1204,6 +1213,32 @@ function filtrarSelect(selectId, query){
     .sort((a,b) => a.nombre.localeCompare(b.nombre));
   select.innerHTML = '<option value="">Seleccioná un producto</option>' +
     opts.map(p => `<option value="${p.id}">${p.nombre} (${p.stock} ${p.unidad})</option>`).join('');
+}
+
+
+// ══ KIT LASHISTA ═════════════════════════════════════════════
+function doKitLashista(){
+  const KIT = ['Frascos para shampo','Funda kit pestaña','Tarjeta pestaña'];
+  const resp = currentUser ? currentUser.nombre : '—';
+  const fecha = hoy();
+  let errores = [];
+  KIT.forEach(nombre => {
+    const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
+    if(!p){ errores.push(nombre + ' (no existe)'); }
+    else if(p.stock <= 0){ errores.push(nombre + ' (sin stock)'); }
+  });
+  if(errores.length > 0){ showToast('⚠️ Sin stock: ' + errores.join(', ')); return; }
+  KIT.forEach(nombre => {
+    const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
+    if(p){
+      p.stock = Math.max(0, p.stock - 1);
+      movimientos.push({tipo:'salida',producto:p.nombre,cant:1,resp,area:'Pestañas',fecha,tipoUnidad:'Unidad'});
+      enviarAlSheet('salida',p.nombre,1,resp,'Pestañas','Unidad');
+      actualizarStockEnSheet(p.nombre, p.stock);
+    }
+  });
+  showToast('👁 Kit Lashista registrado');
+  refreshAll();
 }
 
 // ══ COMBOS BEBIDAS ═══════════════════════════════════════════
