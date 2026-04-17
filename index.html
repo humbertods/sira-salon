@@ -1251,7 +1251,7 @@ function doKitLashista(){
       actualizarStockEnSheet(p.nombre, p.stock);
     }
   });
-  showToast('👁 Kit Lashista registrado');
+  showConfirm('👁', 'Kit Lashista registrado', 'Frasco + Funda + Tarjeta descontados');
   refreshAll();
 }
 
@@ -1313,7 +1313,7 @@ function doCombo(){
   closeModal('combos');
   document.getElementById('combo-sel').value='';
   document.getElementById('combo-preview').style.display='none';
-  showToast('☕ ' + bebida + ' registrado');
+  showConfirm('☕', bebida + ' registrado', 'Bebida + Servilleta + Galleta descontados');
   refreshAll();
 }
 
