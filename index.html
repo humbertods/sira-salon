@@ -1251,8 +1251,8 @@ function doKitLashista(){
       actualizarStockEnSheet(p.nombre, p.stock);
     }
   });
-  showConfirm('👁', 'Kit Lashista registrado', 'Frasco + Funda + Tarjeta descontados');
   refreshAll();
+  setTimeout(()=>showConfirm('👁', 'Kit Lashista registrado', 'Frasco + Funda + Tarjeta descontados'), 300);
 }
 
 // ══ COMBOS BEBIDAS ═══════════════════════════════════════════
@@ -1313,8 +1313,8 @@ function doCombo(){
   closeModal('combos');
   document.getElementById('combo-sel').value='';
   document.getElementById('combo-preview').style.display='none';
-  showConfirm('☕', bebida + ' registrado', 'Bebida + Servilleta + Galleta descontados');
   refreshAll();
+  setTimeout(()=>showConfirm('☕', bebida + ' registrado', 'Bebida + Servilleta + Galleta descontados'), 300);
 }
 
 function doMov(tipo){
