@@ -1596,6 +1596,14 @@ async function enviarAlSheet(tipo,producto,cantidad,responsable,area){
   }catch(e){console.log('Sync error:',e)}
 }
 
+function actualizarStockEnSheet(nombre, nuevoStock){
+  if(!SHEET_URL) return;
+  fetch(SHEET_URL,{method:'POST',mode:'no-cors',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'actualizarStock',producto:nombre,nuevoStock,fecha:hoy()})
+  }).catch(e=>console.log('Stock sync error:',e));
+}
+
 // ══ REPORTE MENSUAL ══════════════════════════════════════════
 const MESES_NOMBRES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
