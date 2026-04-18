@@ -1121,12 +1121,57 @@ function renderMovs(prefix){
   const list=document.getElementById(listId);
   if(!list) return;
   if(movimientos.length===0){list.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Sin movimientos</div></div>`;return;}
-  list.innerHTML=[...movimientos].reverse().map(m=>`
-    <div class="mov-card">
-      <div class="mov-badge ${m.tipo}">${m.tipo==='entrada'?'📥':'📤'}</div>
-      <div class="mov-info"><div class="mov-prod">${m.producto}</div><div class="mov-det">${m.resp} · ${m.area}${m.tipoUnidad?' · '+m.tipoUnidad:''} · ${m.fecha}</div></div>
-      <div class="mov-qty ${m.tipo}">${m.tipo==='entrada'?'+':'-'}${m.cant}</div>
-    </div>`).join('');
+
+  if(prefix==='ow'){
+    // Owner view: grouped by grupo ID
+    const grupos = {};
+    const orden = [];
+    [...movimientos].reverse().forEach(m => {
+      const gid = m.grupo || (m.resp+'_'+m.fecha+'_'+m.hora+'_individual_'+Math.random());
+      if(!grupos[gid]){
+        grupos[gid] = {resp:m.resp, fecha:m.fecha, hora:m.hora||'', tipo:m.tipo, items:[], esCombo:m.esCombo||false, esKit:m.esKit||false, nombreCombo:m.nombreCombo||''};
+        orden.push(gid);
+      }
+      grupos[gid].items.push(m);
+    });
+
+    list.innerHTML = orden.map(gid => {
+      const g = grupos[gid];
+      const fechaParts = g.fecha ? g.fecha.split('-') : ['','',''];
+      const fechaCorta = fechaParts.length===3 ? fechaParts[2]+'/'+fechaParts[1] : g.fecha;
+      const codigo = fechaCorta + (g.hora?' '+g.hora:'');
+      const icono = g.esCombo ? '☕' : g.esKit ? '👁' : g.tipo==='entrada' ? '📥' : '📤';
+      const itemsHtml = g.items.map(m =>
+        `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:13px;color:var(--text)">${m.producto}</span>
+          <span style="font-size:13px;font-weight:500;color:${m.tipo==='entrada'?'var(--ok)':'var(--danger)'}">
+            ${m.tipo==='entrada'?'+':'-'}${m.cant}
+          </span>
+        </div>`
+      ).join('');
+      return `<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 6px var(--shadow)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:18px">${icono}</span>
+            <div>
+              <div style="font-size:13px;font-weight:500;color:var(--text)">${g.resp}</div>
+              <div style="font-size:11px;color:var(--text3)">${codigo}</div>
+            </div>
+          </div>
+          <span style="font-size:11px;color:var(--text3);background:var(--warm);padding:3px 8px;border-radius:50px">${g.items.length} item${g.items.length>1?'s':''}</span>
+        </div>
+        ${itemsHtml}
+      </div>`;
+    }).join('');
+  } else {
+    // CEO view: simple list
+    list.innerHTML=[...movimientos].reverse().map(m=>`
+      <div class="mov-card">
+        <div class="mov-badge ${m.tipo}">${m.tipo==='entrada'?'📥':'📤'}</div>
+        <div class="mov-info"><div class="mov-prod">${m.producto}</div><div class="mov-det">${m.resp} · ${m.area} · ${m.fecha}${m.hora?' '+m.hora:''}</div></div>
+        <div class="mov-qty ${m.tipo}">${m.tipo==='entrada'?'+':'-'}${m.cant}</div>
+      </div>`).join('');
+  }
 }
 
 function renderStaffHoy(){
@@ -1267,11 +1312,14 @@ function doKitLashista(){
     else if(p.stock < cant){ errores.push(nombre + ' (stock insuficiente)'); }
   });
   if(errores.length > 0){ showToast('⚠️ ' + errores.join(', ')); return; }
+  const tsK = new Date();
+  const horaK = tsK.getHours().toString().padStart(2,'0')+':'+tsK.getMinutes().toString().padStart(2,'0');
+  const grupoK = resp+'_kit_'+tsK.getTime();
   KIT.forEach(nombre => {
     const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
     if(p){
       p.stock = Math.max(0, p.stock - cant);
-      movimientos.push({tipo:'salida',producto:p.nombre,cant,resp,area:'Pestañas',fecha,tipoUnidad:'Unidad'});
+      movimientos.push({tipo:'salida',producto:p.nombre,cant,resp,area:'Pestañas',fecha,tipoUnidad:'Unidad',hora:horaK,grupo:grupoK,esKit:true});
       enviarAlSheet('salida',p.nombre,cant,resp,'Pestañas','Unidad');
       actualizarStockEnSheet(p.nombre, p.stock);
     }
@@ -1331,11 +1379,14 @@ function doCombo(){
   });
   if(errores.length > 0){ showToast('⚠️ Sin stock: ' + errores.join(', ')); return; }
   // Descontar cada producto
+  const tsC = new Date();
+  const horaC = tsC.getHours().toString().padStart(2,'0')+':'+tsC.getMinutes().toString().padStart(2,'0');
+  const grupoC = resp+'_combo_'+tsC.getTime();
   items.forEach(nombre => {
     const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
     if(p){
       p.stock = Math.max(0, p.stock - 1);
-      movimientos.push({tipo:'salida',producto:p.nombre,cant:1,resp,area:'Coffee',fecha,tipoUnidad:'Unidad'});
+      movimientos.push({tipo:'salida',producto:p.nombre,cant:1,resp,area:'Coffee',fecha,tipoUnidad:'Unidad',hora:horaC,grupo:grupoC,esCombo:true,nombreCombo:bebida});
       enviarAlSheet('salida',p.nombre,1,resp,'Coffee','Unidad');
       actualizarStockEnSheet(p.nombre, p.stock);
     }
@@ -1361,7 +1412,10 @@ function doMov(tipo){
   if(tipo==='salida'&&cant>prod.stock){showToast(`Sin stock suficiente (${prod.stock} unid.)`);return}
   prod.stock+=tipo==='entrada'?cant:-cant;
   const unidadLabel=tipoUnidad?` · ${tipoUnidad}`:'';
-  movimientos.push({tipo,producto:prod.nombre,cant,resp,area:area||prod.area,fecha:hoy(),tipoUnidad});
+  const ts = new Date();
+  const horaStr = ts.getHours().toString().padStart(2,'0')+':'+ts.getMinutes().toString().padStart(2,'0');
+  const grupoId = resp+'_'+ts.getTime();
+  movimientos.push({tipo,producto:prod.nombre,cant,resp,area:area||prod.area,fecha:hoy(),tipoUnidad,hora:horaStr,grupo:grupoId});
   closeModal(tipo);
   showConfirm(tipo==='entrada'?'📥':'✅', tipo==='entrada'?'Entrada registrada':'Salida registrada', (tipo==='entrada'?'+':'-')+cant+' '+prod.nombre);
   refreshAll();
@@ -1660,12 +1714,28 @@ function renderReporteMensual(){
       else byProd[m.producto].s+=m.cant;
     });
 
-    const prodRows = Object.entries(byProd).map(([prod,vals])=>`
-      <div class="rep-row">
-        <span class="rep-prod">${prod}</span>
-        <span class="rep-e">+${vals.e}</span>
-        <span class="rep-s">-${vals.s}</span>
-      </div>`).join('');
+    // Solo salidas agrupadas por producto con total
+    const soloSalidas = {};
+    data.salidas.forEach(m=>{
+      soloSalidas[m.producto] = (soloSalidas[m.producto]||0) + m.cant;
+    });
+    const soloEntradas = {};
+    data.entradas.forEach(m=>{
+      soloEntradas[m.producto] = (soloEntradas[m.producto]||0) + m.cant;
+    });
+
+    const prodRows = [
+      ...Object.entries(soloSalidas).sort((a,b)=>b[1]-a[1]).map(([prod,cant])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:13px;color:var(--text)">${prod}</span>
+          <span style="font-size:13px;font-weight:500;color:var(--danger)">-${cant}</span>
+        </div>`),
+      ...Object.entries(soloEntradas).sort((a,b)=>b[1]-a[1]).map(([prod,cant])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:13px;color:var(--text)">${prod}</span>
+          <span style="font-size:13px;font-weight:500;color:var(--ok)">+${cant}</span>
+        </div>`)
+    ].join('');
 
     return `<div class="person-report">
       <div class="person-report-header" onclick="togglePersonReport(${idx})">
