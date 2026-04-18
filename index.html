@@ -1005,11 +1005,13 @@ function enterApp(){
     document.getElementById('app-owner').classList.remove('hidden');
     cargarProductosDesdeSheet();
     cargarMarcaDesdeSheet();
+    cargarMovimientosDesdeSheet();
   } else if(currentUser.rol==='ceo'){
     renderCEOInicio(); renderStock('ceo'); renderMovs('ceo');
     document.getElementById('app-ceo').classList.remove('hidden');
     cargarProductosDesdeSheet();
     cargarMarcaDesdeSheet();
+    cargarMovimientosDesdeSheet();
   } else {
     document.getElementById('staff-user-lbl').textContent=currentUser.nombre+' · '+currentUser.cargo;
     document.getElementById('staff-name-disp').textContent=currentUser.nombre;
@@ -1320,7 +1322,7 @@ function doKitLashista(){
     if(p){
       p.stock = Math.max(0, p.stock - cant);
       movimientos.push({tipo:'salida',producto:p.nombre,cant,resp,area:'Pestañas',fecha,tipoUnidad:'Unidad',hora:horaK,grupo:grupoK,esKit:true});
-      enviarAlSheet('salida',p.nombre,cant,resp,'Pestañas','Unidad');
+      enviarAlSheet('salida',p.nombre,cant,resp,'Pestañas','Unidad',horaK,grupoK);
       actualizarStockEnSheet(p.nombre, p.stock);
     }
   });
@@ -1387,7 +1389,7 @@ function doCombo(){
     if(p){
       p.stock = Math.max(0, p.stock - 1);
       movimientos.push({tipo:'salida',producto:p.nombre,cant:1,resp,area:'Coffee',fecha,tipoUnidad:'Unidad',hora:horaC,grupo:grupoC,esCombo:true,nombreCombo:bebida});
-      enviarAlSheet('salida',p.nombre,1,resp,'Coffee','Unidad');
+      enviarAlSheet('salida',p.nombre,1,resp,'Coffee','Unidad',horaC,grupoC);
       actualizarStockEnSheet(p.nombre, p.stock);
     }
   });
@@ -1420,7 +1422,7 @@ function doMov(tipo){
   showConfirm(tipo==='entrada'?'📥':'✅', tipo==='entrada'?'Entrada registrada':'Salida registrada', (tipo==='entrada'?'+':'-')+cant+' '+prod.nombre);
   refreshAll();
   populateSelects();
-  enviarAlSheet(tipo,prod.nombre,cant,resp,area||prod.area,tipoUnidad);
+  enviarAlSheet(tipo,prod.nombre,cant,resp,area||prod.area,tipoUnidad,horaStr,grupoId);
   actualizarStockEnSheet(prod.nombre, prod.stock);
 }
 
@@ -1599,6 +1601,37 @@ async function cargarMarcaDesdeSheet(){
 }
 
 // ══ CARGAR PRODUCTOS DESDE SHEET ════════════════════════════
+async function cargarMovimientosDesdeSheet(){
+  if(!SHEET_URL) return;
+  try{
+    const resp = await fetch(SHEET_URL + '?action=getMovimientos&t=' + Date.now(), {method:'GET'});
+    const text = await resp.text();
+    const data = JSON.parse(text);
+    if(data.ok && data.movimientos && data.movimientos.length > 0){
+      movimientos = data.movimientos.map(m => ({
+        tipo: m.tipo==='Entrada'?'entrada':'salida',
+        producto: m.producto,
+        cant: parseInt(m.cantidad) || 1,
+        resp: m.responsable,
+        area: m.area || '',
+        fecha: m.fecha || '',
+        hora: m.hora || '',
+        grupo: m.grupo || (m.responsable+'_'+m.fecha+'_'+m.hora),
+        tipoUnidad: m.tipoUnidad || 'Unidad',
+        esCombo: m.esCombo || false,
+        esKit: m.esKit || false,
+        nombreCombo: m.nombreCombo || ''
+      }));
+      if(currentUser && currentUser.rol==='owner'){
+        renderMovs('ow');
+        renderReportes();
+      } else if(currentUser && currentUser.rol==='ceo'){
+        renderMovs('ceo');
+      }
+    }
+  }catch(e){ console.log('Movs sync error:',e); }
+}
+
 async function cargarProductosDesdeSheet(){
   if(!SHEET_URL) return;
   try{
@@ -1641,12 +1674,12 @@ async function cargarProductosDesdeSheet(){
 // ══ SHEET SYNC ════════════════════════════════════════════════
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzyEBabD-2BXhSd1tmIXpWXwzHPWE5CoF4VcGD1c5ILkACl8FmWbQRTL0juM70sxZnw/exec';
 
-async function enviarAlSheet(tipo,producto,cantidad,responsable,area){
+async function enviarAlSheet(tipo,producto,cantidad,responsable,area,tipoUnidad,hora,grupo){
   if(!SHEET_URL) return;
   try{
     await fetch(SHEET_URL,{method:'POST',mode:'no-cors',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({tipo,producto,cantidad,responsable,area,fecha:hoy()})});
+      body:JSON.stringify({action:'movimiento',tipo,producto,cantidad,responsable,area,fecha:hoy(),tipoUnidad:tipoUnidad||'Unidad',hora:hora||'',grupo:grupo||''})});
   }catch(e){console.log('Sync error:',e)}
 }
 
