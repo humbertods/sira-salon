@@ -351,6 +351,50 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
 .role-av svg{width:36px;height:36px}
 .role-name3{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--text);font-weight:500}
 .role-desc3{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* ══ GASTOS ══ */
+.gastos-hero{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:var(--r3);
+  padding:22px 20px;margin-bottom:16px;position:relative;overflow:hidden}
+.gastos-hero::after{content:'';position:absolute;top:-20px;right:-20px;width:100px;height:100px;
+  background:radial-gradient(circle,rgba(218,185,127,.15),transparent);border-radius:50%}
+.gh-eyebrow{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(218,185,127,.6);margin-bottom:4px}
+.gh-amount{font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;color:white;line-height:1}
+.gh-sub{font-size:12px;color:rgba(255,255,255,.4);margin-top:4px}
+.gastos-tabs{display:flex;gap:6px;margin-bottom:16px}
+.g-tab{flex:1;padding:10px 8px;border-radius:var(--r);text-align:center;font-size:12px;font-weight:500;
+  cursor:pointer;transition:all .2s;background:var(--white);border:1px solid var(--border);color:var(--text2);
+  box-shadow:0 1px 4px var(--shadow)}
+.g-tab.active{background:linear-gradient(135deg,var(--burg),var(--wine));color:white;border-color:transparent;
+  box-shadow:0 3px 12px rgba(91,10,37,.2)}
+.g-tab:active{transform:scale(.96)}
+.chart-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--r2);
+  padding:16px 14px;margin-bottom:12px;box-shadow:0 1px 8px var(--shadow)}
+.chart-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:14px}
+.chart-bars{display:flex;flex-direction:column;gap:8px}
+.chart-bar-row{display:flex;align-items:center;gap:10px}
+.chart-bar-label{font-size:11px;color:var(--text2);min-width:55px;text-align:right}
+.chart-bar-track{flex:1;height:22px;background:var(--warm);border-radius:6px;overflow:hidden;position:relative}
+.chart-bar-fill{height:100%;border-radius:6px;transition:width .6s cubic-bezier(.22,1,.36,1);min-width:2px;
+  display:flex;align-items:center;justify-content:flex-end;padding-right:8px}
+.chart-bar-val{font-size:10px;font-weight:600;color:white;white-space:nowrap}
+.chart-bar-fill.c1{background:linear-gradient(90deg,#5b0a25,#9a1b4a)}
+.chart-bar-fill.c2{background:linear-gradient(90deg,#c9a45a,#dab97f)}
+.chart-bar-fill.c3{background:linear-gradient(90deg,#2d7a50,#3d8a60)}
+.chart-bar-fill.c4{background:linear-gradient(90deg,#1a6fc4,#4a90d9)}
+.chart-bar-fill.c5{background:linear-gradient(90deg,#e67e22,#f39c12)}
+.chart-bar-fill.c6{background:linear-gradient(90deg,#8e44ad,#a569bd)}
+.gasto-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r);
+  padding:11px 14px;display:flex;align-items:center;gap:10px;margin-bottom:6px;box-shadow:0 1px 4px var(--shadow)}
+.gasto-item-icon{font-size:16px;flex-shrink:0}
+.gasto-item-info{flex:1;min-width:0}
+.gasto-item-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gasto-item-meta{font-size:11px;color:var(--text3);margin-top:1px}
+.gasto-item-val{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--burg);flex-shrink:0}
+.gastos-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.gs-box{background:var(--white);border:1px solid var(--border);border-radius:var(--r);
+  padding:12px 10px;text-align:center;box-shadow:0 1px 5px var(--shadow)}
+.gs-val{font-family:'Cormorant Garamond',serif;font-size:22px;line-height:1;color:var(--burg)}
+.gs-lbl{font-size:10px;color:var(--text3);margin-top:3px}
 </style>
 </head>
 <body>
@@ -534,6 +578,35 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
       <p class="sec-title">Movimientos recientes</p>
       <div id="marca-movs-list"></div>
     </div>
+
+    <!-- GASTOS (solo dueño) -->
+    <div class="screen" id="ow-gastos">
+      <div class="gastos-hero">
+        <div class="gh-eyebrow">Gasto del período</div>
+        <div class="gh-amount" id="g-total-hero">$0.00</div>
+        <div class="gh-sub" id="g-periodo-lbl">Hoy</div>
+      </div>
+      <div class="gastos-tabs">
+        <div class="g-tab active" onclick="setGastoTab('dia',this)">Hoy</div>
+        <div class="g-tab" onclick="setGastoTab('semana',this)">Semana</div>
+        <div class="g-tab" onclick="setGastoTab('mes',this)">Mes</div>
+      </div>
+      <div class="gastos-summary">
+        <div class="gs-box"><div class="gs-val" id="g-entradas-n">0</div><div class="gs-lbl">Entradas</div></div>
+        <div class="gs-box"><div class="gs-val" id="g-productos-n">0</div><div class="gs-lbl">Productos</div></div>
+        <div class="gs-box"><div class="gs-val" id="g-unidades-n">0</div><div class="gs-lbl">Unidades</div></div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-title">Gasto por área</div>
+        <div class="chart-bars" id="g-chart-areas"></div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-title" id="g-chart-dias-title">Gasto por día</div>
+        <div class="chart-bars" id="g-chart-dias"></div>
+      </div>
+      <p class="sec-title">Detalle de compras</p>
+      <div id="g-detalle-list"></div>
+    </div>
   </div>
   <nav class="bottom-nav">
     <div class="nav-item active" id="onav-inicio" onclick="owNav('inicio')"><span class="nav-icon">🏠</span><span class="nav-lbl">Inicio</span></div>
@@ -541,6 +614,7 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
     <div class="nav-item" id="onav-movs" onclick="owNav('movs')"><span class="nav-icon">📋</span><span class="nav-lbl">Historial</span></div>
     <div class="nav-item" id="onav-equipo" onclick="owNav('equipo')"><span class="nav-icon">👥</span><span class="nav-lbl">Equipo</span></div>
     <div class="nav-item" id="onav-marca" onclick="owNav('marca')"><span class="nav-icon">✦</span><span class="nav-lbl">Mi Marca</span></div>
+    <div class="nav-item" id="onav-gastos" onclick="owNav('gastos')"><span class="nav-icon">💰</span><span class="nav-lbl">Gastos</span></div>
     <div class="nav-item" id="onav-reportes" onclick="owNav('reportes')"><span class="nav-icon">📊</span><span class="nav-lbl">Reportes</span></div>
   </nav>
 </div>
@@ -904,7 +978,19 @@ let currentUser = null;
 let currentRole = null;
 let pinBuffer = '';
 
-function hoy(){return new Date().toISOString().split('T')[0]}
+function hoy(){
+  const ahora = new Date();
+  const y = ahora.toLocaleString('en-CA',{timeZone:'America/Guayaquil',year:'numeric'});
+  const m = ahora.toLocaleString('en-CA',{timeZone:'America/Guayaquil',month:'2-digit'});
+  const d = ahora.toLocaleString('en-CA',{timeZone:'America/Guayaquil',day:'2-digit'});
+  return y+'-'+m+'-'+d;
+}
+
+function horaGuayaquil(){
+  const ahora = new Date();
+  const opciones = {hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Guayaquil'};
+  return ahora.toLocaleTimeString('es-EC', opciones).substring(0,5);
+}
 
 function getEstado(stock, min){
   if(stock===0) return 'Agotado';
@@ -1001,7 +1087,7 @@ function enterApp(){
   setDate();
   populateSelects();
   if(currentUser.rol==='owner'){
-    renderOwnerInicio(); renderStock('ow'); renderMovs('ow'); renderEquipo(); renderReportes();
+    renderOwnerInicio(); renderStock('ow'); renderMovs('ow'); renderEquipo(); renderReportes(); renderGastos();
     document.getElementById('app-owner').classList.remove('hidden');
     cargarProductosDesdeSheet();
     cargarMarcaDesdeSheet();
@@ -1053,6 +1139,7 @@ function owNav(s){
   if(s==='equipo') renderEquipo();
   if(s==='reportes') renderReportes();
   if(s==='marca') renderMarca('ow');
+  if(s==='gastos') renderGastos();
 }
 function ceoNav(s){
   document.querySelectorAll('#app-ceo .screen').forEach(x=>x.classList.remove('active'));
@@ -1315,7 +1402,7 @@ function doKitLashista(){
   });
   if(errores.length > 0){ showToast('⚠️ ' + errores.join(', ')); return; }
   const tsK = new Date();
-  const horaK = tsK.getHours().toString().padStart(2,'0')+':'+tsK.getMinutes().toString().padStart(2,'0');
+  const horaK = horaGuayaquil();
   const grupoK = resp+'_kit_'+tsK.getTime();
   KIT.forEach(nombre => {
     const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
@@ -1382,7 +1469,7 @@ function doCombo(){
   if(errores.length > 0){ showToast('⚠️ Sin stock: ' + errores.join(', ')); return; }
   // Descontar cada producto
   const tsC = new Date();
-  const horaC = tsC.getHours().toString().padStart(2,'0')+':'+tsC.getMinutes().toString().padStart(2,'0');
+  const horaC = horaGuayaquil();
   const grupoC = resp+'_combo_'+tsC.getTime();
   items.forEach(nombre => {
     const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
@@ -1415,7 +1502,7 @@ function doMov(tipo){
   prod.stock+=tipo==='entrada'?cant:-cant;
   const unidadLabel=tipoUnidad?` · ${tipoUnidad}`:'';
   const ts = new Date();
-  const horaStr = ts.getHours().toString().padStart(2,'0')+':'+ts.getMinutes().toString().padStart(2,'0');
+  const horaStr = horaGuayaquil();
   const grupoId = resp+'_'+ts.getTime();
   movimientos.push({tipo,producto:prod.nombre,cant,resp,area:area||prod.area,fecha:hoy(),tipoUnidad,hora:horaStr,grupo:grupoId});
   closeModal(tipo);
@@ -1450,7 +1537,7 @@ function agregarProducto(){
 }
 
 function refreshAll(){
-  if(currentUser.rol==='owner'){renderOwnerInicio();renderStock('ow');renderMovs('ow');renderReportes();}
+  if(currentUser.rol==='owner'){renderOwnerInicio();renderStock('ow');renderMovs('ow');renderReportes();renderGastos();}
   else if(currentUser.rol==='ceo'){renderCEOInicio();renderStock('ceo');renderMovs('ceo');}
   else renderStaffHoy();
 }
@@ -1823,6 +1910,240 @@ function renderReporteMensual(){
 function togglePersonReport(idx){
   const body = document.getElementById('rep-body-'+idx);
   if(body) body.classList.toggle('open');
+}
+
+// ══ MÓDULO DE GASTOS (solo Dueño) ════════════════════════════
+let gastoTab = 'dia';
+const AREA_COLORS = ['c1','c2','c3','c4','c5','c6'];
+const DIAS_SEMANA_CORTO = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+function setGastoTab(tab, el){
+  gastoTab = tab;
+  document.querySelectorAll('.g-tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderGastos();
+}
+
+function getWeekRange(){
+  const now = new Date();
+  const day = now.getDay();
+  const start = new Date(now);
+  start.setDate(now.getDate() - day + (day===0?-6:1)); // lunes
+  start.setHours(0,0,0,0);
+  const end = new Date(start);
+  end.setDate(start.getDate()+6);
+  return {start, end};
+}
+
+function getMonthRange(){
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth()+1, 0);
+  return {start, end};
+}
+
+function filtrarEntradasPorPeriodo(periodo){
+  const hoyStr = hoy();
+  const entradas = movimientos.filter(m => m.tipo==='entrada');
+
+  if(periodo==='dia'){
+    return entradas.filter(m => m.fecha === hoyStr);
+  }
+  if(periodo==='semana'){
+    const {start, end} = getWeekRange();
+    return entradas.filter(m => {
+      const d = new Date(m.fecha+'T12:00:00');
+      return d >= start && d <= end;
+    });
+  }
+  if(periodo==='mes'){
+    const {start, end} = getMonthRange();
+    return entradas.filter(m => {
+      const d = new Date(m.fecha+'T12:00:00');
+      return d >= start && d <= end;
+    });
+  }
+  return entradas;
+}
+
+function calcularGastoProducto(mov){
+  const prod = productos.find(p => p.nombre.toLowerCase() === mov.producto.toLowerCase());
+  const costo = prod ? prod.costo : 0;
+  return costo * mov.cant;
+}
+
+function renderGastos(){
+  const entradas = filtrarEntradasPorPeriodo(gastoTab);
+
+  // Total del período
+  let totalGasto = 0;
+  entradas.forEach(m => { totalGasto += calcularGastoProducto(m); });
+
+  const periodoLabels = {dia:'Hoy', semana:'Esta semana', mes:'Este mes'};
+  document.getElementById('g-total-hero').textContent = '$' + totalGasto.toFixed(2);
+  document.getElementById('g-periodo-lbl').textContent = periodoLabels[gastoTab];
+
+  // Resumen cards
+  const prodsUnicos = new Set(entradas.map(m=>m.producto));
+  const totalUnidades = entradas.reduce((s,m)=>s+m.cant, 0);
+  document.getElementById('g-entradas-n').textContent = entradas.length;
+  document.getElementById('g-productos-n').textContent = prodsUnicos.size;
+  document.getElementById('g-unidades-n').textContent = totalUnidades;
+
+  // Gráfico por área
+  const byArea = {};
+  entradas.forEach(m => {
+    const area = m.area || 'Sin área';
+    if(!byArea[area]) byArea[area] = 0;
+    byArea[area] += calcularGastoProducto(m);
+  });
+  const areasOrdenadas = Object.entries(byArea).sort((a,b)=>b[1]-a[1]);
+  const maxArea = areasOrdenadas.length > 0 ? areasOrdenadas[0][1] : 1;
+  const chartAreas = document.getElementById('g-chart-areas');
+  if(areasOrdenadas.length === 0){
+    chartAreas.innerHTML = '<div style="font-size:13px;color:var(--text3);text-align:center;padding:12px">Sin datos</div>';
+  } else {
+    chartAreas.innerHTML = areasOrdenadas.map(([area, val], i) => {
+      const pct = Math.max(5, (val/maxArea)*100);
+      const color = AREA_COLORS[i % AREA_COLORS.length];
+      return `<div class="chart-bar-row">
+        <div class="chart-bar-label">${AREA_EMOJI[area]||'📦'} ${area}</div>
+        <div class="chart-bar-track">
+          <div class="chart-bar-fill ${color}" style="width:${pct}%">
+            <span class="chart-bar-val">$${val.toFixed(0)}</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Gráfico por día / semana
+  const chartDias = document.getElementById('g-chart-dias');
+  const chartDiasTitle = document.getElementById('g-chart-dias-title');
+
+  if(gastoTab === 'dia'){
+    // Mostrar últimos 7 días
+    chartDiasTitle.textContent = 'Últimos 7 días';
+    const dias = [];
+    for(let i=6; i>=0; i--){
+      const d = new Date();
+      d.setDate(d.getDate()-i);
+      const ds = d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
+      const dayName = i===0 ? 'Hoy' : i===1 ? 'Ayer' : DIAS_SEMANA_CORTO[d.getDay()];
+      const gastosDia = movimientos.filter(m=>m.tipo==='entrada'&&m.fecha===ds);
+      let total = 0;
+      gastosDia.forEach(m=>{ total += calcularGastoProducto(m); });
+      dias.push({label: dayName, val: total});
+    }
+    const maxDia = Math.max(...dias.map(d=>d.val), 1);
+    chartDias.innerHTML = dias.map((d,i)=>{
+      const pct = d.val > 0 ? Math.max(5, (d.val/maxDia)*100) : 0;
+      const color = AREA_COLORS[i % AREA_COLORS.length];
+      return `<div class="chart-bar-row">
+        <div class="chart-bar-label">${d.label}</div>
+        <div class="chart-bar-track">
+          ${d.val > 0 ? `<div class="chart-bar-fill ${color}" style="width:${pct}%">
+            <span class="chart-bar-val">$${d.val.toFixed(0)}</span>
+          </div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+
+  } else if(gastoTab === 'semana'){
+    // Mostrar cada día de la semana actual
+    chartDiasTitle.textContent = 'Desglose de la semana';
+    const {start} = getWeekRange();
+    const dias = [];
+    for(let i=0; i<7; i++){
+      const d = new Date(start);
+      d.setDate(start.getDate()+i);
+      const ds = d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
+      const dayName = DIAS_SEMANA_CORTO[d.getDay()] + ' ' + d.getDate();
+      const gastosDia = movimientos.filter(m=>m.tipo==='entrada'&&m.fecha===ds);
+      let total = 0;
+      gastosDia.forEach(m=>{ total += calcularGastoProducto(m); });
+      dias.push({label: dayName, val: total});
+    }
+    const maxDia = Math.max(...dias.map(d=>d.val), 1);
+    chartDias.innerHTML = dias.map((d,i)=>{
+      const pct = d.val > 0 ? Math.max(5, (d.val/maxDia)*100) : 0;
+      const color = AREA_COLORS[i % AREA_COLORS.length];
+      return `<div class="chart-bar-row">
+        <div class="chart-bar-label">${d.label}</div>
+        <div class="chart-bar-track">
+          ${d.val > 0 ? `<div class="chart-bar-fill ${color}" style="width:${pct}%">
+            <span class="chart-bar-val">$${d.val.toFixed(0)}</span>
+          </div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+
+  } else {
+    // Mes: mostrar por semana
+    chartDiasTitle.textContent = 'Gasto por semana del mes';
+    const {start, end} = getMonthRange();
+    const semanas = [];
+    let ws = new Date(start);
+    let semNum = 1;
+    while(ws <= end){
+      const we = new Date(ws);
+      we.setDate(ws.getDate()+6);
+      if(we > end) we.setTime(end.getTime());
+      const wsStr = ws.getDate() + '/' + (ws.getMonth()+1);
+      const weStr = we.getDate() + '/' + (we.getMonth()+1);
+      const label = 'Sem ' + semNum;
+      const gastosS = movimientos.filter(m => {
+        if(m.tipo!=='entrada') return false;
+        const d = new Date(m.fecha+'T12:00:00');
+        return d >= ws && d <= we;
+      });
+      let total = 0;
+      gastosS.forEach(m=>{ total += calcularGastoProducto(m); });
+      semanas.push({label, val: total, rango: wsStr+' - '+weStr});
+      ws = new Date(we);
+      ws.setDate(we.getDate()+1);
+      semNum++;
+    }
+    const maxSem = Math.max(...semanas.map(s=>s.val), 1);
+    chartDias.innerHTML = semanas.map((s,i)=>{
+      const pct = s.val > 0 ? Math.max(5, (s.val/maxSem)*100) : 0;
+      const color = AREA_COLORS[i % AREA_COLORS.length];
+      return `<div class="chart-bar-row">
+        <div class="chart-bar-label" title="${s.rango}">${s.label}</div>
+        <div class="chart-bar-track">
+          ${s.val > 0 ? `<div class="chart-bar-fill ${color}" style="width:${pct}%">
+            <span class="chart-bar-val">$${s.val.toFixed(0)}</span>
+          </div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Detalle de compras
+  const detalle = document.getElementById('g-detalle-list');
+  if(entradas.length === 0){
+    detalle.innerHTML = '<div class="empty" style="padding:20px"><div class="empty-icon">💰</div><div class="empty-text">Sin compras registradas</div></div>';
+  } else {
+    // Agrupar por producto y sumar
+    const byProd = {};
+    entradas.forEach(m => {
+      const key = m.producto;
+      if(!byProd[key]) byProd[key] = {cant:0, gasto:0, area:m.area};
+      byProd[key].cant += m.cant;
+      byProd[key].gasto += calcularGastoProducto(m);
+    });
+    const prodOrdenados = Object.entries(byProd).sort((a,b)=>b[1].gasto-a[1].gasto);
+    detalle.innerHTML = prodOrdenados.map(([nombre, data])=>{
+      return `<div class="gasto-item">
+        <div class="gasto-item-icon">${AREA_EMOJI[data.area]||'📦'}</div>
+        <div class="gasto-item-info">
+          <div class="gasto-item-name">${nombre}</div>
+          <div class="gasto-item-meta">${data.area||'—'} · ${data.cant} unid.</div>
+        </div>
+        <div class="gasto-item-val">$${data.gasto.toFixed(2)}</div>
+      </div>`;
+    }).join('');
+  }
 }
 
 // ══ TOAST ════════════════════════════════════════════════════
