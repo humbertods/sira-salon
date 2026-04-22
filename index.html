@@ -904,19 +904,7 @@ let currentUser = null;
 let currentRole = null;
 let pinBuffer = '';
 
-function hoy(){
-  const ahora = new Date();
-  const y = ahora.toLocaleString('en-CA',{timeZone:'America/Guayaquil',year:'numeric'});
-  const m = ahora.toLocaleString('en-CA',{timeZone:'America/Guayaquil',month:'2-digit'});
-  const d = ahora.toLocaleString('en-CA',{timeZone:'America/Guayaquil',day:'2-digit'});
-  return y+'-'+m+'-'+d;
-}
-
-function horaGuayaquil(){
-  const ahora = new Date();
-  const opciones = {hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Guayaquil'};
-  return ahora.toLocaleTimeString('es-EC', opciones).substring(0,5);
-}
+function hoy(){return new Date().toISOString().split('T')[0]}
 
 function getEstado(stock, min){
   if(stock===0) return 'Agotado';
@@ -1327,7 +1315,7 @@ function doKitLashista(){
   });
   if(errores.length > 0){ showToast('⚠️ ' + errores.join(', ')); return; }
   const tsK = new Date();
-  const horaK = horaGuayaquil();
+  const horaK = tsK.getHours().toString().padStart(2,'0')+':'+tsK.getMinutes().toString().padStart(2,'0');
   const grupoK = resp+'_kit_'+tsK.getTime();
   KIT.forEach(nombre => {
     const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
@@ -1394,7 +1382,7 @@ function doCombo(){
   if(errores.length > 0){ showToast('⚠️ Sin stock: ' + errores.join(', ')); return; }
   // Descontar cada producto
   const tsC = new Date();
-  const horaC = horaGuayaquil();
+  const horaC = tsC.getHours().toString().padStart(2,'0')+':'+tsC.getMinutes().toString().padStart(2,'0');
   const grupoC = resp+'_combo_'+tsC.getTime();
   items.forEach(nombre => {
     const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
@@ -1427,7 +1415,7 @@ function doMov(tipo){
   prod.stock+=tipo==='entrada'?cant:-cant;
   const unidadLabel=tipoUnidad?` · ${tipoUnidad}`:'';
   const ts = new Date();
-  const horaStr = horaGuayaquil();
+  const horaStr = ts.getHours().toString().padStart(2,'0')+':'+ts.getMinutes().toString().padStart(2,'0');
   const grupoId = resp+'_'+ts.getTime();
   movimientos.push({tipo,producto:prod.nombre,cant,resp,area:area||prod.area,fecha:hoy(),tipoUnidad,hora:horaStr,grupo:grupoId});
   closeModal(tipo);
