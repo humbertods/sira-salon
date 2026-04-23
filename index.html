@@ -542,6 +542,54 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
         <div class="data-row"><span class="data-key">Agotados</span><span class="data-val danger" id="r-danger">—</span></div>
         <div class="data-row"><span class="data-key">Valor total</span><span class="data-val" id="r-valor">—</span></div>
       </div>
+
+      <div class="divider"></div>
+      <p class="sec-title">💵 Flujo financiero del local</p>
+      <div class="gastos-tabs" style="margin-bottom:14px">
+        <div class="g-tab active" id="rf-tab-dia" onclick="setFlujoTab('dia',this)">Hoy</div>
+        <div class="g-tab" id="rf-tab-semana" onclick="setFlujoTab('semana',this)">Semana</div>
+        <div class="g-tab" id="rf-tab-mes" onclick="setFlujoTab('mes',this)">Mes</div>
+      </div>
+
+      <!-- Hero: Entradas (gasto) vs Salidas (uso) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="background:linear-gradient(135deg,#fef3e2,#fff9ef);border:1px solid rgba(218,185,127,.3);border-radius:var(--r2);padding:16px;text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">📥</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold2);line-height:1" id="rf-compras">$0</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">Compras (gasto)</div>
+          <div style="font-size:11px;color:var(--text3)" id="rf-compras-u">0 unidades</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#fdf0f2,#fff5f6);border:1px solid rgba(91,10,37,.12);border-radius:var(--r2);padding:16px;text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">📤</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--burg);line-height:1" id="rf-uso">$0</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">Uso (consumo)</div>
+          <div style="font-size:11px;color:var(--text3)" id="rf-uso-u">0 unidades</div>
+        </div>
+      </div>
+
+      <!-- Gráfico comparativo por día -->
+      <div class="chart-wrap">
+        <div class="chart-title" id="rf-chart-title">Compras vs Uso — Hoy</div>
+        <div id="rf-chart-bars"></div>
+      </div>
+
+      <!-- Top productos gastados -->
+      <div class="chart-wrap">
+        <div class="chart-title">Top compras del período ($)</div>
+        <div class="chart-bars" id="rf-top-compras"></div>
+      </div>
+
+      <!-- Top productos usados -->
+      <div class="chart-wrap">
+        <div class="chart-title">Top uso del período ($)</div>
+        <div class="chart-bars" id="rf-top-uso"></div>
+      </div>
+
+      <!-- Detalle diario -->
+      <p class="sec-title" id="rf-detalle-title">Detalle de hoy</p>
+      <div id="rf-detalle"></div>
+
+      <div class="divider"></div>
       <p class="sec-title">Movimientos de hoy por persona</p>
       <div id="r-team"></div>
       <p class="sec-title">Por área</p>
@@ -1331,6 +1379,7 @@ function renderReportes(){
       <div class="data-row"><span class="data-key">Con alerta</span><span class="data-val ${bajos>0?'warn':''}">${bajos}</span></div>
     </div>`;}).join('');
   renderReporteMensual();
+  renderFlujoFinanciero();
 }
 
 // ══ MODALS ════════════════════════════════════════════════════
@@ -2144,6 +2193,219 @@ function renderGastos(){
       </div>`;
     }).join('');
   }
+}
+
+// ══ FLUJO FINANCIERO EN REPORTES ════════════════════════════
+let flujoTab = 'dia';
+
+function setFlujoTab(tab, el){
+  flujoTab = tab;
+  document.querySelectorAll('#ow-reportes .g-tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderFlujoFinanciero();
+}
+
+function filtrarMovsPorPeriodo(tipo, periodo){
+  const hoyStr = hoy();
+  const filtered = movimientos.filter(m => m.tipo === tipo);
+  if(periodo==='dia'){
+    return filtered.filter(m => m.fecha === hoyStr);
+  }
+  if(periodo==='semana'){
+    const {start, end} = getWeekRange();
+    return filtered.filter(m => {
+      const d = new Date(m.fecha+'T12:00:00');
+      return d >= start && d <= end;
+    });
+  }
+  if(periodo==='mes'){
+    const {start, end} = getMonthRange();
+    return filtered.filter(m => {
+      const d = new Date(m.fecha+'T12:00:00');
+      return d >= start && d <= end;
+    });
+  }
+  return filtered;
+}
+
+function costoDeMovimiento(m){
+  const prod = productos.find(p => p.nombre.toLowerCase() === m.producto.toLowerCase());
+  return (prod ? prod.costo : 0) * m.cant;
+}
+
+function formatFechaStr(dateStr){
+  const p = dateStr.split('-');
+  if(p.length===3) return p[2]+'/'+p[1];
+  return dateStr;
+}
+
+function renderFlujoFinanciero(){
+  const compras = filtrarMovsPorPeriodo('entrada', flujoTab);
+  const usos = filtrarMovsPorPeriodo('salida', flujoTab);
+
+  let totalCompras = 0, totalUso = 0, unidCompras = 0, unidUso = 0;
+  compras.forEach(m => { totalCompras += costoDeMovimiento(m); unidCompras += m.cant; });
+  usos.forEach(m => { totalUso += costoDeMovimiento(m); unidUso += m.cant; });
+
+  document.getElementById('rf-compras').textContent = '$' + totalCompras.toFixed(2);
+  document.getElementById('rf-uso').textContent = '$' + totalUso.toFixed(2);
+  document.getElementById('rf-compras-u').textContent = unidCompras + ' unidades';
+  document.getElementById('rf-uso-u').textContent = unidUso + ' unidades';
+
+  const periodoLabels = {dia:'Hoy', semana:'Esta semana', mes:'Este mes'};
+
+  // ── Gráfico comparativo por día ──
+  const chartTitle = document.getElementById('rf-chart-title');
+  const chartBars = document.getElementById('rf-chart-bars');
+
+  if(flujoTab === 'dia'){
+    chartTitle.textContent = 'Compras vs Uso — Últimos 7 días';
+    const dias = [];
+    for(let i=6; i>=0; i--){
+      const d = new Date(); d.setDate(d.getDate()-i);
+      const ds = d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
+      const lbl = i===0?'Hoy':i===1?'Ayer':DIAS_SEMANA_CORTO[d.getDay()];
+      let c=0, u=0;
+      movimientos.filter(m=>m.fecha===ds).forEach(m=>{
+        const cost = costoDeMovimiento(m);
+        if(m.tipo==='entrada') c+=cost; else u+=cost;
+      });
+      dias.push({label:lbl, compra:c, uso:u});
+    }
+    renderDualBars(chartBars, dias);
+
+  } else if(flujoTab === 'semana'){
+    chartTitle.textContent = 'Compras vs Uso — Cada día de la semana';
+    const {start} = getWeekRange();
+    const dias = [];
+    for(let i=0; i<7; i++){
+      const d = new Date(start); d.setDate(start.getDate()+i);
+      const ds = d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
+      const lbl = DIAS_SEMANA_CORTO[d.getDay()]+' '+d.getDate();
+      let c=0, u=0;
+      movimientos.filter(m=>m.fecha===ds).forEach(m=>{
+        const cost = costoDeMovimiento(m);
+        if(m.tipo==='entrada') c+=cost; else u+=cost;
+      });
+      dias.push({label:lbl, compra:c, uso:u});
+    }
+    renderDualBars(chartBars, dias);
+
+  } else {
+    chartTitle.textContent = 'Compras vs Uso — Semanas del mes';
+    const {start, end} = getMonthRange();
+    const semanas = [];
+    let ws = new Date(start), sn=1;
+    while(ws <= end){
+      const we = new Date(ws); we.setDate(ws.getDate()+6);
+      if(we > end) we.setTime(end.getTime());
+      let c=0, u=0;
+      movimientos.filter(m => {
+        const d = new Date(m.fecha+'T12:00:00');
+        return d >= ws && d <= we;
+      }).forEach(m=>{
+        const cost = costoDeMovimiento(m);
+        if(m.tipo==='entrada') c+=cost; else u+=cost;
+      });
+      semanas.push({label:'Sem '+sn, compra:c, uso:u});
+      ws = new Date(we); ws.setDate(we.getDate()+1); sn++;
+    }
+    renderDualBars(chartBars, semanas);
+  }
+
+  // ── Top compras ──
+  const topCompras = document.getElementById('rf-top-compras');
+  const byProdC = {};
+  compras.forEach(m=>{
+    if(!byProdC[m.producto]) byProdC[m.producto]={val:0,area:m.area};
+    byProdC[m.producto].val += costoDeMovimiento(m);
+  });
+  const topC = Object.entries(byProdC).sort((a,b)=>b[1].val-a[1].val).slice(0,6);
+  const maxC = topC.length>0 ? topC[0][1].val : 1;
+  if(topC.length===0){
+    topCompras.innerHTML='<div style="font-size:13px;color:var(--text3);text-align:center;padding:12px">Sin compras</div>';
+  } else {
+    topCompras.innerHTML = topC.map(([name,d],i)=>{
+      const pct = Math.max(5,(d.val/maxC)*100);
+      return `<div class="chart-bar-row">
+        <div class="chart-bar-label" style="min-width:70px;font-size:10px">${name.length>12?name.substring(0,12)+'…':name}</div>
+        <div class="chart-bar-track"><div class="chart-bar-fill c2" style="width:${pct}%"><span class="chart-bar-val">$${d.val.toFixed(0)}</span></div></div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Top uso ──
+  const topUso = document.getElementById('rf-top-uso');
+  const byProdU = {};
+  usos.forEach(m=>{
+    if(!byProdU[m.producto]) byProdU[m.producto]={val:0,area:m.area};
+    byProdU[m.producto].val += costoDeMovimiento(m);
+  });
+  const topU = Object.entries(byProdU).sort((a,b)=>b[1].val-a[1].val).slice(0,6);
+  const maxU = topU.length>0 ? topU[0][1].val : 1;
+  if(topU.length===0){
+    topUso.innerHTML='<div style="font-size:13px;color:var(--text3);text-align:center;padding:12px">Sin uso registrado</div>';
+  } else {
+    topUso.innerHTML = topU.map(([name,d],i)=>{
+      const pct = Math.max(5,(d.val/maxU)*100);
+      return `<div class="chart-bar-row">
+        <div class="chart-bar-label" style="min-width:70px;font-size:10px">${name.length>12?name.substring(0,12)+'…':name}</div>
+        <div class="chart-bar-track"><div class="chart-bar-fill c1" style="width:${pct}%"><span class="chart-bar-val">$${d.val.toFixed(0)}</span></div></div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Detalle ──
+  const detalleTitle = document.getElementById('rf-detalle-title');
+  detalleTitle.textContent = 'Detalle — ' + periodoLabels[flujoTab];
+  const detalleList = document.getElementById('rf-detalle');
+  const allMovs = [...compras, ...usos].sort((a,b)=> (b.fecha+b.hora).localeCompare(a.fecha+a.hora));
+  if(allMovs.length===0){
+    detalleList.innerHTML='<div class="empty" style="padding:16px"><div class="empty-text">Sin movimientos en el período</div></div>';
+  } else {
+    detalleList.innerHTML = allMovs.map(m=>{
+      const costo = costoDeMovimiento(m);
+      const isE = m.tipo==='entrada';
+      return `<div class="gasto-item">
+        <div class="gasto-item-icon">${isE?'📥':'📤'}</div>
+        <div class="gasto-item-info">
+          <div class="gasto-item-name">${m.producto}</div>
+          <div class="gasto-item-meta">${m.resp} · ${formatFechaStr(m.fecha)}${m.hora?' '+m.hora:''} · ${m.cant} unid.</div>
+        </div>
+        <div class="gasto-item-val" style="color:${isE?'var(--gold2)':'var(--burg)'}">
+          ${isE?'+':'-'}$${costo.toFixed(2)}
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function renderDualBars(container, data){
+  const maxVal = Math.max(...data.map(d=>Math.max(d.compra, d.uso)), 1);
+  if(data.every(d=>d.compra===0 && d.uso===0)){
+    container.innerHTML='<div style="font-size:13px;color:var(--text3);text-align:center;padding:12px">Sin datos</div>';
+    return;
+  }
+  container.innerHTML = `
+    <div style="display:flex;gap:12px;justify-content:flex-end;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:linear-gradient(90deg,#c9a45a,#dab97f)"></div><span style="font-size:10px;color:var(--text3)">Compras</span></div>
+      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:linear-gradient(90deg,#5b0a25,#9a1b4a)"></div><span style="font-size:10px;color:var(--text3)">Uso</span></div>
+    </div>
+  ` + data.map(d=>{
+    const pctC = d.compra>0 ? Math.max(3,(d.compra/maxVal)*100) : 0;
+    const pctU = d.uso>0 ? Math.max(3,(d.uso/maxVal)*100) : 0;
+    return `<div style="margin-bottom:8px">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:4px;font-weight:500">${d.label}</div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <div class="chart-bar-track" style="height:18px">
+          ${pctC>0?`<div class="chart-bar-fill c2" style="width:${pctC}%;height:100%"><span class="chart-bar-val" style="font-size:9px">$${d.compra.toFixed(0)}</span></div>`:''}
+        </div>
+        <div class="chart-bar-track" style="height:18px">
+          ${pctU>0?`<div class="chart-bar-fill c1" style="width:${pctU}%;height:100%"><span class="chart-bar-val" style="font-size:9px">$${d.uso.toFixed(0)}</span></div>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ══ TOAST ════════════════════════════════════════════════════
