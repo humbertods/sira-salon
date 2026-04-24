@@ -500,7 +500,7 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
         <div class="qb primary" onclick="openModal('entrada')"><div class="qb-icon">📥</div><div class="qb-title">Entrada</div><div class="qb-sub">Registrar compra</div></div>
         <div class="qb gold-a" onclick="openModal('salida')"><div class="qb-icon">📤</div><div class="qb-title">Salida</div><div class="qb-sub">Registrar uso</div></div>
         <div class="qb" onclick="owNav('stock')"><div class="qb-icon">🗂️</div><div class="qb-title">Inventario</div><div class="qb-sub">Ver todos</div></div>
-        <div class="qb" onclick="owNav('equipo')"><div class="qb-icon">👥</div><div class="qb-title">Equipo</div><div class="qb-sub">Gestionar acceso</div></div>
+        <div class="qb" onclick="openModal('gasto-varios')"><div class="qb-icon">💸</div><div class="qb-title">Gastos Varios</div><div class="qb-sub">Envíos, reparaciones</div></div>
       </div>
     </div>
     <!-- STOCK -->
@@ -552,11 +552,11 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
       </div>
 
       <!-- Hero: Entradas (gasto) vs Salidas (uso) -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
         <div style="background:linear-gradient(135deg,#fef3e2,#fff9ef);border:1px solid rgba(218,185,127,.3);border-radius:var(--r2);padding:16px;text-align:center">
           <div style="font-size:22px;margin-bottom:4px">📥</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold2);line-height:1" id="rf-compras">$0</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:4px">Compras (gasto)</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">Compras (productos)</div>
           <div style="font-size:11px;color:var(--text3)" id="rf-compras-u">0 unidades</div>
         </div>
         <div style="background:linear-gradient(135deg,#fdf0f2,#fff5f6);border:1px solid rgba(91,10,37,.12);border-radius:var(--r2);padding:16px;text-align:center">
@@ -564,6 +564,20 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
           <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--burg);line-height:1" id="rf-uso">$0</div>
           <div style="font-size:11px;color:var(--text3);margin-top:4px">Uso (consumo)</div>
           <div style="font-size:11px;color:var(--text3)" id="rf-uso-u">0 unidades</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="background:linear-gradient(135deg,#f0e8ff,#f7f3ff);border:1px solid rgba(142,68,173,.15);border-radius:var(--r2);padding:16px;text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">💸</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:#8e44ad;line-height:1" id="rf-gv-total">$0</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">Gastos varios</div>
+          <div style="font-size:11px;color:var(--text3)" id="rf-gv-count">0 registros</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(218,185,127,.2);border-radius:var(--r2);padding:16px;text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">🏪</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:white;line-height:1" id="rf-gasto-real">$0</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:4px">Gasto total real</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35)">Compras + Varios</div>
         </div>
       </div>
 
@@ -696,7 +710,7 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
         <div class="qb primary" onclick="openModal('entrada')"><div class="qb-icon">📥</div><div class="qb-title">Entrada</div><div class="qb-sub">Registrar compra</div></div>
         <div class="qb gold-a" onclick="openModal('salida')"><div class="qb-icon">📤</div><div class="qb-title">Salida</div><div class="qb-sub">Registrar uso</div></div>
         <div class="qb" onclick="ceoNav('stock')"><div class="qb-icon">🗂️</div><div class="qb-title">Inventario</div><div class="qb-sub">Ver stock</div></div>
-        <div class="qb" onclick="ceoNav('movs')"><div class="qb-icon">📋</div><div class="qb-title">Historial</div><div class="qb-sub">Movimientos</div></div>
+        <div class="qb" onclick="openModal('gasto-varios')"><div class="qb-icon">💸</div><div class="qb-title">Gastos Varios</div><div class="qb-sub">Envíos, reparaciones</div></div>
       </div>
     </div>
     <div class="screen" id="ceo-stock">
@@ -996,6 +1010,37 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
   </div>
 </div>
 
+<!-- MODAL GASTO VARIOS -->
+<div class="modal-ov" id="modal-gasto-varios">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💸 Registrar Gasto Varios</div>
+    <div class="form-group"><div class="form-label">Categoría</div>
+      <select class="form-input" id="gv-cat">
+        <option value="Envío">🚚 Envío de productos</option>
+        <option value="Reparación">🔧 Reparación del local</option>
+        <option value="Servicio">⚡ Servicio (luz, agua, internet)</option>
+        <option value="Transporte">🚕 Transporte</option>
+        <option value="Insumo extra">🛒 Insumo no inventariado</option>
+        <option value="Otro">📎 Otro</option>
+      </select></div>
+    <div class="form-group"><div class="form-label">Descripción</div>
+      <input type="text" class="form-input" id="gv-desc" placeholder="Ej: Envío de cera desde Quito"></div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Monto ($)</div>
+        <input type="number" class="form-input" id="gv-monto" placeholder="0.00" min="0" step="0.01"></div>
+      <div class="form-group"><div class="form-label">Responsable</div>
+        <select class="form-input" id="gv-resp">
+          <option>Humberto</option><option>Mikaela</option>
+        </select></div>
+    </div>
+    <div class="form-group"><div class="form-label">Notas (opcional)</div>
+      <input type="text" class="form-input" id="gv-notas" placeholder="Detalle adicional"></div>
+    <button class="btn-p" onclick="registrarGastoVarios()">Confirmar gasto</button>
+    <button class="btn-s" onclick="closeModal('gasto-varios')">Cancelar</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1140,12 +1185,14 @@ function enterApp(){
     cargarProductosDesdeSheet();
     cargarMarcaDesdeSheet();
     cargarMovimientosDesdeSheet();
+    cargarGastosVariosDesdeSheet();
   } else if(currentUser.rol==='ceo'){
     renderCEOInicio(); renderStock('ceo'); renderMovs('ceo');
     document.getElementById('app-ceo').classList.remove('hidden');
     cargarProductosDesdeSheet();
     cargarMarcaDesdeSheet();
     cargarMovimientosDesdeSheet();
+    cargarGastosVariosDesdeSheet();
   } else {
     document.getElementById('staff-user-lbl').textContent=currentUser.nombre+' · '+currentUser.cargo;
     document.getElementById('staff-name-disp').textContent=currentUser.nombre;
@@ -1401,6 +1448,12 @@ function populateSelects(){
 function openModal(t){
   if(t==='entrada'||t==='salida') populateSelects();
   if(t==='nuevo-pedido') poblarModalPedido();
+  if(t==='gasto-varios'){
+    const sel = document.getElementById('gv-resp');
+    sel.innerHTML = '<option value="'+currentUser.nombre+'" selected>'+currentUser.nombre+'</option>'
+      + (currentUser.nombre!=='Humberto'?'<option>Humberto</option>':'')
+      + (currentUser.nombre!=='Mikaela'?'<option>Mikaela</option>':'');
+  }
   document.getElementById('modal-'+t).classList.add('open');
   if(t==='entrada'){ const s=document.getElementById('e-search'); if(s){s.value='';filtrarSelect('e-prod','');} }
   if(t==='salida'){  const s=document.getElementById('s-search'); if(s){s.value='';filtrarSelect('s-prod','');} }
@@ -2195,6 +2248,78 @@ function renderGastos(){
   }
 }
 
+// ══ GASTOS VARIOS ════════════════════════════════════════════
+let gastosVarios = [];
+const GV_CAT_EMOJI = {'Envío':'🚚','Reparación':'🔧','Servicio':'⚡','Transporte':'🚕','Insumo extra':'🛒','Otro':'📎'};
+
+function registrarGastoVarios(){
+  const cat = document.getElementById('gv-cat').value;
+  const desc = document.getElementById('gv-desc').value.trim();
+  const monto = parseFloat(document.getElementById('gv-monto').value);
+  const resp = document.getElementById('gv-resp').value;
+  const notas = document.getElementById('gv-notas').value.trim();
+  if(!desc){showToast('⚠️ Ingresá una descripción');return}
+  if(!monto||monto<=0){showToast('⚠️ Ingresá un monto válido');return}
+  const fecha = hoy();
+  const hora = horaGuayaquil();
+  const gasto = {id:Date.now(),cat,desc,monto,resp,notas,fecha,hora};
+  gastosVarios.push(gasto);
+  closeModal('gasto-varios');
+  ['gv-desc','gv-monto','gv-notas'].forEach(id=>document.getElementById(id).value='');
+  showConfirm('💸','Gasto registrado','$'+monto.toFixed(2)+' · '+desc);
+  refreshAll();
+  // Guardar en Sheet
+  enviarGastoVariosAlSheet(gasto);
+}
+
+async function enviarGastoVariosAlSheet(g){
+  if(!SHEET_URL) return;
+  try{
+    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'gastoVarios',fecha:g.fecha,hora:g.hora,categoria:g.cat,descripcion:g.desc,monto:g.monto,responsable:g.resp,notas:g.notas})});
+  }catch(e){console.log('GV sync error:',e)}
+}
+
+async function cargarGastosVariosDesdeSheet(){
+  if(!SHEET_URL) return;
+  try{
+    const resp = await fetch(SHEET_URL+'?action=getGastosVarios&t='+Date.now(),{method:'GET'});
+    const text = await resp.text();
+    const data = JSON.parse(text);
+    if(data.ok && data.gastos && data.gastos.length>0){
+      gastosVarios = data.gastos.map(g=>({
+        id: g.id||Date.now(),
+        cat: g.categoria||'Otro',
+        desc: g.descripcion||'',
+        monto: parseFloat(g.monto)||0,
+        resp: g.responsable||'',
+        notas: g.notas||'',
+        fecha: g.fecha||'',
+        hora: g.hora||''
+      }));
+      if(currentUser && currentUser.rol==='owner'){
+        renderFlujoFinanciero();
+        renderGastos();
+      }
+    }
+  }catch(e){console.log('GV load error:',e)}
+}
+
+function filtrarGVPorPeriodo(periodo){
+  const hoyStr = hoy();
+  if(periodo==='dia') return gastosVarios.filter(g=>g.fecha===hoyStr);
+  if(periodo==='semana'){
+    const {start,end}=getWeekRange();
+    return gastosVarios.filter(g=>{const d=new Date(g.fecha+'T12:00:00');return d>=start&&d<=end;});
+  }
+  if(periodo==='mes'){
+    const {start,end}=getMonthRange();
+    return gastosVarios.filter(g=>{const d=new Date(g.fecha+'T12:00:00');return d>=start&&d<=end;});
+  }
+  return gastosVarios;
+}
+
 // ══ FLUJO FINANCIERO EN REPORTES ════════════════════════════
 let flujoTab = 'dia';
 
@@ -2242,15 +2367,24 @@ function formatFechaStr(dateStr){
 function renderFlujoFinanciero(){
   const compras = filtrarMovsPorPeriodo('entrada', flujoTab);
   const usos = filtrarMovsPorPeriodo('salida', flujoTab);
+  const gvPeriodo = filtrarGVPorPeriodo(flujoTab);
 
   let totalCompras = 0, totalUso = 0, unidCompras = 0, unidUso = 0;
   compras.forEach(m => { totalCompras += costoDeMovimiento(m); unidCompras += m.cant; });
   usos.forEach(m => { totalUso += costoDeMovimiento(m); unidUso += m.cant; });
 
+  let totalGV = 0;
+  gvPeriodo.forEach(g => { totalGV += g.monto; });
+
+  const gastoTotalReal = totalCompras + totalGV;
+
   document.getElementById('rf-compras').textContent = '$' + totalCompras.toFixed(2);
   document.getElementById('rf-uso').textContent = '$' + totalUso.toFixed(2);
   document.getElementById('rf-compras-u').textContent = unidCompras + ' unidades';
   document.getElementById('rf-uso-u').textContent = unidUso + ' unidades';
+  document.getElementById('rf-gv-total').textContent = '$' + totalGV.toFixed(2);
+  document.getElementById('rf-gv-count').textContent = gvPeriodo.length + ' registro' + (gvPeriodo.length!==1?'s':'');
+  document.getElementById('rf-gasto-real').textContent = '$' + gastoTotalReal.toFixed(2);
 
   const periodoLabels = {dia:'Hoy', semana:'Esta semana', mes:'Este mes'};
 
@@ -2359,21 +2493,27 @@ function renderFlujoFinanciero(){
   const detalleTitle = document.getElementById('rf-detalle-title');
   detalleTitle.textContent = 'Detalle — ' + periodoLabels[flujoTab];
   const detalleList = document.getElementById('rf-detalle');
-  const allMovs = [...compras, ...usos].sort((a,b)=> (b.fecha+b.hora).localeCompare(a.fecha+a.hora));
-  if(allMovs.length===0){
+
+  // Combinar movimientos + gastos varios en una lista unificada
+  const items = [];
+  compras.forEach(m => items.push({type:'compra', name:m.producto, meta:m.resp+' · '+formatFechaStr(m.fecha)+(m.hora?' '+m.hora:'')+' · '+m.cant+' unid.', val:costoDeMovimiento(m), fecha:m.fecha, hora:m.hora||'', icon:'📥', color:'var(--gold2)', prefix:'+'}));
+  usos.forEach(m => items.push({type:'uso', name:m.producto, meta:m.resp+' · '+formatFechaStr(m.fecha)+(m.hora?' '+m.hora:'')+' · '+m.cant+' unid.', val:costoDeMovimiento(m), fecha:m.fecha, hora:m.hora||'', icon:'📤', color:'var(--burg)', prefix:'-'}));
+  gvPeriodo.forEach(g => items.push({type:'gv', name:g.desc, meta:(GV_CAT_EMOJI[g.cat]||'📎')+' '+g.cat+' · '+g.resp+' · '+formatFechaStr(g.fecha)+(g.hora?' '+g.hora:''), val:g.monto, fecha:g.fecha, hora:g.hora||'', icon:'💸', color:'#8e44ad', prefix:'-'}));
+
+  items.sort((a,b)=> (b.fecha+b.hora).localeCompare(a.fecha+a.hora));
+
+  if(items.length===0){
     detalleList.innerHTML='<div class="empty" style="padding:16px"><div class="empty-text">Sin movimientos en el período</div></div>';
   } else {
-    detalleList.innerHTML = allMovs.map(m=>{
-      const costo = costoDeMovimiento(m);
-      const isE = m.tipo==='entrada';
+    detalleList.innerHTML = items.map(item=>{
       return `<div class="gasto-item">
-        <div class="gasto-item-icon">${isE?'📥':'📤'}</div>
+        <div class="gasto-item-icon">${item.icon}</div>
         <div class="gasto-item-info">
-          <div class="gasto-item-name">${m.producto}</div>
-          <div class="gasto-item-meta">${m.resp} · ${formatFechaStr(m.fecha)}${m.hora?' '+m.hora:''} · ${m.cant} unid.</div>
+          <div class="gasto-item-name">${item.name}</div>
+          <div class="gasto-item-meta">${item.meta}</div>
         </div>
-        <div class="gasto-item-val" style="color:${isE?'var(--gold2)':'var(--burg)'}">
-          ${isE?'+':'-'}$${costo.toFixed(2)}
+        <div class="gasto-item-val" style="color:${item.color}">
+          ${item.prefix}$${item.val.toFixed(2)}
         </div>
       </div>`;
     }).join('');
