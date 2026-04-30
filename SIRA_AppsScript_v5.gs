@@ -238,60 +238,90 @@ function doPost(e) {
 
     if (action === 'movimientoBatch') {
       // Registrar múltiples movimientos en una sola petición (combos/kits)
-      const movs = datos.movimientos || [];
-      if (movs.length === 0) return jsonResponse({ ok: false, error: 'Sin movimientos' });
+      const lock = LockService.getScriptLock();
+      lock.waitLock(10000);
+      try {
+        const movs = datos.movimientos || [];
+        if (movs.length === 0) { lock.releaseLock(); return jsonResponse({ ok: false, error: 'Sin movimientos' }); }
 
-      const wsM = ss.getSheetByName(HOJA_MOVS);
-      const fechaHoy = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
+        const wsM = ss.getSheetByName(HOJA_MOVS);
+        const fechaHoy = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
+        const startRow = Math.max(wsM.getLastRow()+1, 8);
 
-      movs.forEach(m => {
-        const nr = Math.max(wsM.getLastRow()+1, 8);
-        const tipo = m.tipo || 'salida';
-        const hora = m.hora || Utilities.formatDate(new Date(), TZ, 'HH:mm');
-        wsM.getRange(nr,1).setValue(m.fecha || fechaHoy);
-        wsM.getRange(nr,2).setValue(m.producto);
-        wsM.getRange(nr,3).setValue(tipo==='entrada'?'Entrada':'Salida');
-        wsM.getRange(nr,4).setValue(parseInt(m.cantidad) || 1);
-        wsM.getRange(nr,5).setValue(m.area || '');
-        wsM.getRange(nr,6).setValue(m.responsable || '');
-        wsM.getRange(nr,7).setValue(m.tipoUnidad || 'Unidad');
-        wsM.getRange(nr,8).setValue(m.grupo || '');
-        wsM.getRange(nr,9).setNumberFormat('@').setValue(hora);
-        wsM.getRange(nr,1,1,9).setBackground(tipo==='entrada'?'#E8F5E9':'#FFEBEE');
-        wsM.getRange(nr,3).setFontColor(tipo==='entrada'?'#1B5E20':'#B71C1C').setFontWeight('bold');
-      });
+        // Escribir todas las filas de una vez
+        const rows = movs.map(m => {
+          const tipo = m.tipo || 'salida';
+          const hora = m.hora || Utilities.formatDate(new Date(), TZ, 'HH:mm');
+          return [
+            m.fecha || fechaHoy,
+            m.producto,
+            tipo==='entrada'?'Entrada':'Salida',
+            parseInt(m.cantidad) || 1,
+            m.area || '',
+            m.responsable || '',
+            m.tipoUnidad || 'Unidad',
+            m.grupo || '',
+            hora
+          ];
+        });
+        wsM.getRange(startRow, 1, rows.length, 9).setValues(rows);
 
-      actualizarAlertas();
-      return jsonResponse({ ok: true, mensaje: movs.length + ' movimientos registrados' });
+        // Formato
+        for (let i=0; i<rows.length; i++) {
+          const r = startRow + i;
+          const tipo = movs[i].tipo || 'salida';
+          wsM.getRange(r,1,1,9).setBackground(tipo==='entrada'?'#E8F5E9':'#FFEBEE');
+          wsM.getRange(r,3).setFontColor(tipo==='entrada'?'#1B5E20':'#B71C1C').setFontWeight('bold');
+          wsM.getRange(r,9).setNumberFormat('@');
+        }
+
+        actualizarAlertas();
+        lock.releaseLock();
+        return jsonResponse({ ok: true, mensaje: movs.length + ' movimientos registrados' });
+      } catch(err) {
+        lock.releaseLock();
+        return jsonResponse({ ok: false, error: err.message });
+      }
     }
 
     if (action === 'actualizarStockBatch') {
       // Actualizar stock de múltiples productos en una sola petición
-      const items = datos.items || [];
-      if (items.length === 0) return jsonResponse({ ok: false, error: 'Sin items' });
+      const lock = LockService.getScriptLock();
+      lock.waitLock(10000);
+      try {
+        const items = datos.items || [];
+        if (items.length === 0) { lock.releaseLock(); return jsonResponse({ ok: false, error: 'Sin items' }); }
 
-      const ws = ss.getSheetByName(HOJA_STOCK);
-      const lastRow = ws.getLastRow();
-      if (lastRow < FILA_INICIO) return jsonResponse({ ok: false, error: 'Sin datos' });
+        const ws = ss.getSheetByName(HOJA_STOCK);
+        const lastRow = ws.getLastRow();
+        if (lastRow < FILA_INICIO) { lock.releaseLock(); return jsonResponse({ ok: false, error: 'Sin datos' }); }
 
-      const nombres = ws.getRange(FILA_INICIO,COL_NOMBRE,lastRow-FILA_INICIO+1,1).getValues();
-      const fechaHoy = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
+        const nombres = ws.getRange(FILA_INICIO,COL_NOMBRE,lastRow-FILA_INICIO+1,1).getValues();
+        const fechaHoy = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
 
-      items.forEach(item => {
-        nombres.forEach((row,i) => {
-          if (row[0] && row[0].toString().toLowerCase() === item.nombre.toLowerCase()) {
-            const fila = FILA_INICIO + i;
-            ws.getRange(fila, COL_STOCK).setValue(Number(item.stock));
-            ws.getRange(fila, COL_FECHA).setValue(fechaHoy);
-          }
+        items.forEach(item => {
+          nombres.forEach((row,i) => {
+            if (row[0] && row[0].toString().toLowerCase() === item.nombre.toLowerCase()) {
+              const fila = FILA_INICIO + i;
+              ws.getRange(fila, COL_STOCK).setValue(Number(item.stock));
+              ws.getRange(fila, COL_FECHA).setValue(fechaHoy);
+            }
+          });
         });
-      });
 
-      actualizarAlertas();
-      return jsonResponse({ ok: true, mensaje: items.length + ' stocks actualizados' });
+        actualizarAlertas();
+        lock.releaseLock();
+        return jsonResponse({ ok: true, mensaje: items.length + ' stocks actualizados' });
+      } catch(err) {
+        lock.releaseLock();
+        return jsonResponse({ ok: false, error: err.message });
+      }
     }
 
     if (action === 'movimiento') {
+      const lock = LockService.getScriptLock();
+      lock.waitLock(10000);
+      try {
       const tipo        = datos.tipo;
       const producto    = datos.producto;
       const cantidad    = parseInt(datos.cantidad);
@@ -300,11 +330,11 @@ function doPost(e) {
       const tipoUnidad  = datos.tipoUnidad || 'Unidad';
       const grupo       = datos.grupo || '';
       const fechaHoy    = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
-      // Usar la hora que envía la app (del dispositivo del usuario) como prioridad
       const horaApp     = datos.hora || '';
       const horaReal    = horaApp || Utilities.formatDate(new Date(), TZ, 'HH:mm');
 
       if (!tipo||!producto||!cantidad||!responsable) {
+        lock.releaseLock();
         return jsonResponse({ ok: false, error: 'Faltan campos' });
       }
 
@@ -333,12 +363,16 @@ function doPost(e) {
       wsM.getRange(nr,6).setValue(responsable);
       wsM.getRange(nr,7).setValue(tipoUnidad);
       wsM.getRange(nr,8).setValue(grupo);
-      // Grabar hora como texto puro — setNumberFormat('@') evita que Sheets la interprete como Time
       wsM.getRange(nr,9).setNumberFormat('@').setValue(horaReal);
       wsM.getRange(nr,1,1,9).setBackground(tipo==='entrada'?'#E8F5E9':'#FFEBEE');
       wsM.getRange(nr,3).setFontColor(tipo==='entrada'?'#1B5E20':'#B71C1C').setFontWeight('bold');
       actualizarAlertas();
+      lock.releaseLock();
       return jsonResponse({ ok: true, mensaje: 'Movimiento registrado', hora: horaReal });
+      } catch(err) {
+        lock.releaseLock();
+        return jsonResponse({ ok: false, error: err.message });
+      }
     }
 
     if (action === 'gastoVarios') {
