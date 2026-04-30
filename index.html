@@ -1494,8 +1494,10 @@ function selectKit(n){
 }
 
 function doKitLashista(){
+  if(_procesando) return;
+  _procesando = true;
   const cant = parseInt(document.getElementById('kit-cantidad').value) || 0;
-  if(!cant){ showToast('⚠️ Seleccioná la cantidad'); return; }
+  if(!cant){ showToast('⚠️ Seleccioná la cantidad'); _procesando=false; return; }
   const KIT = ['Frasco para shampo','Funda kit pestaña','Tarjeta pestaña'];
   const resp = currentUser ? currentUser.nombre : '—';
   const fecha = hoy();
@@ -1528,7 +1530,7 @@ function doKitLashista(){
   const btn=document.getElementById('kit-confirm-btn');
   btn.style.opacity='0.35'; btn.style.pointerEvents='none';
   refreshAll();
-  setTimeout(()=>showConfirm('👁', cant+' Kit'+(cant>1?'s':'')+' registrado'+(cant>1?'s':''), cant+' × Frasco + Funda + Tarjeta descontados'), 300);
+  setTimeout(()=>{ showConfirm('👁', cant+' Kit'+(cant>1?'s':'')+' registrado'+(cant>1?'s':''), cant+' × Frasco + Funda + Tarjeta descontados'); _procesando=false; }, 300);
 }
 
 // ══ COMBOS BEBIDAS ═══════════════════════════════════════════
@@ -1564,11 +1566,15 @@ document.addEventListener('change', function(e){
   }
 });
 
+let _procesando = false;
+
 function doCombo(){
+  if(_procesando) return;
+  _procesando = true;
   const bebida = document.getElementById('combo-sel').value;
-  if(!bebida){ showToast('⚠️ Seleccioná una bebida'); return; }
+  if(!bebida){ showToast('⚠️ Seleccioná una bebida'); _procesando=false; return; }
   const items = COMBOS[bebida];
-  if(!items){ showToast('⚠️ Combo no encontrado'); return; }
+  if(!items){ showToast('⚠️ Combo no encontrado'); _procesando=false; return; }
   const resp = currentUser ? currentUser.nombre : '—';
   const fecha = hoy();
   let errores = [];
@@ -1578,7 +1584,7 @@ function doCombo(){
     if(!p){ errores.push(nombre + ' (no existe)'); }
     else if(p.stock <= 0){ errores.push(nombre + ' (sin stock)'); }
   });
-  if(errores.length > 0){ showToast('⚠️ Sin stock: ' + errores.join(', ')); return; }
+  if(errores.length > 0){ showToast('⚠️ Sin stock: ' + errores.join(', ')); _procesando=false; return; }
   // Descontar cada producto y preparar batch
   const tsC = new Date();
   const horaC = horaGuayaquil();
@@ -1594,28 +1600,35 @@ function doCombo(){
       batchStock.push({nombre:p.nombre,stock:p.stock});
     }
   });
-  // Enviar TODO en una sola petición
+  // Enviar TODO en una sola petición — verificar que los 3 items se procesaron
+  if(batchMovs.length !== items.length){
+    showToast('⚠️ Error: solo se procesaron '+batchMovs.length+' de '+items.length+' items');
+    _procesando=false;
+    return;
+  }
   enviarBatchAlSheet(batchMovs);
   actualizarStockBatchEnSheet(batchStock);
   closeModal('combos');
   document.getElementById('combo-sel').value='';
   document.getElementById('combo-preview').style.display='none';
   refreshAll();
-  setTimeout(()=>showConfirm('☕', bebida, 'Bebida + Servilleta + Galleta descontados'), 300);
+  setTimeout(()=>{ showConfirm('☕', bebida, 'Bebida + Servilleta + Galleta descontados'); _procesando=false; }, 300);
 }
 
 function doMov(tipo){
+  if(_procesando) return;
+  _procesando = true;
   const c=tipo[0];
   const pid=parseInt(document.getElementById(c+'-prod').value);
   const cant=parseInt(document.getElementById(c+'-cant').value);
   const area=document.getElementById(c+'-area-mov').value;
   const resp=document.getElementById(c+'-resp').value;
   const tipoUnidad=tipo==='salida'?(document.getElementById('s-tipo-unidad').value||'Unidad'):'';
-  if(!pid){showToast('⚠️ Seleccioná un producto');return}
-  if(!cant||cant<=0){showToast('⚠️ Ingresá una cantidad válida');return}
+  if(!pid){showToast('⚠️ Seleccioná un producto');_procesando=false;return}
+  if(!cant||cant<=0){showToast('⚠️ Ingresá una cantidad válida');_procesando=false;return}
   const prod=productos.find(p=>p.id===pid);
-  if(!prod) return;
-  if(tipo==='salida'&&cant>prod.stock){showToast(`Sin stock suficiente (${prod.stock} unid.)`);return}
+  if(!prod){_procesando=false;return}
+  if(tipo==='salida'&&cant>prod.stock){showToast(`Sin stock suficiente (${prod.stock} unid.)`);_procesando=false;return}
   prod.stock+=tipo==='entrada'?cant:-cant;
   const unidadLabel=tipoUnidad?` · ${tipoUnidad}`:'';
   const ts = new Date();
@@ -1628,6 +1641,7 @@ function doMov(tipo){
   populateSelects();
   enviarAlSheet(tipo,prod.nombre,cant,resp,area||prod.area,tipoUnidad,horaStr,grupoId);
   actualizarStockEnSheet(prod.nombre, prod.stock);
+  setTimeout(()=>{_procesando=false;}, 500);
 }
 
 function agregarProducto(){
@@ -2288,13 +2302,15 @@ let gastosVarios = [];
 const GV_CAT_EMOJI = {'Envío':'🚚','Reparación':'🔧','Servicio':'⚡','Transporte':'🚕','Insumo extra':'🛒','Otro':'📎'};
 
 function registrarGastoVarios(){
+  if(_procesando) return;
+  _procesando = true;
   const cat = document.getElementById('gv-cat').value;
   const desc = document.getElementById('gv-desc').value.trim();
   const monto = parseFloat(document.getElementById('gv-monto').value);
   const resp = document.getElementById('gv-resp').value;
   const notas = document.getElementById('gv-notas').value.trim();
-  if(!desc){showToast('⚠️ Ingresá una descripción');return}
-  if(!monto||monto<=0){showToast('⚠️ Ingresá un monto válido');return}
+  if(!desc){showToast('⚠️ Ingresá una descripción');_procesando=false;return}
+  if(!monto||monto<=0){showToast('⚠️ Ingresá un monto válido');_procesando=false;return}
   const fecha = hoy();
   const hora = horaGuayaquil();
   const gasto = {id:Date.now(),cat,desc,monto,resp,notas,fecha,hora};
@@ -2303,8 +2319,8 @@ function registrarGastoVarios(){
   ['gv-desc','gv-monto','gv-notas'].forEach(id=>document.getElementById(id).value='');
   showConfirm('💸','Gasto registrado','$'+monto.toFixed(2)+' · '+desc);
   refreshAll();
-  // Guardar en Sheet
   enviarGastoVariosAlSheet(gasto);
+  setTimeout(()=>{_procesando=false;}, 500);
 }
 
 async function enviarGastoVariosAlSheet(g){
