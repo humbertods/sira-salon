@@ -1509,15 +1509,19 @@ function doKitLashista(){
   const tsK = new Date();
   const horaK = horaGuayaquil();
   const grupoK = resp+'_kit_'+tsK.getTime();
+  const batchMovs = [];
+  const batchStock = [];
   KIT.forEach(nombre => {
     const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
     if(p){
       p.stock = Math.max(0, p.stock - cant);
       movimientos.push({tipo:'salida',producto:p.nombre,cant,resp,area:'Pestañas',fecha,tipoUnidad:'Unidad',hora:horaK,grupo:grupoK,esKit:true});
-      enviarAlSheet('salida',p.nombre,cant,resp,'Pestañas','Unidad',horaK,grupoK);
-      actualizarStockEnSheet(p.nombre, p.stock);
+      batchMovs.push({tipo:'salida',producto:p.nombre,cantidad:cant,responsable:resp,area:'Pestañas',fecha,tipoUnidad:'Unidad',hora:horaK,grupo:grupoK});
+      batchStock.push({nombre:p.nombre,stock:p.stock});
     }
   });
+  enviarBatchAlSheet(batchMovs);
+  actualizarStockBatchEnSheet(batchStock);
   closeModal('kit');
   document.getElementById('kit-cantidad').value=0;
   document.querySelectorAll('.kit-num').forEach(el=>el.classList.remove('selected'));
@@ -1575,19 +1579,24 @@ function doCombo(){
     else if(p.stock <= 0){ errores.push(nombre + ' (sin stock)'); }
   });
   if(errores.length > 0){ showToast('⚠️ Sin stock: ' + errores.join(', ')); return; }
-  // Descontar cada producto
+  // Descontar cada producto y preparar batch
   const tsC = new Date();
   const horaC = horaGuayaquil();
   const grupoC = resp+'_combo_'+tsC.getTime();
+  const batchMovs = [];
+  const batchStock = [];
   items.forEach(nombre => {
     const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
     if(p){
       p.stock = Math.max(0, p.stock - 1);
       movimientos.push({tipo:'salida',producto:p.nombre,cant:1,resp,area:'Coffee',fecha,tipoUnidad:'Unidad',hora:horaC,grupo:grupoC,esCombo:true,nombreCombo:bebida});
-      enviarAlSheet('salida',p.nombre,1,resp,'Coffee','Unidad',horaC,grupoC);
-      actualizarStockEnSheet(p.nombre, p.stock);
+      batchMovs.push({tipo:'salida',producto:p.nombre,cantidad:1,responsable:resp,area:'Coffee',fecha,tipoUnidad:'Unidad',hora:horaC,grupo:grupoC});
+      batchStock.push({nombre:p.nombre,stock:p.stock});
     }
   });
+  // Enviar TODO en una sola petición
+  enviarBatchAlSheet(batchMovs);
+  actualizarStockBatchEnSheet(batchStock);
   closeModal('combos');
   document.getElementById('combo-sel').value='';
   document.getElementById('combo-preview').style.display='none';
@@ -1894,6 +1903,26 @@ async function enviarAlSheet(tipo,producto,cantidad,responsable,area,tipoUnidad,
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'movimiento',tipo,producto,cantidad,responsable,area,fecha:hoy(),tipoUnidad:tipoUnidad||'Unidad',hora:hora||'',grupo:grupo||''})});
   }catch(e){console.log('Sync error:',e)}
+}
+
+// Enviar múltiples movimientos en UNA sola petición (para combos y kits)
+async function enviarBatchAlSheet(movs){
+  if(!SHEET_URL || !movs || movs.length===0) return;
+  try{
+    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'movimientoBatch',movimientos:movs})});
+  }catch(e){console.log('Batch sync error:',e)}
+}
+
+// Actualizar stock de múltiples productos en UNA sola petición
+async function actualizarStockBatchEnSheet(items){
+  if(!SHEET_URL || !items || items.length===0) return;
+  try{
+    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'actualizarStockBatch',items:items})});
+  }catch(e){console.log('Stock batch sync error:',e)}
 }
 
 function actualizarStockEnSheet(nombre, nuevoStock){
