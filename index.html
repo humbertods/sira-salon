@@ -395,6 +395,51 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
   padding:12px 10px;text-align:center;box-shadow:0 1px 5px var(--shadow)}
 .gs-val{font-family:'Cormorant Garamond',serif;font-size:22px;line-height:1;color:var(--burg)}
 .gs-lbl{font-size:10px;color:var(--text3);margin-top:3px}
+
+/* ══ ACORDEÓN REPORTES ══ */
+.ac-dia{margin-bottom:8px}
+.ac-dia-header{background:#1a1a1a;color:white;padding:12px 16px;border-radius:var(--r);
+  display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all .2s;
+  font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500}
+.ac-dia-header:active{opacity:.85}
+.ac-dia-arrow{transition:transform .2s;font-size:12px}
+.ac-dia-header.open .ac-dia-arrow{transform:rotate(180deg)}
+.ac-dia-body{display:none;padding:8px 0 0}
+.ac-dia-body.open{display:block;animation:fadeUp .2s ease}
+.ac-sec{margin-bottom:8px}
+.ac-sec-header{background:var(--white);border:1px solid var(--border);border-radius:var(--r);
+  padding:10px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;
+  font-size:13px;font-weight:600;color:var(--text);box-shadow:0 1px 4px var(--shadow)}
+.ac-sec-header:active{opacity:.85}
+.ac-sec-header.gv{background:#f5f0ff;border-color:rgba(142,68,173,.15)}
+.ac-sec-body{display:none;padding:4px 0 0}
+.ac-sec-body.open{display:block}
+.ac-person{margin:4px 0}
+.ac-person-header{background:var(--warm);border:1px solid var(--border);border-radius:var(--r);
+  padding:9px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;
+  font-size:13px;font-weight:500;color:var(--text)}
+.ac-person-header:active{opacity:.85}
+.ac-person-body{display:none;padding:2px 0 0 12px}
+.ac-person-body.open{display:block}
+.ac-prod-row{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;
+  border-bottom:1px solid var(--border);font-size:12px}
+.ac-prod-row:last-child{border-bottom:none}
+.ac-prod-name{color:var(--text);flex:1}
+.ac-prod-name::before{content:'';display:inline-block;width:4px;height:4px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.ac-prod-name.entrada::before{background:var(--ok)}
+.ac-prod-name.salida::before{background:var(--danger)}
+.ac-val-e{color:var(--ok);font-weight:600;min-width:45px;text-align:right}
+.ac-val-s{color:var(--danger);font-weight:600;min-width:45px;text-align:right}
+.ac-totals{display:flex;gap:8px;font-size:12px;font-weight:600}
+.ac-totals .te{color:var(--ok)} .ac-totals .ts{color:var(--danger)}
+.ac-total-row{display:flex;justify-content:space-between;padding:8px 14px;
+  background:var(--white);border:1px solid var(--border);border-radius:var(--r);
+  font-size:13px;font-weight:700;color:var(--text);margin-top:4px;box-shadow:0 1px 4px var(--shadow)}
+.ac-gv-item{display:flex;justify-content:space-between;padding:5px 14px;font-size:12px;
+  border-bottom:1px solid var(--border)}
+.ac-gv-item:last-child{border-bottom:none}
+.ac-gv-desc{color:var(--text);flex:1}
+.ac-gv-val{color:#8e44ad;font-weight:600}
 </style>
 </head>
 <body>
@@ -544,64 +589,13 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);dis
       </div>
 
       <div class="divider"></div>
-      <p class="sec-title">💵 Flujo financiero del local</p>
+      <p class="sec-title">💵 Compras vs Usos diarios de productos</p>
       <div class="gastos-tabs" style="margin-bottom:14px">
-        <div class="g-tab active" id="rf-tab-dia" onclick="setFlujoTab('dia',this)">Hoy</div>
+        <div class="g-tab active" id="rf-tab-dia" onclick="setFlujoTab('dia',this)">Día</div>
         <div class="g-tab" id="rf-tab-semana" onclick="setFlujoTab('semana',this)">Semana</div>
         <div class="g-tab" id="rf-tab-mes" onclick="setFlujoTab('mes',this)">Mes</div>
       </div>
-
-      <!-- Hero: Entradas (gasto) vs Salidas (uso) -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-        <div style="background:linear-gradient(135deg,#fef3e2,#fff9ef);border:1px solid rgba(218,185,127,.3);border-radius:var(--r2);padding:16px;text-align:center">
-          <div style="font-size:22px;margin-bottom:4px">📥</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold2);line-height:1" id="rf-compras">$0</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:4px">Compras (productos)</div>
-          <div style="font-size:11px;color:var(--text3)" id="rf-compras-u">0 unidades</div>
-        </div>
-        <div style="background:linear-gradient(135deg,#fdf0f2,#fff5f6);border:1px solid rgba(91,10,37,.12);border-radius:var(--r2);padding:16px;text-align:center">
-          <div style="font-size:22px;margin-bottom:4px">📤</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--burg);line-height:1" id="rf-uso">$0</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:4px">Uso (consumo)</div>
-          <div style="font-size:11px;color:var(--text3)" id="rf-uso-u">0 unidades</div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-        <div style="background:linear-gradient(135deg,#f0e8ff,#f7f3ff);border:1px solid rgba(142,68,173,.15);border-radius:var(--r2);padding:16px;text-align:center">
-          <div style="font-size:22px;margin-bottom:4px">💸</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:#8e44ad;line-height:1" id="rf-gv-total">$0</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:4px">Gastos varios</div>
-          <div style="font-size:11px;color:var(--text3)" id="rf-gv-count">0 registros</div>
-        </div>
-        <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(218,185,127,.2);border-radius:var(--r2);padding:16px;text-align:center">
-          <div style="font-size:22px;margin-bottom:4px">🏪</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:white;line-height:1" id="rf-gasto-real">$0</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:4px">Gasto total real</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.35)">Compras + Varios</div>
-        </div>
-      </div>
-
-      <!-- Gráfico comparativo por día -->
-      <div class="chart-wrap">
-        <div class="chart-title" id="rf-chart-title">Compras vs Uso — Hoy</div>
-        <div id="rf-chart-bars"></div>
-      </div>
-
-      <!-- Top productos gastados -->
-      <div class="chart-wrap">
-        <div class="chart-title">Top compras del período ($)</div>
-        <div class="chart-bars" id="rf-top-compras"></div>
-      </div>
-
-      <!-- Top productos usados -->
-      <div class="chart-wrap">
-        <div class="chart-title">Top uso del período ($)</div>
-        <div class="chart-bars" id="rf-top-uso"></div>
-      </div>
-
-      <!-- Detalle diario -->
-      <p class="sec-title" id="rf-detalle-title">Detalle de hoy</p>
-      <div id="rf-detalle"></div>
+      <div id="rf-acordeon"></div>
 
       <div class="divider"></div>
       <p class="sec-title">Movimientos de hoy por persona</p>
@@ -2371,7 +2365,7 @@ function filtrarGVPorPeriodo(periodo){
   return gastosVarios;
 }
 
-// ══ FLUJO FINANCIERO EN REPORTES ════════════════════════════
+// ══ FLUJO FINANCIERO — ACORDEÓN POR DÍA ═════════════════════
 let flujoTab = 'dia';
 
 function setFlujoTab(tab, el){
@@ -2381,219 +2375,204 @@ function setFlujoTab(tab, el){
   renderFlujoFinanciero();
 }
 
-function filtrarMovsPorPeriodo(tipo, periodo){
-  const hoyStr = hoy();
-  const filtered = movimientos.filter(m => m.tipo === tipo);
-  if(periodo==='dia'){
-    return filtered.filter(m => m.fecha === hoyStr);
+function getDiasSemana(){
+  const {start} = getWeekRange();
+  const dias = [];
+  for(let i=0;i<7;i++){
+    const d=new Date(start);d.setDate(start.getDate()+i);
+    const ds=d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
+    dias.push({date:d, dateStr:ds});
   }
-  if(periodo==='semana'){
-    const {start, end} = getWeekRange();
-    return filtered.filter(m => {
-      const d = new Date(m.fecha+'T12:00:00');
-      return d >= start && d <= end;
-    });
-  }
-  if(periodo==='mes'){
-    const {start, end} = getMonthRange();
-    return filtered.filter(m => {
-      const d = new Date(m.fecha+'T12:00:00');
-      return d >= start && d <= end;
-    });
-  }
-  return filtered;
+  return dias;
 }
 
-function costoDeMovimiento(m){
-  const prod = productos.find(p => p.nombre.toLowerCase() === m.producto.toLowerCase());
-  return (prod ? prod.costo : 0) * m.cant;
+function getDiasMes(){
+  const now=new Date();
+  const start=new Date(now.getFullYear(),now.getMonth(),1);
+  const end=new Date(now.getFullYear(),now.getMonth()+1,0);
+  const dias=[];
+  for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+    const ds=d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
+    dias.push({date:new Date(d), dateStr:ds});
+  }
+  return dias;
 }
 
-function formatFechaStr(dateStr){
-  const p = dateStr.split('-');
-  if(p.length===3) return p[2]+'/'+p[1];
-  return dateStr;
+function getNombreDia(d){
+  const nombres=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  return nombres[d.getDay()];
+}
+
+function costoMov(m){
+  const prod=productos.find(p=>p.nombre.toLowerCase()===m.producto.toLowerCase());
+  return (prod?prod.costo:0)*m.cant;
+}
+
+function toggleAc(id){
+  const el=document.getElementById(id);
+  if(el) el.classList.toggle('open');
+  // Toggle header
+  const hdr=document.querySelector('[data-target="'+id+'"]');
+  if(hdr) hdr.classList.toggle('open');
 }
 
 function renderFlujoFinanciero(){
-  const compras = filtrarMovsPorPeriodo('entrada', flujoTab);
-  const usos = filtrarMovsPorPeriodo('salida', flujoTab);
-  const gvPeriodo = filtrarGVPorPeriodo(flujoTab);
+  const container=document.getElementById('rf-acordeon');
+  if(!container) return;
 
-  let totalCompras = 0, totalUso = 0, unidCompras = 0, unidUso = 0;
-  compras.forEach(m => { totalCompras += costoDeMovimiento(m); unidCompras += m.cant; });
-  usos.forEach(m => { totalUso += costoDeMovimiento(m); unidUso += m.cant; });
-
-  let totalGV = 0;
-  gvPeriodo.forEach(g => { totalGV += g.monto; });
-
-  const gastoTotalReal = totalCompras + totalGV;
-
-  document.getElementById('rf-compras').textContent = '$' + totalCompras.toFixed(2);
-  document.getElementById('rf-uso').textContent = '$' + totalUso.toFixed(2);
-  document.getElementById('rf-compras-u').textContent = unidCompras + ' unidades';
-  document.getElementById('rf-uso-u').textContent = unidUso + ' unidades';
-  document.getElementById('rf-gv-total').textContent = '$' + totalGV.toFixed(2);
-  document.getElementById('rf-gv-count').textContent = gvPeriodo.length + ' registro' + (gvPeriodo.length!==1?'s':'');
-  document.getElementById('rf-gasto-real').textContent = '$' + gastoTotalReal.toFixed(2);
-
-  const periodoLabels = {dia:'Hoy', semana:'Esta semana', mes:'Este mes'};
-
-  // ── Gráfico comparativo por día ──
-  const chartTitle = document.getElementById('rf-chart-title');
-  const chartBars = document.getElementById('rf-chart-bars');
-
-  if(flujoTab === 'dia'){
-    chartTitle.textContent = 'Compras vs Uso — Últimos 7 días';
-    const dias = [];
-    for(let i=6; i>=0; i--){
-      const d = new Date(); d.setDate(d.getDate()-i);
-      const ds = d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
-      const lbl = i===0?'Hoy':i===1?'Ayer':DIAS_SEMANA_CORTO[d.getDay()];
-      let c=0, u=0;
-      movimientos.filter(m=>m.fecha===ds).forEach(m=>{
-        const cost = costoDeMovimiento(m);
-        if(m.tipo==='entrada') c+=cost; else u+=cost;
-      });
-      dias.push({label:lbl, compra:c, uso:u});
-    }
-    renderDualBars(chartBars, dias);
-
-  } else if(flujoTab === 'semana'){
-    chartTitle.textContent = 'Compras vs Uso — Cada día de la semana';
-    const {start} = getWeekRange();
-    const dias = [];
-    for(let i=0; i<7; i++){
-      const d = new Date(start); d.setDate(start.getDate()+i);
-      const ds = d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
-      const lbl = DIAS_SEMANA_CORTO[d.getDay()]+' '+d.getDate();
-      let c=0, u=0;
-      movimientos.filter(m=>m.fecha===ds).forEach(m=>{
-        const cost = costoDeMovimiento(m);
-        if(m.tipo==='entrada') c+=cost; else u+=cost;
-      });
-      dias.push({label:lbl, compra:c, uso:u});
-    }
-    renderDualBars(chartBars, dias);
-
+  let diasData=[];
+  if(flujoTab==='dia'){
+    const ds=hoy();
+    const d=new Date();
+    diasData=[{date:d,dateStr:ds}];
+  } else if(flujoTab==='semana'){
+    diasData=getDiasSemana();
   } else {
-    chartTitle.textContent = 'Compras vs Uso — Semanas del mes';
-    const {start, end} = getMonthRange();
-    const semanas = [];
-    let ws = new Date(start), sn=1;
-    while(ws <= end){
-      const we = new Date(ws); we.setDate(ws.getDate()+6);
-      if(we > end) we.setTime(end.getTime());
-      let c=0, u=0;
-      movimientos.filter(m => {
-        const d = new Date(m.fecha+'T12:00:00');
-        return d >= ws && d <= we;
-      }).forEach(m=>{
-        const cost = costoDeMovimiento(m);
-        if(m.tipo==='entrada') c+=cost; else u+=cost;
-      });
-      semanas.push({label:'Sem '+sn, compra:c, uso:u});
-      ws = new Date(we); ws.setDate(we.getDate()+1); sn++;
-    }
-    renderDualBars(chartBars, semanas);
+    diasData=getDiasMes();
   }
 
-  // ── Top compras ──
-  const topCompras = document.getElementById('rf-top-compras');
-  const byProdC = {};
-  compras.forEach(m=>{
-    if(!byProdC[m.producto]) byProdC[m.producto]={val:0,area:m.area};
-    byProdC[m.producto].val += costoDeMovimiento(m);
+  // Filtrar solo días que tengan movimientos o gastos varios
+  const diasConData=diasData.filter(dia=>{
+    const tieneMovs=movimientos.some(m=>m.fecha===dia.dateStr);
+    const tieneGV=gastosVarios.some(g=>g.fecha===dia.dateStr);
+    return tieneMovs||tieneGV;
   });
-  const topC = Object.entries(byProdC).sort((a,b)=>b[1].val-a[1].val).slice(0,6);
-  const maxC = topC.length>0 ? topC[0][1].val : 1;
-  if(topC.length===0){
-    topCompras.innerHTML='<div style="font-size:13px;color:var(--text3);text-align:center;padding:12px">Sin compras</div>';
-  } else {
-    topCompras.innerHTML = topC.map(([name,d],i)=>{
-      const pct = Math.max(5,(d.val/maxC)*100);
-      return `<div class="chart-bar-row">
-        <div class="chart-bar-label" style="min-width:70px;font-size:10px">${name.length>12?name.substring(0,12)+'…':name}</div>
-        <div class="chart-bar-track"><div class="chart-bar-fill c2" style="width:${pct}%"><span class="chart-bar-val">$${d.val.toFixed(0)}</span></div></div>
-      </div>`;
-    }).join('');
-  }
 
-  // ── Top uso ──
-  const topUso = document.getElementById('rf-top-uso');
-  const byProdU = {};
-  usos.forEach(m=>{
-    if(!byProdU[m.producto]) byProdU[m.producto]={val:0,area:m.area};
-    byProdU[m.producto].val += costoDeMovimiento(m);
-  });
-  const topU = Object.entries(byProdU).sort((a,b)=>b[1].val-a[1].val).slice(0,6);
-  const maxU = topU.length>0 ? topU[0][1].val : 1;
-  if(topU.length===0){
-    topUso.innerHTML='<div style="font-size:13px;color:var(--text3);text-align:center;padding:12px">Sin uso registrado</div>';
-  } else {
-    topUso.innerHTML = topU.map(([name,d],i)=>{
-      const pct = Math.max(5,(d.val/maxU)*100);
-      return `<div class="chart-bar-row">
-        <div class="chart-bar-label" style="min-width:70px;font-size:10px">${name.length>12?name.substring(0,12)+'…':name}</div>
-        <div class="chart-bar-track"><div class="chart-bar-fill c1" style="width:${pct}%"><span class="chart-bar-val">$${d.val.toFixed(0)}</span></div></div>
-      </div>`;
-    }).join('');
-  }
-
-  // ── Detalle ──
-  const detalleTitle = document.getElementById('rf-detalle-title');
-  detalleTitle.textContent = 'Detalle — ' + periodoLabels[flujoTab];
-  const detalleList = document.getElementById('rf-detalle');
-
-  // Combinar movimientos + gastos varios en una lista unificada
-  const items = [];
-  compras.forEach(m => items.push({type:'compra', name:m.producto, meta:m.resp+' · '+formatFechaStr(m.fecha)+(m.hora?' '+m.hora:'')+' · '+m.cant+' unid.', val:costoDeMovimiento(m), fecha:m.fecha, hora:m.hora||'', icon:'📥', color:'var(--gold2)', prefix:'+'}));
-  usos.forEach(m => items.push({type:'uso', name:m.producto, meta:m.resp+' · '+formatFechaStr(m.fecha)+(m.hora?' '+m.hora:'')+' · '+m.cant+' unid.', val:costoDeMovimiento(m), fecha:m.fecha, hora:m.hora||'', icon:'📤', color:'var(--burg)', prefix:'-'}));
-  gvPeriodo.forEach(g => items.push({type:'gv', name:g.desc, meta:(GV_CAT_EMOJI[g.cat]||'📎')+' '+g.cat+' · '+g.resp+' · '+formatFechaStr(g.fecha)+(g.hora?' '+g.hora:''), val:g.monto, fecha:g.fecha, hora:g.hora||'', icon:'💸', color:'#8e44ad', prefix:'-'}));
-
-  items.sort((a,b)=> (b.fecha+b.hora).localeCompare(a.fecha+a.hora));
-
-  if(items.length===0){
-    detalleList.innerHTML='<div class="empty" style="padding:16px"><div class="empty-text">Sin movimientos en el período</div></div>';
-  } else {
-    detalleList.innerHTML = items.map(item=>{
-      return `<div class="gasto-item">
-        <div class="gasto-item-icon">${item.icon}</div>
-        <div class="gasto-item-info">
-          <div class="gasto-item-name">${item.name}</div>
-          <div class="gasto-item-meta">${item.meta}</div>
-        </div>
-        <div class="gasto-item-val" style="color:${item.color}">
-          ${item.prefix}$${item.val.toFixed(2)}
-        </div>
-      </div>`;
-    }).join('');
-  }
-}
-
-function renderDualBars(container, data){
-  const maxVal = Math.max(...data.map(d=>Math.max(d.compra, d.uso)), 1);
-  if(data.every(d=>d.compra===0 && d.uso===0)){
-    container.innerHTML='<div style="font-size:13px;color:var(--text3);text-align:center;padding:12px">Sin datos</div>';
+  if(diasConData.length===0){
+    container.innerHTML='<div class="empty" style="padding:20px"><div class="empty-text">Sin movimientos en el período</div></div>';
     return;
   }
-  container.innerHTML = `
-    <div style="display:flex;gap:12px;justify-content:flex-end;margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:linear-gradient(90deg,#c9a45a,#dab97f)"></div><span style="font-size:10px;color:var(--text3)">Compras</span></div>
-      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:linear-gradient(90deg,#5b0a25,#9a1b4a)"></div><span style="font-size:10px;color:var(--text3)">Uso</span></div>
-    </div>
-  ` + data.map(d=>{
-    const pctC = d.compra>0 ? Math.max(3,(d.compra/maxVal)*100) : 0;
-    const pctU = d.uso>0 ? Math.max(3,(d.uso/maxVal)*100) : 0;
-    return `<div style="margin-bottom:8px">
-      <div style="font-size:11px;color:var(--text2);margin-bottom:4px;font-weight:500">${d.label}</div>
-      <div style="display:flex;flex-direction:column;gap:3px">
-        <div class="chart-bar-track" style="height:18px">
-          ${pctC>0?`<div class="chart-bar-fill c2" style="width:${pctC}%;height:100%"><span class="chart-bar-val" style="font-size:9px">$${d.compra.toFixed(0)}</span></div>`:''}
+
+  // Renderizar en orden inverso (más reciente arriba)
+  container.innerHTML=diasConData.reverse().map((dia,dIdx)=>{
+    const movsDia=movimientos.filter(m=>m.fecha===dia.dateStr);
+    const gvDia=gastosVarios.filter(g=>g.fecha===dia.dateStr);
+    const nombreDia=getNombreDia(dia.date);
+    const fechaCorta=dia.date.getDate()+'/'+(dia.date.getMonth()+1);
+
+    // Totales del día
+    let totalEntradas=0,totalSalidas=0,totalGV=0;
+    movsDia.forEach(m=>{
+      if(m.tipo==='entrada') totalEntradas+=costoMov(m);
+      else totalSalidas+=costoMov(m);
+    });
+    gvDia.forEach(g=>{totalGV+=g.monto;});
+
+    // Agrupar por persona
+    const byPerson={};
+    movsDia.forEach(m=>{
+      if(!byPerson[m.resp]) byPerson[m.resp]={entradas:[],salidas:[]};
+      if(m.tipo==='entrada') byPerson[m.resp].entradas.push(m);
+      else byPerson[m.resp].salidas.push(m);
+    });
+
+    // Agrupar GV por persona
+    const gvByPerson={};
+    gvDia.forEach(g=>{
+      if(!gvByPerson[g.resp]) gvByPerson[g.resp]=[];
+      gvByPerson[g.resp].push(g);
+    });
+
+    const isToday=dia.dateStr===hoy();
+    const diaId='ac-dia-'+dIdx;
+
+    // Personas HTML
+    const personasHtml=Object.entries(byPerson).map(([nombre,data],pIdx)=>{
+      const pId=diaId+'-p-'+pIdx;
+      let pEntradas=0,pSalidas=0;
+      data.entradas.forEach(m=>{pEntradas+=costoMov(m);});
+      data.salidas.forEach(m=>{pSalidas+=costoMov(m);});
+
+      // Productos de entrada
+      const prodEntradas={};
+      data.entradas.forEach(m=>{
+        if(!prodEntradas[m.producto]) prodEntradas[m.producto]=0;
+        prodEntradas[m.producto]+=costoMov(m);
+      });
+      // Productos de salida
+      const prodSalidas={};
+      data.salidas.forEach(m=>{
+        if(!prodSalidas[m.producto]) prodSalidas[m.producto]=0;
+        prodSalidas[m.producto]+=costoMov(m);
+      });
+
+      const prodsHtml=[
+        ...Object.entries(prodEntradas).map(([prod,val])=>
+          `<div class="ac-prod-row"><span class="ac-prod-name entrada">+ ${prod}</span><span class="ac-val-e">↑$${val.toFixed(0)}</span></div>`),
+        ...Object.entries(prodSalidas).map(([prod,val])=>
+          `<div class="ac-prod-row"><span class="ac-prod-name salida">- ${prod}</span><span class="ac-val-s">↓$${val.toFixed(0)}</span></div>`)
+      ].join('');
+
+      return `<div class="ac-person">
+        <div class="ac-person-header" onclick="toggleAc('${pId}')" data-target="${pId}">
+          <span>${nombre}</span>
+          <div class="ac-totals">
+            ${pEntradas>0?'<span class="te">↑$'+pEntradas.toFixed(0)+'</span>':''}
+            ${pSalidas>0?'<span class="ts">↓$'+pSalidas.toFixed(0)+'</span>':''}
+            <span style="font-size:11px;color:var(--text3)">▾</span>
+          </div>
         </div>
-        <div class="chart-bar-track" style="height:18px">
-          ${pctU>0?`<div class="chart-bar-fill c1" style="width:${pctU}%;height:100%"><span class="chart-bar-val" style="font-size:9px">$${d.uso.toFixed(0)}</span></div>`:''}
+        <div class="ac-person-body" id="${pId}">${prodsHtml}</div>
+      </div>`;
+    }).join('');
+
+    // Gastos varios HTML
+    let gvHtml='';
+    if(gvDia.length>0){
+      const gvId=diaId+'-gv';
+      const gvPersonasHtml=Object.entries(gvByPerson).map(([nombre,gastos])=>{
+        const totalP=gastos.reduce((s,g)=>s+g.monto,0);
+        const detalle=gastos.map(g=>
+          `<div class="ac-gv-item"><span class="ac-gv-desc" style="padding-left:16px">${g.desc}</span><span class="ac-gv-val">$${g.monto.toFixed(0)}</span></div>`
+        ).join('');
+        return `<div class="ac-person-header" style="background:#f5f0ff;margin:4px 0" onclick="toggleAc('${gvId}-${nombre}')">
+          <span>${nombre}</span><span class="ac-gv-val">$${totalP.toFixed(0)} ▾</span>
         </div>
+        <div class="ac-person-body" id="${gvId}-${nombre}">${detalle}</div>`;
+      }).join('');
+
+      gvHtml=`<div class="ac-sec" style="margin-top:6px">
+        <div class="ac-sec-header gv" onclick="toggleAc('${gvId}')">
+          <span>Gastos varios</span>
+          <span class="ac-gv-val">$${totalGV.toFixed(0)} ▾</span>
+        </div>
+        <div class="ac-sec-body" id="${gvId}">${gvPersonasHtml}
+          <div class="ac-total-row"><span>Total</span><span class="ac-gv-val">$${totalGV.toFixed(0)}</span></div>
+        </div>
+      </div>`;
+    }
+
+    const gastoTotalDia=totalEntradas+totalSalidas+totalGV;
+
+    return `<div class="ac-dia">
+      <div class="ac-dia-header ${isToday?'open':''}" onclick="toggleAc('${diaId}')" data-target="${diaId}">
+        <span>${nombreDia} ${fechaCorta}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="ac-dia-arrow">▾</span>
+        </div>
+      </div>
+      <div class="ac-dia-body ${isToday?'open':''}" id="${diaId}">
+        <div class="ac-sec">
+          <div class="ac-sec-header" onclick="toggleAc('${diaId}-gen')">
+            <span>Gastos generales</span>
+            <div class="ac-totals">
+              ${totalEntradas>0?'<span class="te">↑$'+totalEntradas.toFixed(0)+'</span>':''}
+              ${totalSalidas>0?'<span class="ts">↓$'+totalSalidas.toFixed(0)+'</span>':''}
+              <span style="font-size:11px;color:var(--text3)">▾</span>
+            </div>
+          </div>
+          <div class="ac-sec-body" id="${diaId}-gen">
+            ${personasHtml}
+            <div class="ac-total-row">
+              <span>Total</span>
+              <div class="ac-totals">
+                <span class="te">↑$${totalEntradas.toFixed(0)}</span>
+                <span class="ts">↓$${totalSalidas.toFixed(0)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        ${gvHtml}
       </div>
     </div>`;
   }).join('');
