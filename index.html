@@ -1099,6 +1099,10 @@ function horaGuayaquil(){
   return ahora.toLocaleTimeString('es-EC', opciones).substring(0,5);
 }
 
+function norm(str){
+  return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+}
+
 function getEstado(stock, min){
   if(stock===0) return 'Agotado';
   if(stock<=min) return 'Stock Bajo';
@@ -1515,7 +1519,7 @@ function doKitLashista(){
   const fecha = hoy();
   let errores = [];
   KIT.forEach(nombre => {
-    const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
+    const p = productos.find(x => norm(x.nombre) === norm(nombre));
     if(!p){ errores.push(nombre + ' (no existe)'); }
     else if(p.stock < cant){ errores.push(nombre + ' (stock insuficiente)'); }
   });
@@ -1526,7 +1530,7 @@ function doKitLashista(){
   const batchMovs = [];
   const batchStock = [];
   KIT.forEach(nombre => {
-    const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
+    const p = productos.find(x => norm(x.nombre) === norm(nombre));
     if(p){
       p.stock = Math.max(0, p.stock - cant);
       movimientos.push({tipo:'salida',producto:p.nombre,cant,resp,area:'Pestañas',fecha,tipoUnidad:'Unidad',hora:horaK,grupo:grupoK,esKit:true});
@@ -1592,7 +1596,7 @@ function doCombo(){
   let errores = [];
   // Verificar stock antes de descontar
   items.forEach(nombre => {
-    const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
+    const p = productos.find(x => norm(x.nombre) === norm(nombre));
     if(!p){ errores.push(nombre + ' (no existe)'); }
     else if(p.stock <= 0){ errores.push(nombre + ' (sin stock)'); }
   });
@@ -1604,7 +1608,7 @@ function doCombo(){
   const batchMovs = [];
   const batchStock = [];
   items.forEach(nombre => {
-    const p = productos.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
+    const p = productos.find(x => norm(x.nombre) === norm(nombre));
     if(p){
       p.stock = Math.max(0, p.stock - 1);
       movimientos.push({tipo:'salida',producto:p.nombre,cant:1,resp,area:'Coffee',fecha,tipoUnidad:'Unidad',hora:horaC,grupo:grupoC,esCombo:true,nombreCombo:bebida});
@@ -2130,7 +2134,7 @@ function filtrarEntradasPorPeriodo(periodo){
 }
 
 function calcularGastoProducto(mov){
-  const prod = productos.find(p => p.nombre.toLowerCase() === mov.producto.toLowerCase());
+  const prod = productos.find(p => norm(p.nombre) === norm(mov.producto));
   const costo = prod ? prod.costo : 0;
   return costo * mov.cant;
 }
@@ -2408,7 +2412,7 @@ function renderStaffMes(){
     const movsPers = movsMes.filter(m => m.resp === nombre);
     let entradas = 0, salidas = 0, totalDolares = 0;
     movsPers.forEach(m => {
-      const prod = productos.find(p => p.nombre.toLowerCase() === m.producto.toLowerCase());
+      const prod = productos.find(p => norm(p.nombre) === norm(m.producto));
       const costo = (prod ? prod.costo : 0) * m.cant;
       if(m.tipo === 'entrada'){
         entradas += m.cant;
@@ -2488,7 +2492,7 @@ function getNombreDia(d){
 }
 
 function costoMov(m){
-  const prod=productos.find(p=>p.nombre.toLowerCase()===m.producto.toLowerCase());
+  const prod=productos.find(p=>norm(p.nombre)===norm(m.producto));
   return (prod?prod.costo:0)*m.cant;
 }
 
