@@ -1539,7 +1539,6 @@ function doKitLashista(){
     }
   });
   enviarBatchAlSheet(batchMovs);
-  actualizarStockBatchEnSheet(batchStock);
   closeModal('kit');
   document.getElementById('kit-cantidad').value=0;
   document.querySelectorAll('.kit-num').forEach(el=>el.classList.remove('selected'));
@@ -1623,7 +1622,6 @@ function doCombo(){
     return;
   }
   enviarBatchAlSheet(batchMovs);
-  actualizarStockBatchEnSheet(batchStock);
   closeModal('combos');
   document.getElementById('combo-sel').value='';
   document.getElementById('combo-preview').style.display='none';
@@ -1656,7 +1654,6 @@ function doMov(tipo){
   refreshAll();
   populateSelects();
   enviarAlSheet(tipo,prod.nombre,cant,resp,area||prod.area,tipoUnidad,horaStr,grupoId);
-  actualizarStockEnSheet(prod.nombre, prod.stock);
   setTimeout(()=>{_procesando=false;}, 500);
 }
 

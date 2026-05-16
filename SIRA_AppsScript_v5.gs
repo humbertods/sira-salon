@@ -22,6 +22,12 @@ const COL_NOTAS     = 12;
 const EMAIL_ALERTAS = "tumarcadigital7@gmail.com";
 const TZ            = "America/Guayaquil";
 
+function norm(str) {
+  if (!str) return '';
+  return str.toString().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+
 function jsonResponse(data) {
   return ContentService
     .createTextOutput(JSON.stringify(data))
@@ -213,7 +219,7 @@ function doPost(e) {
       const nombres = ws.getRange(2,2,lastRow-1,1).getValues();
       let fila = -1;
       nombres.forEach((row,i) => {
-        if (row[0] && row[0].toString().toLowerCase()===datos.nombre.toLowerCase()) fila=2+i;
+        if (row[0] && norm(row[0]) === norm(datos.nombre)) fila=2+i;
       });
       if (fila===-1) return jsonResponse({ ok: false, error: 'No encontrado' });
       ws.getRange(fila,3).setValue(Number(datos.stock));
@@ -227,7 +233,7 @@ function doPost(e) {
       const nombres = ws.getRange(FILA_INICIO,COL_NOMBRE,lastRow-FILA_INICIO+1,1).getValues();
       let fila = -1;
       nombres.forEach((row,i) => {
-        if (row[0] && row[0].toString().toLowerCase()===datos.producto.toLowerCase()) fila=FILA_INICIO+i;
+        if (row[0] && norm(row[0]) === norm(datos.producto)) fila=FILA_INICIO+i;
       });
       if (fila===-1) return jsonResponse({ ok: false, error: 'No encontrado' });
       ws.getRange(fila,COL_STOCK).setValue(Number(datos.nuevoStock));
@@ -237,7 +243,7 @@ function doPost(e) {
     }
 
     if (action === 'movimientoBatch') {
-      // Registrar múltiples movimientos en una sola petición (combos/kits)
+      // Registrar múltiples movimientos Y actualizar stock en una sola petición (combos/kits)
       const lock = LockService.getScriptLock();
       lock.waitLock(10000);
       try {
@@ -245,10 +251,11 @@ function doPost(e) {
         if (movs.length === 0) { lock.releaseLock(); return jsonResponse({ ok: false, error: 'Sin movimientos' }); }
 
         const wsM = ss.getSheetByName(HOJA_MOVS);
+        const wsS = ss.getSheetByName(HOJA_STOCK);
         const fechaHoy = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
         const startRow = Math.max(wsM.getLastRow()+1, 8);
 
-        // Escribir todas las filas de una vez
+        // Escribir todas las filas de movimiento de una vez
         const rows = movs.map(m => {
           const tipo = m.tipo || 'salida';
           const hora = m.hora || Utilities.formatDate(new Date(), TZ, 'HH:mm');
@@ -275,9 +282,34 @@ function doPost(e) {
           wsM.getRange(r,9).setNumberFormat('@');
         }
 
+        // Actualizar stock en la misma transacción
+        const lastRowS = wsS.getLastRow();
+        if (lastRowS >= FILA_INICIO) {
+          const nombres = wsS.getRange(FILA_INICIO,COL_NOMBRE,lastRowS-FILA_INICIO+1,1).getValues();
+          // Agrupar cantidades por producto
+          const cambios = {};
+          movs.forEach(m => {
+            const key = norm(m.producto);
+            if(!cambios[key]) cambios[key] = 0;
+            const cant = parseInt(m.cantidad) || 1;
+            cambios[key] += (m.tipo==='entrada' ? cant : -cant);
+          });
+          nombres.forEach((row,i) => {
+            if (row[0]) {
+              const key = norm(row[0]);
+              if (cambios[key] !== undefined) {
+                const fila = FILA_INICIO + i;
+                const stockActual = Number(wsS.getRange(fila,COL_STOCK).getValue()) || 0;
+                const nuevoStock = Math.max(0, stockActual + cambios[key]);
+                wsS.getRange(fila,COL_STOCK).setValue(nuevoStock);
+              }
+            }
+          });
+        }
+
         actualizarAlertas();
         lock.releaseLock();
-        return jsonResponse({ ok: true, mensaje: movs.length + ' movimientos registrados' });
+        return jsonResponse({ ok: true, mensaje: movs.length + ' movimientos registrados y stock actualizado' });
       } catch(err) {
         lock.releaseLock();
         return jsonResponse({ ok: false, error: err.message });
@@ -301,7 +333,7 @@ function doPost(e) {
 
         items.forEach(item => {
           nombres.forEach((row,i) => {
-            if (row[0] && row[0].toString().toLowerCase() === item.nombre.toLowerCase()) {
+            if (row[0] && norm(row[0]) === norm(item.nombre)) {
               const fila = FILA_INICIO + i;
               ws.getRange(fila, COL_STOCK).setValue(Number(item.stock));
               ws.getRange(fila, COL_FECHA).setValue(fechaHoy);
@@ -343,7 +375,7 @@ function doPost(e) {
       if (lastRow >= FILA_INICIO) {
         const nombres = ws.getRange(FILA_INICIO,COL_NOMBRE,lastRow-FILA_INICIO+1,1).getValues();
         nombres.forEach((row,i) => {
-          if (row[0] && row[0].toString().toLowerCase()===producto.toLowerCase()) {
+          if (row[0] && norm(row[0]) === norm(producto)) {
             const fila = FILA_INICIO+i;
             const stockActual = Number(ws.getRange(fila,COL_STOCK).getValue())||0;
             const nuevoStock = tipo==='entrada'?stockActual+cantidad:Math.max(0,stockActual-cantidad);
