@@ -1,23 +1,23 @@
 {
   "name": "SIRA",
   "short_name": "SIRA",
-  "description": "Sistema Inteligente de Registro y Administración — Salón de Belleza",
+  "description": "Sistema Inteligente de Inventario y Flujo",
   "start_url": "/sira-salon/",
   "display": "standalone",
-  "background_color": "#1a1a1a",
-  "theme_color": "#1a1a1a",
+  "background_color": "#F8F7F5",
+  "theme_color": "#F8F7F5",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "icon-192.svg",
+      "src": "ICON.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icon-512.svg",
+      "src": "ICON.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
