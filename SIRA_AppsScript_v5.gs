@@ -227,19 +227,10 @@ function doPost(e) {
     }
 
     if (action === 'actualizarStock') {
-      const ws = ss.getSheetByName(HOJA_STOCK);
-      const lastRow = ws.getLastRow();
-      if (lastRow < FILA_INICIO) return jsonResponse({ ok: false, error: 'Sin datos' });
-      const nombres = ws.getRange(FILA_INICIO,COL_NOMBRE,lastRow-FILA_INICIO+1,1).getValues();
-      let fila = -1;
-      nombres.forEach((row,i) => {
-        if (row[0] && norm(row[0]) === norm(datos.producto)) fila=FILA_INICIO+i;
-      });
-      if (fila===-1) return jsonResponse({ ok: false, error: 'No encontrado' });
-      ws.getRange(fila,COL_STOCK).setValue(Number(datos.nuevoStock));
-      ws.getRange(fila,COL_FECHA).setValue(datos.fecha||Utilities.formatDate(new Date(),TZ,'yyyy-MM-dd'));
-      actualizarAlertas();
-      return jsonResponse({ ok: true, mensaje: 'Stock actualizado' });
+      // DESHABILITADO: el stock se actualiza en la acción 'movimiento' directamente.
+      // Esta acción se mantiene para compatibilidad con versiones viejas de la app
+      // pero ya no modifica el stock para evitar doble escritura.
+      return jsonResponse({ ok: true, mensaje: 'Stock manejado por movimiento' });
     }
 
     if (action === 'movimientoBatch') {
@@ -317,37 +308,8 @@ function doPost(e) {
     }
 
     if (action === 'actualizarStockBatch') {
-      // Actualizar stock de múltiples productos en una sola petición
-      const lock = LockService.getScriptLock();
-      lock.waitLock(10000);
-      try {
-        const items = datos.items || [];
-        if (items.length === 0) { lock.releaseLock(); return jsonResponse({ ok: false, error: 'Sin items' }); }
-
-        const ws = ss.getSheetByName(HOJA_STOCK);
-        const lastRow = ws.getLastRow();
-        if (lastRow < FILA_INICIO) { lock.releaseLock(); return jsonResponse({ ok: false, error: 'Sin datos' }); }
-
-        const nombres = ws.getRange(FILA_INICIO,COL_NOMBRE,lastRow-FILA_INICIO+1,1).getValues();
-        const fechaHoy = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
-
-        items.forEach(item => {
-          nombres.forEach((row,i) => {
-            if (row[0] && norm(row[0]) === norm(item.nombre)) {
-              const fila = FILA_INICIO + i;
-              ws.getRange(fila, COL_STOCK).setValue(Number(item.stock));
-              ws.getRange(fila, COL_FECHA).setValue(fechaHoy);
-            }
-          });
-        });
-
-        actualizarAlertas();
-        lock.releaseLock();
-        return jsonResponse({ ok: true, mensaje: items.length + ' stocks actualizados' });
-      } catch(err) {
-        lock.releaseLock();
-        return jsonResponse({ ok: false, error: err.message });
-      }
+      // DESHABILITADO: el stock se actualiza en 'movimientoBatch' directamente.
+      return jsonResponse({ ok: true, mensaje: 'Stock manejado por movimientoBatch' });
     }
 
     if (action === 'movimiento') {
