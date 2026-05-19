@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="SIRA">
-<meta name="theme-color" content="#F8F7F5">
+<meta name="theme-color" content="#FAFAF9">
 <link rel="manifest" href="manifest.json">
 <title>SIRA</title>
 <link rel="apple-touch-icon" href="ICON.png">
@@ -14,8 +14,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#F8F7F5;--card:#FFFFFF;--primary:#D9A066;--primary-light:#E8C496;--primary-pale:rgba(217,160,102,.08);
-  --beige:#F4ECE4;--text:#2D2D2D;--text2:#8A8A8A;--text3:#B0B0B0;--placeholder:#B3B3B3;
+  --bg:#FAFAF9;--card:#FFFFFF;--primary:#BFA26F;--primary-light:#D4BC8E;--primary-pale:rgba(191,162,111,.08);
+  --beige:#F4ECE4;--text:#121213;--text2:#8A8A8A;--text3:#B0B0B0;--placeholder:#B3B3B3;
+  --charcoal:#2F2F2E;--softgrey:#D3D3CF;
   --border:#EAEAEA;--shadow:0 4px 20px rgba(0,0,0,.04);--shadow-sm:0 2px 8px rgba(0,0,0,.03);
   --ok:#34A853;--warn:#F5A623;--danger:#EA4335;--white:#fff;
   --r:14px;--r2:20px;--r3:28px;--r4:16px;
@@ -31,11 +32,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 /* ══ LOGIN ══ */
 #login{overflow-y:auto;display:flex;flex-direction:column;align-items:stretch}
 .login-hero{width:100%;min-height:260px;position:relative;flex-shrink:0;
-  background:linear-gradient(155deg,#2D2D2D 0%,#1F1F1F 50%,#D9A066 100%);
+  background:linear-gradient(155deg,#121213 0%,#2F2F2E 50%,#BFA26F 100%);
   display:flex;flex-direction:column;justify-content:flex-end;padding:28px 28px 32px}
 .hero-mark{position:absolute;top:20px;right:20px;width:44px;height:44px;border-radius:14px;
-  background:rgba(255,255,255,.1);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;
-  font-family:var(--font);font-size:18px;font-weight:700;color:white}
+  overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+.hero-mark img{width:100%;height:100%;object-fit:cover}
 .hero-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:6px;font-weight:500}
 .hero-title{font-family:var(--font);font-size:48px;font-weight:700;color:white;letter-spacing:6px;line-height:1}
 .hero-sub{font-size:12px;color:rgba(255,255,255,.35);letter-spacing:2px;margin-top:4px;font-weight:400}
@@ -47,7 +48,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
   box-shadow:var(--shadow)}
 .role-card:active{transform:scale(.96)}
 .role-card.selected{border-color:var(--primary);background:var(--beige);
-  box-shadow:0 4px 16px rgba(217,160,102,.15)}
+  box-shadow:0 4px 16px rgba(191,162,111,.15)}
 .role-icon{font-size:24px;margin-bottom:8px}
 .role-name{font-family:var(--font);font-size:16px;color:var(--text);font-weight:600}
 .role-desc{font-size:11px;color:var(--text2);margin-top:2px}
@@ -82,7 +83,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .btn-enter{width:100%;padding:16px;border:none;border-radius:var(--r4);
   background:var(--primary);color:white;
   font-family:var(--font);font-size:15px;font-weight:600;letter-spacing:.3px;
-  cursor:pointer;box-shadow:0 4px 16px rgba(217,160,102,.25);transition:all var(--dur) var(--ease);
+  cursor:pointer;box-shadow:0 4px 16px rgba(191,162,111,.25);transition:all var(--dur) var(--ease);
   opacity:.35;pointer-events:none}
 .btn-enter.ready{opacity:1;pointer-events:all}
 .btn-enter.ready:active{transform:scale(.98)}
@@ -92,11 +93,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
   border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;position:relative;z-index:5}
 .hdr-left{display:flex;align-items:center;gap:12px}
-.hdr-mark{width:36px;height:36px;border-radius:12px;
-  background:linear-gradient(135deg,#D9A066,#C48A4A);
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--font);font-size:15px;font-weight:700;color:white;
-  box-shadow:0 2px 8px rgba(217,160,102,.25)}
+.hdr-mark{width:36px;height:36px;border-radius:12px;overflow:hidden;flex-shrink:0;
+  box-shadow:0 2px 8px rgba(191,162,111,.25)}
+.hdr-mark img{width:100%;height:100%;object-fit:cover}
 .hdr-title{font-family:var(--font);font-size:18px;letter-spacing:3px;color:var(--text);font-weight:700}
 .hdr-user{font-size:11px;color:var(--text2);margin-top:1px;font-weight:500}
 .hdr-right{display:flex;align-items:center;gap:8px}
@@ -105,7 +104,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
   display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);transition:all var(--dur) var(--ease)}
 .icon-btn:active{transform:scale(.92)}
 .rbadge{padding:5px 12px;border-radius:50px;font-size:10px;font-weight:600;letter-spacing:.5px}
-.rbadge.owner{background:rgba(217,160,102,.1);color:#B8843E;border:1px solid rgba(217,160,102,.2)}
+.rbadge.owner{background:rgba(191,162,111,.1);color:#A68B55;border:1px solid rgba(191,162,111,.2)}
 .rbadge.ceo{background:rgba(52,168,83,.08);color:var(--ok);border:1px solid rgba(52,168,83,.15)}
 .rbadge.staff{background:rgba(138,138,138,.08);color:var(--text2);border:1px solid var(--border)}
 
@@ -165,9 +164,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .qb-icon{font-size:22px;margin-bottom:10px}
 .qb-title{font-size:14px;font-weight:600;color:var(--text)}
 .qb-sub{font-size:11px;color:var(--text2);margin-top:3px;font-weight:400}
-.qb.primary{background:var(--primary);border-color:transparent;box-shadow:0 4px 16px rgba(217,160,102,.25)}
+.qb.primary{background:var(--primary);border-color:transparent;box-shadow:0 4px 16px rgba(191,162,111,.25)}
 .qb.primary .qb-title,.qb.primary .qb-sub{color:rgba(255,255,255,.9)}
-.qb.gold-a{background:var(--card);border-color:rgba(217,160,102,.3)}
+.qb.gold-a{background:var(--card);border-color:rgba(191,162,111,.3)}
 .qb.gold-a .qb-title{color:var(--primary)}
 
 /* ══ SEARCH + PILLS ══ */
@@ -202,7 +201,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .mov-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);
   padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px;box-shadow:var(--shadow)}
 .mov-badge{width:40px;height:40px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.mov-badge.entrada{background:rgba(52,168,83,.08)} .mov-badge.salida{background:rgba(217,160,102,.08)}
+.mov-badge.entrada{background:rgba(52,168,83,.08)} .mov-badge.salida{background:rgba(191,162,111,.08)}
 .mov-info{flex:1}
 .mov-prod{font-size:13px;font-weight:600}
 .mov-det{font-size:11px;color:var(--text2);margin-top:2px}
@@ -213,7 +212,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .action-hero{border-radius:var(--r2);padding:24px 20px;cursor:pointer;transition:all var(--dur) var(--ease);margin-bottom:12px;box-shadow:var(--shadow)}
 .action-hero:active{transform:scale(.98)}
 .action-hero.entrada{background:var(--beige);border:1px solid rgba(52,168,83,.12)}
-.action-hero.salida{background:var(--beige);border:1px solid rgba(217,160,102,.15)}
+.action-hero.salida{background:var(--beige);border:1px solid rgba(191,162,111,.15)}
 .ah-icon{font-size:28px;margin-bottom:12px}
 .ah-title{font-family:var(--font);font-size:20px;font-weight:600}
 .ah-sub{font-size:12px;color:var(--text2);margin-top:4px}
@@ -237,7 +236,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .btn-p{width:100%;padding:16px;background:var(--primary);border:none;
   border-radius:var(--r4);color:white;font-family:var(--font);font-size:15px;font-weight:600;
-  cursor:pointer;box-shadow:0 4px 16px rgba(217,160,102,.25);transition:all var(--dur) var(--ease);margin-top:8px}
+  cursor:pointer;box-shadow:0 4px 16px rgba(191,162,111,.25);transition:all var(--dur) var(--ease);margin-top:8px}
 .btn-p:active{transform:scale(.98)}
 .btn-s{width:100%;padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r4);
   color:var(--text2);font-family:var(--font);font-size:14px;cursor:pointer;transition:all var(--dur) var(--ease);margin-top:8px}
@@ -280,7 +279,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .kit-num.selected{border-color:var(--primary);background:var(--primary-pale);color:var(--primary);font-weight:700}
 
 /* ══ MARCA ══ */
-.marca-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;background:linear-gradient(135deg,#2D2D2D,#3D3D3D);border-radius:var(--r2);padding:20px 18px}
+.marca-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;background:linear-gradient(135deg,#121213,#2F2F2E);border-radius:var(--r2);padding:20px 18px}
 .marca-logo{width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:22px;color:white;flex-shrink:0}
 .marca-title{font-family:var(--font);font-size:17px;color:white;font-weight:600}
 .marca-sub{font-size:10px;color:rgba(255,255,255,.45);margin-top:2px;letter-spacing:.5px}
@@ -314,7 +313,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .rep-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .rep-sum-box{border-radius:var(--r);padding:12px;text-align:center}
 .rep-sum-box.entrada{background:rgba(52,168,83,.05);border:1px solid rgba(52,168,83,.12)}
-.rep-sum-box.salida{background:rgba(217,160,102,.05);border:1px solid rgba(217,160,102,.15)}
+.rep-sum-box.salida{background:rgba(191,162,111,.05);border:1px solid rgba(191,162,111,.15)}
 .rep-sum-val{font-family:var(--font);font-size:22px;font-weight:700;line-height:1}
 .rep-sum-lbl{font-size:10px;color:var(--text2);margin-top:3px;font-weight:500}
 .rep-sum-box.entrada .rep-sum-val{color:var(--ok)} .rep-sum-box.salida .rep-sum-val{color:var(--primary)}
@@ -326,9 +325,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
   padding:18px 10px 16px;cursor:pointer;text-align:center;transition:all var(--dur) var(--ease);
   box-shadow:var(--shadow)}
 .role-card3:active{transform:scale(.96)}
-.role-card3.selected{border-color:var(--primary);box-shadow:0 4px 16px rgba(217,160,102,.15)}
+.role-card3.selected{border-color:var(--primary);box-shadow:0 4px 16px rgba(191,162,111,.15)}
 .role-av{width:52px;height:52px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center}
-.owner-av{background:rgba(217,160,102,.08)}
+.owner-av{background:rgba(191,162,111,.08)}
 .ceo-av{background:rgba(52,168,83,.06)}
 .staff-av{background:rgba(138,138,138,.06)}
 .role-av svg{width:36px;height:36px}
@@ -336,11 +335,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .role-desc3{font-size:10px;color:var(--text2);margin-top:2px;font-weight:400}
 
 /* ══ GASTOS ══ */
-.gastos-hero{background:linear-gradient(135deg,#2D2D2D,#1F1F1F);border-radius:var(--r2);
+.gastos-hero{background:linear-gradient(135deg,#121213,#2F2F2E);border-radius:var(--r2);
   padding:24px 22px;margin-bottom:16px;position:relative;overflow:hidden}
 .gastos-hero::after{content:'';position:absolute;top:-20px;right:-20px;width:100px;height:100px;
-  background:radial-gradient(circle,rgba(217,160,102,.12),transparent);border-radius:50%}
-.gh-eyebrow{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(217,160,102,.5);margin-bottom:6px;font-weight:600}
+  background:radial-gradient(circle,rgba(191,162,111,.12),transparent);border-radius:50%}
+.gh-eyebrow{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(191,162,111,.5);margin-bottom:6px;font-weight:600}
 .gh-amount{font-family:var(--font);font-size:38px;font-weight:700;color:white;line-height:1}
 .gh-sub{font-size:12px;color:rgba(255,255,255,.35);margin-top:5px;font-weight:400}
 .gastos-tabs{display:flex;gap:6px;margin-bottom:16px}
@@ -359,7 +358,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .chart-bar-fill{height:100%;border-radius:8px;transition:width 500ms cubic-bezier(.22,1,.36,1);min-width:2px;
   display:flex;align-items:center;justify-content:flex-end;padding-right:10px}
 .chart-bar-val{font-size:10px;font-weight:700;color:white;white-space:nowrap}
-.chart-bar-fill.c1{background:linear-gradient(90deg,#D9A066,#C48A4A)}
+.chart-bar-fill.c1{background:linear-gradient(90deg,#BFA26F,#A68B55)}
 .chart-bar-fill.c2{background:linear-gradient(90deg,#34A853,#2d8a44)}
 .chart-bar-fill.c3{background:linear-gradient(90deg,#4285F4,#3574d4)}
 .chart-bar-fill.c4{background:linear-gradient(90deg,#EA4335,#d13a2e)}
@@ -440,7 +439,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <!-- ══ LOGIN ══ -->
 <div class="layer" id="login">
   <div class="login-hero">
-    <div class="hero-mark">S</div>
+    <div class="hero-mark"><img src="ICON.png" alt="SIRA"></div>
     <div class="hero-eyebrow">Sistema inteligente de inventario</div>
     <div class="hero-title">SIRA</div>
     <div class="hero-sub">Control de inventario y flujo</div>
@@ -452,8 +451,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
         <div class="role-card3" id="card-owner" onclick="selectRole('owner')">
           <div class="role-av owner-av">
             <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="20" cy="15" r="8" fill="#D9A066"/>
-              <path d="M6 36c0-7.7 6.3-13 14-13s14 5.3 14 13" stroke="#D9A066" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+              <circle cx="20" cy="15" r="8" fill="#BFA26F"/>
+              <path d="M6 36c0-7.7 6.3-13 14-13s14 5.3 14 13" stroke="#BFA26F" stroke-width="2.5" stroke-linecap="round" fill="none"/>
             </svg>
           </div>
           <div class="role-name3">Dueño</div>
@@ -511,7 +510,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <div class="layer hidden" id="app-owner">
   <div class="app-header">
     <div class="hdr-left">
-      <div class="hdr-mark">S</div>
+      <div class="hdr-mark"><img src="ICON.png" alt="SIRA"></div>
       <div><div class="hdr-title">SIRA</div><div class="hdr-user" id="owner-user-lbl">Humberto · Dueño</div></div>
     </div>
     <div class="hdr-right">
@@ -682,7 +681,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <div class="layer hidden" id="app-ceo">
   <div class="app-header">
     <div class="hdr-left">
-      <div class="hdr-mark">S</div>
+      <div class="hdr-mark"><img src="ICON.png" alt="SIRA"></div>
       <div><div class="hdr-title">SIRA</div><div class="hdr-user">Mikaela · CEO</div></div>
     </div>
     <div class="hdr-right">
@@ -763,7 +762,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <div class="layer hidden" id="app-staff">
   <div class="app-header">
     <div class="hdr-left">
-      <div class="hdr-mark">S</div>
+      <div class="hdr-mark"><img src="ICON.png" alt="SIRA"></div>
       <div><div class="hdr-title">SIRA</div><div class="hdr-user" id="staff-user-lbl">Mi turno</div></div>
     </div>
     <div class="hdr-right">
@@ -1988,7 +1987,7 @@ function renderTopUsados(){
 
   // Colores por área
   const areaColores = {
-    'Cejas': '#D9A066',
+    'Cejas': '#BFA26F',
     'Pestañas': '#34A853',
     'Depilaciones': '#4285F4',
     'Limpieza Facial': '#F5A623',
