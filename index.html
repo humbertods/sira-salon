@@ -1414,12 +1414,6 @@ function renderReportes(){
   document.getElementById('r-warn').textContent=alertas.length;
   document.getElementById('r-danger').textContent=agotados.length;
   document.getElementById('r-valor').textContent='$'+valor.toFixed(2);
-  const hoyStr=hoy();const byPerson={};
-  movimientos.filter(m=>m.fecha===hoyStr).forEach(m=>{byPerson[m.resp]=(byPerson[m.resp]||0)+1});
-  const rt=document.getElementById('r-team');
-  rt.innerHTML=Object.keys(byPerson).length===0
-    ?`<div style="font-size:13px;color:var(--text2);padding:8px 0">Sin movimientos hoy</div>`
-    :Object.entries(byPerson).map(([n,c])=>`<div class="data-row"><span class="data-key">${n}</span><span class="data-val">${c} mov.</span></div>`).join('');
   const byArea={};productos.forEach(p=>{byArea[p.area]=(byArea[p.area]||[]).concat(p)});
   document.getElementById('r-areas').innerHTML=Object.entries(byArea).map(([area,prods])=>{
     const bajos=prods.filter(p=>p.stock<=p.min).length;
