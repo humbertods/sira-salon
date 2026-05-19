@@ -614,13 +614,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
       <div id="r-areas"></div>
 
       <div class="divider"></div>
-      <p class="sec-title">Reporte mensual por persona</p>
-      <div class="month-selector">
-        <button class="month-btn" onclick="cambiarMes(-1)">‹</button>
-        <div class="month-label" id="mes-label">—</div>
-        <button class="month-btn" onclick="cambiarMes(1)">›</button>
-      </div>
-      <div id="r-mensual"></div>
+      <p class="sec-title">🔥 Productos más usados esta semana</p>
+      <div id="r-top-usados"></div>
     </div>
 
     <!-- MI MARCA -->
@@ -1436,7 +1431,7 @@ function renderReportes(){
       <div class="data-row"><span class="data-key">Productos</span><span class="data-val">${prods.length}</span></div>
       <div class="data-row"><span class="data-key">Con alerta</span><span class="data-val ${bajos>0?'warn':''}">${bajos}</span></div>
     </div>`;}).join('');
-  renderReporteMensual();
+  renderTopUsados();
   renderFlujoFinanciero();
   renderStaffMes();
 }
@@ -1957,116 +1952,90 @@ function actualizarStockEnSheet(nombre, nuevoStock){
 const MESES_NOMBRES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-let mesActual = new Date().getMonth();
-let anioActual = new Date().getFullYear();
-
-function cambiarMes(dir){
-  mesActual += dir;
-  if(mesActual > 11){ mesActual=0; anioActual++; }
-  if(mesActual < 0){ mesActual=11; anioActual--; }
-  renderReporteMensual();
-}
-
-function renderReporteMensual(){
-  const labelEl = document.getElementById('mes-label');
-  if(labelEl) labelEl.textContent = MESES_NOMBRES[mesActual] + ' ' + anioActual;
-
-  const container = document.getElementById('r-mensual');
+function renderTopUsados(){
+  const container = document.getElementById('r-top-usados');
   if(!container) return;
 
-  // Filtrar movimientos del mes/año seleccionado
-  const movMes = movimientos.filter(m => {
-    const d = new Date(m.fecha);
-    return d.getMonth()===mesActual && d.getFullYear()===anioActual;
+  // Obtener rango de la semana actual (lunes a hoy)
+  const {start, end} = getWeekRange();
+
+  // Filtrar solo salidas de esta semana
+  const salidasSemana = movimientos.filter(m => {
+    if(m.tipo !== 'salida') return false;
+    const d = new Date(m.fecha + 'T12:00:00');
+    return d >= start && d <= end;
   });
 
-  if(movMes.length===0){
-    container.innerHTML=`<div class="no-data">Sin movimientos en ${MESES_NOMBRES[mesActual]} ${anioActual}</div>`;
+  if(salidasSemana.length === 0){
+    container.innerHTML = '<div class="no-data">Sin salidas esta semana</div>';
     return;
   }
 
-  // Agrupar por persona
-  const byPerson = {};
-  movMes.forEach(m=>{
-    if(!byPerson[m.resp]) byPerson[m.resp]={entradas:[],salidas:[]};
-    if(m.tipo==='entrada') byPerson[m.resp].entradas.push(m);
-    else byPerson[m.resp].salidas.push(m);
+  // Agrupar por producto: total de unidades y por área
+  const byProd = {};
+  salidasSemana.forEach(m => {
+    const key = m.producto;
+    if(!byProd[key]) byProd[key] = {total: 0, areas: {}};
+    byProd[key].total += m.cant;
+    const area = m.area || 'Sin área';
+    byProd[key].areas[area] = (byProd[key].areas[area] || 0) + m.cant;
   });
 
-  container.innerHTML = Object.entries(byPerson).map(([nombre, data], idx) => {
-    const totalE = data.entradas.reduce((s,m)=>s+m.cant,0);
-    const totalS = data.salidas.reduce((s,m)=>s+m.cant,0);
-    const totalMov = data.entradas.length + data.salidas.length;
-    const u = usuarios.find(x=>x.nombre===nombre);
-    const avColor = u?.rol==='ceo'?'#34A853':u?.rol==='owner'?'#D9A066':'#8A8A8A';
-    const avBg = u?.rol==='ceo'?'rgba(52,168,83,.06)':u?.rol==='owner'?'rgba(217,160,102,.08)':'rgba(138,138,138,.06)';
+  // Ordenar de más usado a menos usado, top 20
+  const sorted = Object.entries(byProd)
+    .sort((a, b) => b[1].total - a[1].total)
+    .slice(0, 20);
 
-    // Agrupar por producto
-    const byProd = {};
-    [...data.entradas,...data.salidas].forEach(m=>{
-      if(!byProd[m.producto]) byProd[m.producto]={e:0,s:0};
-      if(m.tipo==='entrada') byProd[m.producto].e+=m.cant;
-      else byProd[m.producto].s+=m.cant;
-    });
+  const maxTotal = sorted[0][1].total;
 
-    // Solo salidas agrupadas por producto con total
-    const soloSalidas = {};
-    data.salidas.forEach(m=>{
-      soloSalidas[m.producto] = (soloSalidas[m.producto]||0) + m.cant;
-    });
-    const soloEntradas = {};
-    data.entradas.forEach(m=>{
-      soloEntradas[m.producto] = (soloEntradas[m.producto]||0) + m.cant;
-    });
+  // Colores por área
+  const areaColores = {
+    'Cejas': '#D9A066',
+    'Pestañas': '#34A853',
+    'Depilaciones': '#4285F4',
+    'Limpieza Facial': '#F5A623',
+    'Local': '#8A8A8A',
+    'Coffee': '#6D4C41',
+    'Sin área': '#B0B0B0'
+  };
 
-    const prodRows = [
-      ...Object.entries(soloSalidas).sort((a,b)=>b[1]-a[1]).map(([prod,cant])=>`
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
-          <span style="font-size:13px;color:var(--text)">${prod}</span>
-          <span style="font-size:13px;font-weight:500;color:var(--danger)">-${cant}</span>
-        </div>`),
-      ...Object.entries(soloEntradas).sort((a,b)=>b[1]-a[1]).map(([prod,cant])=>`
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
-          <span style="font-size:13px;color:var(--text)">${prod}</span>
-          <span style="font-size:13px;font-weight:500;color:var(--ok)">+${cant}</span>
-        </div>`)
-    ].join('');
+  container.innerHTML = sorted.map(([nombre, data], i) => {
+    const pct = Math.max(8, (data.total / maxTotal) * 100);
 
-    return `<div class="person-report">
-      <div class="person-report-header" onclick="togglePersonReport(${idx})">
-        <div class="person-report-av" style="background:${avBg}">
-          <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="26" height="26">
-            <circle cx="20" cy="15" r="8" fill="${avColor}"/>
-            <path d="M6 36c0-7.7 6.3-13 14-13s14 5.3 14 13" stroke="${avColor}" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-          </svg>
+    // Calcular % por área
+    const areaEntries = Object.entries(data.areas).sort((a, b) => b[1] - a[1]);
+    const areaBarsHtml = areaEntries.map(([area, cant]) => {
+      const areaPct = Math.round((cant / data.total) * 100);
+      const color = areaColores[area] || '#B0B0B0';
+      return `<div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+        <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></div>
+        <span style="font-size:11px;color:var(--text2);flex:1">${area}</span>
+        <div style="width:60px;height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+          <div style="width:${areaPct}%;height:100%;background:${color};border-radius:3px"></div>
         </div>
-        <div class="person-report-name">${nombre}<br><span style="font-size:11px;color:var(--text2);font-weight:400">${u?.cargo||u?.rol||''}</span></div>
-        <div class="person-report-total">${totalMov} mov.</div>
-        <span style="color:var(--text2);font-size:14px;margin-left:6px">›</span>
+        <span style="font-size:11px;font-weight:700;color:var(--text);min-width:32px;text-align:right">${areaPct}%</span>
+      </div>`;
+    }).join('');
+
+    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;box-shadow:var(--shadow)">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <div style="width:28px;height:28px;border-radius:50%;background:${i<3?'var(--primary)':'var(--border)'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <span style="font-size:12px;font-weight:700;color:${i<3?'white':'var(--text2)'}">${i+1}</span>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nombre}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:18px;font-weight:700;color:var(--text)">${data.total}</div>
+          <div style="font-size:10px;color:var(--text2)">unid.</div>
+        </div>
       </div>
-      <div class="person-report-body" id="rep-body-${idx}">
-        <div class="rep-summary">
-          <div class="rep-sum-box entrada">
-            <div class="rep-sum-val">+${totalE}</div>
-            <div class="rep-sum-lbl">Entradas</div>
-          </div>
-          <div class="rep-sum-box salida">
-            <div class="rep-sum-val">-${totalS}</div>
-            <div class="rep-sum-lbl">Salidas</div>
-          </div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text2);padding:0 0 6px">
-          <span>Producto</span><span>Entrada &nbsp; Salida</span>
-        </div>
-        ${prodRows}
+      <div style="width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:8px">
+        <div style="width:${pct}%;height:100%;background:var(--primary);border-radius:3px;transition:width 500ms"></div>
       </div>
+      ${areaBarsHtml}
     </div>`;
   }).join('');
-}
-
-function togglePersonReport(idx){
-  const body = document.getElementById('rep-body-'+idx);
-  if(body) body.classList.toggle('open');
 }
 
 // ══ MÓDULO DE GASTOS (solo Dueño) ════════════════════════════
