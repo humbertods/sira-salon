@@ -244,6 +244,22 @@ function doPost(e) {
         const wsM = ss.getSheetByName(HOJA_MOVS);
         const wsS = ss.getSheetByName(HOJA_STOCK);
         const fechaHoy = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
+
+        // IDEMPOTENCIA: verificar si el grupo ya fue registrado
+        const grupoCheck = movs[0] && movs[0].grupo ? movs[0].grupo : '';
+        if (grupoCheck) {
+          const lastRowM = wsM.getLastRow();
+          if (lastRowM >= 8) {
+            const grupos = wsM.getRange(8, 8, lastRowM - 7, 1).getValues();
+            for (let g = 0; g < grupos.length; g++) {
+              if (grupos[g][0] && grupos[g][0].toString() === grupoCheck) {
+                lock.releaseLock();
+                return jsonResponse({ ok: true, mensaje: 'Ya registrado (duplicado ignorado)', duplicado: true });
+              }
+            }
+          }
+        }
+
         const startRow = Math.max(wsM.getLastRow()+1, 8);
 
         // Escribir todas las filas de movimiento de una vez
@@ -332,12 +348,29 @@ function doPost(e) {
         return jsonResponse({ ok: false, error: 'Faltan campos' });
       }
 
+      // IDEMPOTENCIA: verificar si este grupo ya fue registrado para evitar duplicados
+      const wsM = ss.getSheetByName(HOJA_MOVS);
+      if (grupo) {
+        const lastRowM = wsM.getLastRow();
+        if (lastRowM >= 8) {
+          const grupos = wsM.getRange(8, 8, lastRowM - 7, 1).getValues();
+          for (let g = 0; g < grupos.length; g++) {
+            if (grupos[g][0] && grupos[g][0].toString() === grupo) {
+              lock.releaseLock();
+              return jsonResponse({ ok: true, mensaje: 'Ya registrado (duplicado ignorado)', duplicado: true });
+            }
+          }
+        }
+      }
+
       const ws = ss.getSheetByName(HOJA_STOCK);
       const lastRow = ws.getLastRow();
       if (lastRow >= FILA_INICIO) {
         const nombres = ws.getRange(FILA_INICIO,COL_NOMBRE,lastRow-FILA_INICIO+1,1).getValues();
+        let encontrado = false;
         nombres.forEach((row,i) => {
-          if (row[0] && norm(row[0]) === norm(producto)) {
+          if (!encontrado && row[0] && norm(row[0]) === norm(producto)) {
+            encontrado = true;
             const fila = FILA_INICIO+i;
             const stockActual = Number(ws.getRange(fila,COL_STOCK).getValue())||0;
             const nuevoStock = tipo==='entrada'?stockActual+cantidad:Math.max(0,stockActual-cantidad);
@@ -347,7 +380,6 @@ function doPost(e) {
         });
       }
 
-      const wsM = ss.getSheetByName(HOJA_MOVS);
       const nr = Math.max(wsM.getLastRow()+1, 8);
       wsM.getRange(nr,1).setValue(fechaHoy);
       wsM.getRange(nr,2).setValue(producto);
