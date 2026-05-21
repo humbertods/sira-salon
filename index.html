@@ -1629,7 +1629,8 @@ function doMov(tipo){
   const grupoId = resp+'_'+ts.getTime();
   movimientos.push({tipo,producto:prod.nombre,cant,resp,area:area||prod.area,fecha:hoy(),tipoUnidad,hora:horaStr,grupo:grupoId});
   closeModal(tipo);
-  showConfirm(tipo==='entrada'?'📥':'✅', tipo==='entrada'?'Entrada registrada':'Salida registrada', (tipo==='entrada'?'+':'-')+cant+' '+prod.nombre);
+  const waNotif = tipo==='entrada' ? '📦 *SIRA — Nuevo ingreso*\n\n✅ +'+cant+' '+prod.nombre+'\n📍 Área: '+(area||prod.area)+'\n👤 '+resp+'\n📊 Stock actual: '+prod.stock+' unid.\n\n_Inventario actualizado_' : '';
+  showConfirm(tipo==='entrada'?'📥':'✅', tipo==='entrada'?'Entrada registrada':'Salida registrada', (tipo==='entrada'?'+':'-')+cant+' '+prod.nombre, waNotif);
   refreshAll();
   populateSelects();
   enviarAlSheet(tipo,prod.nombre,cant,resp,area||prod.area,tipoUnidad,horaStr,grupoId);
@@ -2677,15 +2678,45 @@ function playError(){
   }catch(e){}
 }
 
-function showConfirm(icon, msg, sub=''){
+// ══ WHATSAPP GRUPO ══════════════════════════════════════════
+const WA_GROUP = 'https://chat.whatsapp.com/G0B5u1opWm66yLR4pRizd6';
+
+function enviarWhatsApp(texto){
+  const encoded = encodeURIComponent(texto);
+  window.open('https://wa.me/?text=' + encoded, '_blank');
+}
+
+function showConfirm(icon, msg, sub='', waMsg=''){
   playPin();
   const ov = document.createElement('div');
-  ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(44,24,16,.6);display:flex;align-items:center;justify-content:center;flex-direction:column;color:white;text-align:center;padding:20px';
+  ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;flex-direction:column;color:white;text-align:center;padding:20px';
+
+  let waBtn = '';
+  if(waMsg){
+    waBtn = `<div style="margin-top:16px;display:flex;gap:8px;justify-content:center">
+      <button onclick="enviarWhatsApp('${waMsg.replace(/'/g,"\\'")}')" style="background:#25D366;color:white;border:none;border-radius:var(--r4);padding:12px 20px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(37,211,102,.3)">
+        📲 Notificar al grupo
+      </button>
+    </div>`;
+  }
+
   ov.innerHTML = '<div style="font-size:64px;margin-bottom:16px">'+icon+'</div>'
-    +'<div style="font-size:24px;font-weight:500;margin-bottom:8px">'+msg+'</div>'
-    +'<div style="font-size:14px;opacity:.75">'+sub+'</div>';
+    +'<div style="font-size:24px;font-weight:600;margin-bottom:8px">'+msg+'</div>'
+    +'<div style="font-size:14px;opacity:.75">'+sub+'</div>'
+    + waBtn;
+
   document.body.appendChild(ov);
-  setTimeout(()=>ov.remove(), 2500);
+
+  if(waMsg){
+    // Si tiene botón de WhatsApp, no cerrar automáticamente — cerrar al tocar fuera
+    ov.addEventListener('click', function(e){
+      if(e.target === ov) ov.remove();
+    });
+    // Auto-cerrar después de 8 segundos por si no tocan nada
+    setTimeout(()=>{ if(ov.parentNode) ov.remove(); }, 8000);
+  } else {
+    setTimeout(()=>ov.remove(), 2500);
+  }
 }
 
 function showToast(msg){
