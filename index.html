@@ -1202,6 +1202,7 @@ function enterApp(){
     renderStaffHoy();
     document.getElementById('app-staff').classList.remove('hidden');
     cargarProductosDesdeSheet();
+    cargarMovimientosDesdeSheet();
   }
 }
 
@@ -1856,6 +1857,8 @@ async function cargarMovimientosDesdeSheet(){
         renderReportes();
       } else if(currentUser && currentUser.rol==='ceo'){
         renderMovs('ceo');
+      } else if(currentUser && currentUser.rol==='staff'){
+        renderStaffHoy();
       }
     }
   }catch(e){ console.log('Movs sync error:',e); }
