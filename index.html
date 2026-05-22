@@ -2683,7 +2683,7 @@ const WA_GROUP = 'https://chat.whatsapp.com/G0B5u1opWm66yLR4pRizd6';
 
 function enviarWhatsApp(texto){
   const encoded = encodeURIComponent(texto);
-  window.open('https://wa.me/?text=' + encoded, '_blank');
+  location.href = 'https://api.whatsapp.com/send?text=' + encoded;
 }
 
 function showConfirm(icon, msg, sub='', waMsg=''){
@@ -2693,10 +2693,11 @@ function showConfirm(icon, msg, sub='', waMsg=''){
 
   let waBtn = '';
   if(waMsg){
+    const encodedMsg = encodeURIComponent(waMsg);
     waBtn = `<div style="margin-top:16px;display:flex;gap:8px;justify-content:center">
-      <button onclick="enviarWhatsApp('${waMsg.replace(/'/g,"\\'")}')" style="background:#25D366;color:white;border:none;border-radius:var(--r4);padding:12px 20px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(37,211,102,.3)">
+      <a href="https://api.whatsapp.com/send?text=${encodedMsg}" target="_blank" rel="noopener" style="background:#25D366;color:white;border:none;border-radius:var(--r4);padding:12px 20px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(37,211,102,.3);text-decoration:none">
         📲 Notificar al grupo
-      </button>
+      </a>
     </div>`;
   }
 
