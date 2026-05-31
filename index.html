@@ -575,6 +575,51 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     </div>
     <!-- REPORTES -->
     <div class="screen" id="ow-reportes">
+
+      <!-- RESUMEN GENERAL MENSUAL -->
+      <div class="month-selector" style="margin-bottom:8px">
+        <button class="month-btn" onclick="cambiarMesResumen(-1)">‹</button>
+        <div class="month-label" id="rg-mes-label">—</div>
+        <button class="month-btn" onclick="cambiarMesResumen(1)">›</button>
+      </div>
+      <div style="margin-bottom:16px">
+        <!-- Botón acordeón -->
+        <div class="ac-dia-header" onclick="toggleAc('rg-body')" data-target="rg-body" style="background:var(--charcoal);border-radius:var(--r2)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:18px">📊</span>
+            <div>
+              <div style="font-size:15px;font-weight:700">Resumen General</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:400" id="rg-total-preview">$0.00</div>
+            </div>
+          </div>
+          <span class="ac-dia-arrow">▾</span>
+        </div>
+        <div class="ac-dia-body" id="rg-body" style="margin-top:2px">
+          <!-- Staff movements -->
+          <div class="info-card" style="padding:0;overflow:hidden;margin-bottom:8px">
+            <div style="padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--border)">
+              <span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text2);font-weight:700">Movimientos por Staff</span>
+            </div>
+            <div id="rg-staff-list"></div>
+            <div id="rg-staff-total" style="display:grid;grid-template-columns:1fr 60px 80px;padding:12px 16px;background:var(--bg);border-top:2px solid var(--border)"></div>
+          </div>
+          <!-- Gastos varios -->
+          <div class="info-card" style="padding:0;overflow:hidden;margin-bottom:8px">
+            <div style="padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text2);font-weight:700">Gastos Varios</span>
+              <span style="font-size:14px;font-weight:700;color:#8e44ad" id="rg-gv-total">$0</span>
+            </div>
+            <div id="rg-gv-list"></div>
+          </div>
+          <!-- Total general -->
+          <div style="background:var(--charcoal);border-radius:var(--r);padding:16px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:14px;font-weight:700;color:white">GASTO TOTAL DEL MES</span>
+            <span style="font-size:22px;font-weight:700;color:var(--primary)" id="rg-gran-total">$0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
       <p class="sec-title">Resumen general</p>
       <div class="info-card">
         <div class="info-card-title">Estado del inventario</div>
@@ -1499,6 +1544,7 @@ function renderReportes(){
   renderTopUsados();
   renderFlujoFinanciero();
   renderStaffMes();
+  renderResumenGeneral();
 }
 
 // ══ MODALS ════════════════════════════════════════════════════
@@ -2478,6 +2524,126 @@ function renderStaffMes(){
       <span style="font-size:14px;font-weight:700;color:var(--danger);text-align:center">${totalS}</span>
       <span style="font-size:14px;font-weight:700;color:var(--primary);text-align:right">$${totalD.toFixed(0)}</span>`;
   }
+}
+
+// ══ RESUMEN GENERAL MENSUAL ══════════════════════════════════
+let rgMes = new Date().getMonth();
+let rgAnio = new Date().getFullYear();
+
+function cambiarMesResumen(dir){
+  rgMes += dir;
+  if(rgMes > 11){ rgMes=0; rgAnio++; }
+  if(rgMes < 0){ rgMes=11; rgAnio--; }
+  renderResumenGeneral();
+}
+
+function renderResumenGeneral(){
+  const labelEl = document.getElementById('rg-mes-label');
+  if(labelEl) labelEl.textContent = MESES_NOMBRES[rgMes] + ' ' + rgAnio;
+
+  // Filtrar movimientos del mes seleccionado
+  const movsMes = movimientos.filter(m => {
+    if(!m.fecha) return false;
+    const parts = m.fecha.split('-');
+    if(parts.length<3) return false;
+    return parseInt(parts[0])===rgAnio && parseInt(parts[1])===(rgMes+1);
+  });
+
+  // Filtrar gastos varios del mes seleccionado
+  const gvMes = gastosVarios.filter(g => {
+    if(!g.fecha) return false;
+    const parts = g.fecha.split('-');
+    if(parts.length<3) return false;
+    return parseInt(parts[0])===rgAnio && parseInt(parts[1])===(rgMes+1);
+  });
+
+  // Staff (todos excepto Humberto)
+  const staffNames = usuarios.filter(u => u.id !== 'humberto').map(u => u.nombre);
+
+  // Calcular por persona
+  const staffData = staffNames.map(nombre => {
+    const movsPers = movsMes.filter(m => m.resp === nombre);
+    let totalDolares = 0;
+    movsPers.forEach(m => {
+      const prod = productos.find(p => norm(p.nombre) === norm(m.producto));
+      totalDolares += (prod ? prod.costo : 0) * m.cant;
+    });
+    return { nombre, movs: movsPers.length, total: totalDolares };
+  }).filter(d => d.movs > 0); // Solo mostrar los que tuvieron movimientos
+
+  // Render staff list
+  const staffList = document.getElementById('rg-staff-list');
+  if(staffList){
+    if(staffData.length === 0){
+      staffList.innerHTML = '<div style="padding:16px;text-align:center;font-size:13px;color:var(--text2)">Sin movimientos</div>';
+    } else {
+      staffList.innerHTML = staffData.map((d, i) => {
+        const u = usuarios.find(x => x.nombre === d.nombre);
+        const bg = i % 2 === 0 ? 'var(--card)' : 'var(--bg)';
+        return `<div style="display:grid;grid-template-columns:1fr 60px 80px;padding:11px 16px;background:${bg};border-bottom:1px solid var(--border);align-items:center">
+          <div>
+            <span style="font-size:13px;font-weight:600;color:var(--text)">${d.nombre}</span>
+            <span style="font-size:10px;color:var(--text2);margin-left:4px">${u?.cargo||''}</span>
+          </div>
+          <span style="font-size:13px;font-weight:600;color:var(--text2);text-align:center">${d.movs}</span>
+          <span style="font-size:14px;font-weight:700;color:var(--text);text-align:right">$${d.total.toFixed(2)}</span>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Total staff
+  const totalMovs = staffData.reduce((s,d) => s + d.movs, 0);
+  const totalStaff = staffData.reduce((s,d) => s + d.total, 0);
+  const staffTotal = document.getElementById('rg-staff-total');
+  if(staffTotal){
+    staffTotal.innerHTML = `
+      <span style="font-size:13px;font-weight:700;color:var(--text)">Subtotal productos</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text2);text-align:center">${totalMovs}</span>
+      <span style="font-size:14px;font-weight:700;color:var(--primary);text-align:right">$${totalStaff.toFixed(2)}</span>`;
+  }
+
+  // Gastos varios
+  const gvList = document.getElementById('rg-gv-list');
+  const totalGV = gvMes.reduce((s,g) => s + g.monto, 0);
+  document.getElementById('rg-gv-total').textContent = '$' + totalGV.toFixed(2);
+
+  if(gvList){
+    if(gvMes.length === 0){
+      gvList.innerHTML = '<div style="padding:12px 16px;font-size:13px;color:var(--text2)">Sin gastos varios</div>';
+    } else {
+      // Agrupar por persona
+      const gvByPerson = {};
+      gvMes.forEach(g => {
+        if(!gvByPerson[g.resp]) gvByPerson[g.resp] = {items:[], total:0};
+        gvByPerson[g.resp].items.push(g);
+        gvByPerson[g.resp].total += g.monto;
+      });
+      gvList.innerHTML = Object.entries(gvByPerson).map(([nombre, data]) => {
+        const detalles = data.items.map(g =>
+          `<div style="display:flex;justify-content:space-between;padding:6px 16px 6px 32px;font-size:12px;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text)">${g.desc} <span style="color:var(--text2)">(${g.cat})</span></span>
+            <span style="font-weight:600;color:#8e44ad">$${g.monto.toFixed(2)}</span>
+          </div>`
+        ).join('');
+        return `<div style="border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;padding:10px 16px;cursor:pointer;background:var(--card)" onclick="toggleAc('rg-gv-${nombre}')">
+            <span style="font-size:13px;font-weight:600;color:var(--text)">${nombre}</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:13px;font-weight:700;color:#8e44ad">$${data.total.toFixed(2)}</span>
+              <span style="font-size:10px;color:var(--text2)">▾</span>
+            </div>
+          </div>
+          <div class="ac-dia-body" id="rg-gv-${nombre}">${detalles}</div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Gran total
+  const granTotal = totalStaff + totalGV;
+  document.getElementById('rg-gran-total').textContent = '$' + granTotal.toFixed(2);
+  document.getElementById('rg-total-preview').textContent = 'Total: $' + granTotal.toFixed(2);
 }
 
 // ══ FLUJO FINANCIERO — ACORDEÓN POR DÍA ═════════════════════
