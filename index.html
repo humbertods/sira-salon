@@ -445,63 +445,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     <div class="hero-sub">Control de inventario y flujo</div>
   </div>
   <div class="login-body">
-    <div id="step-rol">
-      <div class="login-sec">¿Cómo ingresás hoy?</div>
-      <div class="role-grid-3">
-        <div class="role-card3" id="card-owner" onclick="selectRole('owner')">
-          <div class="role-av owner-av">
-            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="20" cy="15" r="8" fill="#BFA26F"/>
-              <path d="M6 36c0-7.7 6.3-13 14-13s14 5.3 14 13" stroke="#BFA26F" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-            </svg>
-          </div>
-          <div class="role-name3">Dueño</div>
-          <div class="role-desc3">Acceso total</div>
-        </div>
-        <div class="role-card3" id="card-ceo" onclick="selectRole('ceo')">
-          <div class="role-av ceo-av">
-            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="20" cy="15" r="8" fill="#34A853"/>
-              <path d="M6 36c0-7.7 6.3-13 14-13s14 5.3 14 13" stroke="#34A853" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-            </svg>
-          </div>
-          <div class="role-name3">CEO</div>
-          <div class="role-desc3">Gestión y stock</div>
-        </div>
-        <div class="role-card3" id="card-staff" onclick="selectRole('staff')">
-          <div class="role-av staff-av">
-            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="20" cy="15" r="8" fill="#8A8A8A"/>
-              <path d="M6 36c0-7.7 6.3-13 14-13s14 5.3 14 13" stroke="#8A8A8A" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-            </svg>
-          </div>
-          <div class="role-name3">Colaboradora</div>
-          <div class="role-desc3">Registrar turnos</div>
-        </div>
+    <div id="step-login">
+      <div class="login-sec">Ingresá tu código de acceso</div>
+      <div style="margin-bottom:20px">
+        <input type="password" class="form-input" id="login-code" placeholder="Código de acceso" 
+          style="text-align:center;font-size:18px;font-weight:600;letter-spacing:4px;padding:16px"
+          onkeydown="if(event.key==='Enter')loginConCodigo()">
       </div>
-    </div>
-
-    <div id="step-pin" style="display:none">
-      <div class="pin-title">PIN de acceso</div>
-      <div class="pin-dots">
-        <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
-        <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
-      </div>
-      <div class="pin-pad">
-        <div class="pin-btn" onclick="pp('1')">1</div><div class="pin-btn" onclick="pp('2')">2</div><div class="pin-btn" onclick="pp('3')">3</div>
-        <div class="pin-btn" onclick="pp('4')">4</div><div class="pin-btn" onclick="pp('5')">5</div><div class="pin-btn" onclick="pp('6')">6</div>
-        <div class="pin-btn" onclick="pp('7')">7</div><div class="pin-btn" onclick="pp('8')">8</div><div class="pin-btn" onclick="pp('9')">9</div>
-        <div class="pin-btn sm" onclick="backToRoles()">‹ Volver</div>
-        <div class="pin-btn" onclick="pp('0')">0</div>
-        <div class="pin-btn sm" onclick="pdel()">⌫</div>
-      </div>
-      <div id="pin-error">PIN incorrecto</div>
-    </div>
-
-    <div id="step-staff" style="display:none">
-      <div class="login-sec">¿Quién sos?</div>
-      <div class="user-grid" id="staff-grid"></div>
-      <button class="btn-enter" id="btn-enter-staff" onclick="enterApp()">Entrar →</button>
+      <div id="login-error" style="text-align:center;color:var(--danger);font-size:13px;margin-bottom:12px;opacity:0;transition:opacity 250ms var(--ease)">Código incorrecto</div>
+      <button class="btn-enter ready" onclick="loginConCodigo()" style="opacity:1;pointer-events:all">Entrar →</button>
     </div>
   </div>
 </div>
@@ -516,14 +468,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     <div class="hdr-right">
       <span class="rbadge owner">Dueño</span>
       <button class="icon-btn" onclick="openModal('entrada')">➕</button>
-      <div style="position:relative">
-        <button class="icon-btn" onclick="toggleLogoutMenu(this, event)">🚪</button>
-        <div class="logout-menu" style="display:none;position:absolute;top:42px;right:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:50;min-width:160px">
-          <button onclick="logout()" style="width:100%;padding:12px 14px;background:none;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--danger);cursor:pointer;display:flex;align-items:center;gap:8px;text-align:left">
-            🔒 Cerrar sesión
-          </button>
-        </div>
-      </div>
+      <button class="icon-btn" onclick="confirmarLogout()">🚪</button>
     </div>
   </div>
   <div class="app-body">
@@ -752,14 +697,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     </div>
     <div class="hdr-right">
       <span class="rbadge ceo">CEO</span>
-      <div style="position:relative">
-        <button class="icon-btn" onclick="toggleLogoutMenu(this, event)">🚪</button>
-        <div class="logout-menu" style="display:none;position:absolute;top:42px;right:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:50;min-width:160px">
-          <button onclick="logout()" style="width:100%;padding:12px 14px;background:none;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--danger);cursor:pointer;display:flex;align-items:center;gap:8px;text-align:left">
-            🔒 Cerrar sesión
-          </button>
-        </div>
-      </div>
+      <button class="icon-btn" onclick="confirmarLogout()">🚪</button>
     </div>
   </div>
   <div class="app-body">
@@ -840,14 +778,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     </div>
     <div class="hdr-right">
       <span class="rbadge staff">Turno</span>
-      <div style="position:relative">
-        <button class="icon-btn" onclick="toggleLogoutMenu(this, event)">🚪</button>
-        <div class="logout-menu" style="display:none;position:absolute;top:42px;right:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:50;min-width:160px">
-          <button onclick="logout()" style="width:100%;padding:12px 14px;background:none;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--danger);cursor:pointer;display:flex;align-items:center;gap:8px;text-align:left">
-            🔒 Cerrar sesión
-          </button>
-        </div>
-      </div>
+      <button class="icon-btn" onclick="confirmarLogout()">🚪</button>
     </div>
   </div>
   <div class="app-body">
@@ -1128,19 +1059,37 @@ const AREAS = ['Cejas','Pestañas','Depilaciones','Limpieza Facial','Local','Cof
 const AREA_EMOJI = {Cejas:'✦',Pestañas:'👁',Depilaciones:'🪶','Limpieza Facial':'✨',Local:'🏪',Coffee:'☕'};
 
 // ══ USUARIOS ══════════════════════════════════════════════
-const OWNER_PIN = '0001';
-const CEO_PIN   = '5678';
-
 let usuarios = [
-  {id:'humberto', nombre:'Humberto', rol:'owner', pin:OWNER_PIN, activo:true},
-  {id:'mikaela',  nombre:'Mikaela',  rol:'ceo',   pin:CEO_PIN,   activo:true,  cargo:'CEO'},
-  {id:'diana',    nombre:'Diana',    rol:'staff',  activo:true,  cargo:'Lashista'},
-  {id:'yadira',   nombre:'Yadira',   rol:'staff',  activo:true,  cargo:'Lashista'},
-  {id:'keyla',    nombre:'Keyla',    rol:'staff',  activo:true,  cargo:'Cajista'},
-  {id:'lesly',    nombre:'Lesly',    rol:'staff',  activo:true,  cargo:'Cejista'},
-  {id:'maria',    nombre:'Maria',    rol:'staff',  activo:true,  cargo:'Cejista'},
-  {id:'laura',    nombre:'Laura',    rol:'staff',  activo:true,  cargo:'Cosmetóloga'},
+  {id:'humberto', nombre:'Humberto', rol:'owner', codigo:'hu001',  activo:true},
+  {id:'mikaela',  nombre:'Mikaela',  rol:'ceo',   codigo:'mi5678', activo:true,  cargo:'CEO'},
+  {id:'diana',    nombre:'Diana',    rol:'staff',  codigo:'di2026', activo:true,  cargo:'Lashista'},
+  {id:'yadira',   nombre:'Yadira',   rol:'staff',  codigo:'ya2026', activo:true,  cargo:'Lashista'},
+  {id:'keyla',    nombre:'Keyla',    rol:'staff',  codigo:'ke2026', activo:true,  cargo:'Cajista'},
+  {id:'lesly',    nombre:'Lesly',    rol:'staff',  codigo:'le2026', activo:true,  cargo:'Cejista'},
+  {id:'maria',    nombre:'Maria',    rol:'staff',  codigo:'ma2026', activo:true,  cargo:'Cejista'},
+  {id:'laura',    nombre:'Laura',    rol:'staff',  codigo:'la2026', activo:true,  cargo:'Cosmetóloga'},
 ];
+
+// ══ LOGIN CON CÓDIGO ════════════════════════════════════════
+function loginConCodigo(){
+  const input = document.getElementById('login-code');
+  const codigo = (input.value||'').trim().toLowerCase();
+  if(!codigo){ showLoginError(); return; }
+
+  const user = usuarios.find(u => u.codigo === codigo && u.activo);
+  if(!user){ showLoginError(); return; }
+
+  currentUser = user;
+  currentRole = user.rol;
+  input.value = '';
+  enterApp();
+}
+
+function showLoginError(){
+  const err = document.getElementById('login-error');
+  err.style.opacity = '1';
+  setTimeout(()=> err.style.opacity = '0', 2000);
+}
 
 // ══ PRODUCTOS ══════════════════════════════════════════════
 let productos = [];
@@ -1148,7 +1097,6 @@ let movimientos = [];
 let activeArea = 'Todos';
 let currentUser = null;
 let currentRole = null;
-let pinBuffer = '';
 
 function hoy(){
   const ahora = new Date();
@@ -1180,81 +1128,6 @@ function avatarSVG(color='#8a7060'){
     <circle cx="12" cy="8" r="4" fill="${color}"/>
     <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="${color}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
   </svg>`;
-}
-
-// ══ LOGIN ═══════════════════════════════════════════════════
-function selectRole(r){
-  currentRole=r;
-  document.querySelectorAll('.role-card3').forEach(c=>c.classList.remove('selected'));
-  document.getElementById('card-'+r).classList.add('selected');
-  document.getElementById('step-rol').style.display='none';
-  if(r==='owner'){
-    document.getElementById('step-pin').style.display='block';
-  } else if(r==='ceo'){
-    // CEO goes directly to pin
-    currentUser=usuarios.find(u=>u.id==='mikaela');
-    document.getElementById('step-pin').style.display='block';
-  } else {
-    buildStaffGrid();
-    document.getElementById('step-staff').style.display='block';
-  }
-}
-
-function buildStaffGrid(){
-  const staffUsers = usuarios.filter(u=>u.rol==='staff'||u.rol==='ceo');
-  document.getElementById('staff-grid').innerHTML = staffUsers.map(u=>`
-    <div class="user-chip ${!u.activo?'disabled':''}" id="chip-${u.id}" onclick="selectUser('${u.id}',this)">
-      <div class="user-avatar">${avatarSVG(u.rol==='ceo'?'#34A853':'#8A8A8A')}</div>
-      <div class="user-info">
-        <div class="user-name">${u.nombre}</div>
-        <div class="user-role-tag">${u.cargo||u.rol}</div>
-      </div>
-      <div class="user-status ${u.activo?'on':'off'}"></div>
-    </div>`).join('');
-}
-
-function selectUser(id, el){
-  const u = usuarios.find(x=>x.id===id);
-  if(!u||!u.activo) return;
-  currentUser = u;
-  document.querySelectorAll('.user-chip').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected');
-  // CEO needs PIN
-  if(u.rol==='ceo'){
-    document.getElementById('step-staff').style.display='none';
-    document.getElementById('step-pin').style.display='block';
-  } else {
-    document.getElementById('btn-enter-staff').classList.add('ready');
-  }
-}
-
-function pp(d){
-  if(pinBuffer.length>=4) return;
-  pinBuffer+=d; updateDots();
-  if(pinBuffer.length===4) setTimeout(checkPin,180);
-}
-function pdel(){pinBuffer=pinBuffer.slice(0,-1);updateDots();document.getElementById('pin-error').style.opacity='0';}
-function updateDots(){for(let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('filled',i<pinBuffer.length);}
-
-function checkPin(){
-  if(currentRole==='owner'&&pinBuffer===OWNER_PIN){
-    currentUser=usuarios.find(u=>u.id==='humberto'); enterApp();
-  } else if(currentUser&&currentUser.rol==='ceo'&&pinBuffer===CEO_PIN){
-    enterApp();
-  } else {
-    pinBuffer=''; updateDots();
-    const e=document.getElementById('pin-error');
-    e.style.opacity='1'; setTimeout(()=>e.style.opacity='0',1500);
-  }
-}
-
-function backToRoles(){
-  pinBuffer=''; updateDots();
-  document.getElementById('step-pin').style.display='none';
-  document.getElementById('step-staff').style.display='none';
-  document.getElementById('step-rol').style.display='block';
-  document.querySelectorAll('.role-card').forEach(c=>c.classList.remove('selected'));
-  currentRole=null; currentUser=null;
 }
 
 function enterApp(){
@@ -1289,44 +1162,38 @@ function enterApp(){
 }
 
 function logout(){
-  // Limpiar sesión guardada
   try{ localStorage.removeItem('sira_session'); }catch(e){}
-  currentUser=null; currentRole=null; pinBuffer=''; updateDots();
+  currentUser=null; currentRole=null;
   ['app-owner','app-ceo','app-staff'].forEach(id=>document.getElementById(id).classList.add('hidden'));
   document.getElementById('login').classList.remove('hidden');
-  document.getElementById('step-pin').style.display='none';
-  document.getElementById('step-staff').style.display='none';
-  document.getElementById('step-rol').style.display='block';
-  document.querySelectorAll('.role-card,.role-card3,.user-chip').forEach(c=>c.classList.remove('selected'));
-  document.getElementById('btn-enter-staff').classList.remove('ready');
-  closeAllLogoutMenus();
+  const input = document.getElementById('login-code');
+  if(input) input.value = '';
 }
 
-// ══ MENÚ LOGOUT ═════════════════════════════════════════════
-function toggleLogoutMenu(btn, evt){
-  if(evt) evt.stopPropagation();
-  const parent = btn.parentElement;
-  const menu = parent.querySelector('.logout-menu');
-  if(!menu) return;
-  const isOpen = menu.style.display === 'block';
-  closeAllLogoutMenus();
-  if(!isOpen){
-    menu.style.display = 'block';
-    // Cerrar al tocar fuera después de un frame
-    setTimeout(()=>{
-      function closeHandler(e){
-        if(!menu.contains(e.target) && e.target !== btn){
-          menu.style.display = 'none';
-          document.removeEventListener('click', closeHandler, true);
-        }
-      }
-      document.addEventListener('click', closeHandler, true);
-    }, 50);
-  }
-}
+// ══ CONFIRMAR LOGOUT ═════════════════════════════════════════
+function confirmarLogout(){
+  const nombre = currentUser ? currentUser.nombre : '';
+  const ov = document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.innerHTML = `
+    <div style="background:var(--card);border-radius:var(--r2);padding:28px 24px;max-width:300px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.2)">
+      <div style="font-size:36px;margin-bottom:12px">🚪</div>
+      <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">¿Cerrar sesión?</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:20px">${nombre}, tendrás que volver a ingresar tu PIN</div>
+      <button id="btn-logout-yes" style="width:100%;padding:14px;background:var(--danger);border:none;border-radius:var(--r4);
+        color:white;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px">
+        Cerrar sesión
+      </button>
+      <button id="btn-logout-no" style="width:100%;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r4);
+        color:var(--text2);font-family:var(--font);font-size:14px;cursor:pointer">
+        Cancelar
+      </button>
+    </div>`;
+  document.body.appendChild(ov);
 
-function closeAllLogoutMenus(){
-  document.querySelectorAll('.logout-menu').forEach(m => m.style.display = 'none');
+  document.getElementById('btn-logout-no').onclick = () => ov.remove();
+  ov.addEventListener('click', (e) => { if(e.target === ov) ov.remove(); });
+  document.getElementById('btn-logout-yes').onclick = () => { ov.remove(); logout(); };
 }
 
 // ══ AUTO-LOGIN (sesión persistente) ══════════════════════════
