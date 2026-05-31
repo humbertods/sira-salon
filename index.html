@@ -516,7 +516,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     <div class="hdr-right">
       <span class="rbadge owner">Dueño</span>
       <button class="icon-btn" onclick="openModal('entrada')">➕</button>
-      <button class="icon-btn" onclick="logout()">🚪</button>
+      <div style="position:relative">
+        <button class="icon-btn" onclick="toggleLogoutMenu(this)">🚪</button>
+        <div class="logout-menu" style="display:none;position:absolute;top:42px;right:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:50;min-width:160px">
+          <button onclick="logout()" style="width:100%;padding:12px 14px;background:none;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--danger);cursor:pointer;display:flex;align-items:center;gap:8px;text-align:left">
+            🔒 Cerrar sesión
+          </button>
+        </div>
+      </div>
     </div>
   </div>
   <div class="app-body">
@@ -745,7 +752,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     </div>
     <div class="hdr-right">
       <span class="rbadge ceo">CEO</span>
-      <button class="icon-btn" onclick="logout()">🚪</button>
+      <div style="position:relative">
+        <button class="icon-btn" onclick="toggleLogoutMenu(this)">🚪</button>
+        <div class="logout-menu" style="display:none;position:absolute;top:42px;right:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:50;min-width:160px">
+          <button onclick="logout()" style="width:100%;padding:12px 14px;background:none;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--danger);cursor:pointer;display:flex;align-items:center;gap:8px;text-align:left">
+            🔒 Cerrar sesión
+          </button>
+        </div>
+      </div>
     </div>
   </div>
   <div class="app-body">
@@ -826,7 +840,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     </div>
     <div class="hdr-right">
       <span class="rbadge staff">Turno</span>
-      <button class="icon-btn" onclick="logout()">🚪</button>
+      <div style="position:relative">
+        <button class="icon-btn" onclick="toggleLogoutMenu(this)">🚪</button>
+        <div class="logout-menu" style="display:none;position:absolute;top:42px;right:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:50;min-width:160px">
+          <button onclick="logout()" style="width:100%;padding:12px 14px;background:none;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--danger);cursor:pointer;display:flex;align-items:center;gap:8px;text-align:left">
+            🔒 Cerrar sesión
+          </button>
+        </div>
+      </div>
     </div>
   </div>
   <div class="app-body">
@@ -1238,6 +1259,8 @@ function backToRoles(){
 
 function enterApp(){
   if(!currentUser) return;
+  // Guardar sesión
+  try{ localStorage.setItem('sira_session', JSON.stringify({id:currentUser.id, rol:currentUser.rol})); }catch(e){}
   document.getElementById('login').classList.add('hidden');
   setDate();
   populateSelects();
@@ -1266,6 +1289,8 @@ function enterApp(){
 }
 
 function logout(){
+  // Limpiar sesión guardada
+  try{ localStorage.removeItem('sira_session'); }catch(e){}
   currentUser=null; currentRole=null; pinBuffer=''; updateDots();
   ['app-owner','app-ceo','app-staff'].forEach(id=>document.getElementById(id).classList.add('hidden'));
   document.getElementById('login').classList.remove('hidden');
@@ -1274,7 +1299,42 @@ function logout(){
   document.getElementById('step-rol').style.display='block';
   document.querySelectorAll('.role-card,.role-card3,.user-chip').forEach(c=>c.classList.remove('selected'));
   document.getElementById('btn-enter-staff').classList.remove('ready');
+  closeAllLogoutMenus();
 }
+
+// ══ MENÚ LOGOUT ═════════════════════════════════════════════
+function toggleLogoutMenu(btn){
+  const menu = btn.nextElementSibling;
+  const isOpen = menu.style.display === 'block';
+  closeAllLogoutMenus();
+  if(!isOpen) menu.style.display = 'block';
+}
+
+function closeAllLogoutMenus(){
+  document.querySelectorAll('.logout-menu').forEach(m => m.style.display = 'none');
+}
+
+// Cerrar menú al tocar fuera
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.logout-menu') && !e.target.closest('.icon-btn')){
+    closeAllLogoutMenus();
+  }
+});
+
+// ══ AUTO-LOGIN (sesión persistente) ══════════════════════════
+(function autoLogin(){
+  try{
+    const saved = localStorage.getItem('sira_session');
+    if(!saved) return;
+    const session = JSON.parse(saved);
+    if(!session || !session.id) return;
+    const user = usuarios.find(u => u.id === session.id);
+    if(!user || !user.activo) return;
+    currentUser = user;
+    currentRole = user.rol;
+    enterApp();
+  }catch(e){}
+})();
 
 // ══ DATE ════════════════════════════════════════════════════
 function setDate(){
