@@ -618,9 +618,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
           </div>
           <!-- Botón Cierre de Mes -->
           <div style="margin-top:12px">
-            <button onclick="confirmarCierreMes()" style="width:100%;padding:14px;background:none;border:2px dashed var(--danger);border-radius:var(--r4);
-              color:var(--danger);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;
-              display:flex;align-items:center;justify-content:center;gap:8px;transition:all var(--dur) var(--ease)">
+            <button onclick="confirmarCierreMes()" style="width:100%;padding:14px;background:var(--primary);border:none;border-radius:var(--r4);
+              color:white;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;
+              display:flex;align-items:center;justify-content:center;gap:8px;
+              box-shadow:0 4px 16px rgba(191,162,111,.3)">
               🔒 Cierre de Mes
             </button>
           </div>
@@ -1987,6 +1988,12 @@ async function cargarMovimientosDesdeSheet(){
       } else if(currentUser && currentUser.rol==='staff'){
         renderStaffHoy();
       }
+      // Cargar cierres y filtrar movimientos de meses cerrados
+      await cargarCierresDesdeSheet();
+      if(currentUser && currentUser.rol==='owner'){
+        renderReportes();
+        renderGastos();
+      }
     }
   }catch(e){ console.log('Movs sync error:',e); }
 }
@@ -2396,6 +2403,39 @@ function renderGastos(){
 
 // ══ GASTOS VARIOS ════════════════════════════════════════════
 let gastosVarios = [];
+let mesesCerrados = []; // [{mes:5, anio:2026}, ...]
+
+function esMesCerrado(mesNum, anio){
+  return mesesCerrados.some(c => c.mes === mesNum && c.anio === anio);
+}
+
+function filtrarMovsCerrados(){
+  movimientos = movimientos.filter(m => {
+    if(!m.fecha) return true;
+    const parts = m.fecha.split('-');
+    if(parts.length<3) return true;
+    return !esMesCerrado(parseInt(parts[1]), parseInt(parts[0]));
+  });
+  gastosVarios = gastosVarios.filter(g => {
+    if(!g.fecha) return true;
+    const parts = g.fecha.split('-');
+    if(parts.length<3) return true;
+    return !esMesCerrado(parseInt(parts[1]), parseInt(parts[0]));
+  });
+}
+
+async function cargarCierresDesdeSheet(){
+  if(!SHEET_URL) return;
+  try{
+    const resp = await fetch(SHEET_URL+'?action=getCierres&t='+Date.now(),{method:'GET'});
+    const text = await resp.text();
+    const data = JSON.parse(text);
+    if(data.ok && data.cierres && data.cierres.length>0){
+      mesesCerrados = data.cierres.map(c=>({mes:parseInt(c.mesNum), anio:parseInt(c.anio)}));
+      filtrarMovsCerrados();
+    }
+  }catch(e){console.log('Cierres load error:',e)}
+}
 const GV_CAT_EMOJI = {'Envío':'🚚','Reparación':'🔧','Servicio':'⚡','Transporte':'🚕','Insumo extra':'🛒','Otro':'📎'};
 
 function registrarGastoVarios(){
@@ -2659,7 +2699,12 @@ function confirmarCierreMes(){
   const mesNombre = MESES_NOMBRES[rgMes] + ' ' + rgAnio;
   const total = document.getElementById('rg-gran-total').textContent;
 
-  // Crear overlay de confirmación
+  // Verificar si ya está cerrado
+  if(esMesCerrado(rgMes+1, rgAnio)){
+    showToast('⚠️ ' + mesNombre + ' ya fue cerrado');
+    return;
+  }
+
   const ov = document.createElement('div');
   ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px';
   ov.innerHTML = `
@@ -2668,11 +2713,11 @@ function confirmarCierreMes(){
       <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px">Cierre de ${mesNombre}</div>
       <div style="font-size:14px;color:var(--text2);margin-bottom:6px">Total del mes: <strong style="color:var(--primary)">${total}</strong></div>
       <div style="font-size:12px;color:var(--text2);margin-bottom:20px;line-height:1.5">
-        Se archivará el resumen en tu Sheet y los contadores se reiniciarán para el próximo mes.
+        Los contadores se reiniciarán a $0.<br>El registro queda guardado en tu Sheet.
       </div>
-      <button id="btn-cierre-confirm" style="width:100%;padding:14px;background:var(--danger);border:none;border-radius:var(--r4);
+      <button id="btn-cierre-confirm" style="width:100%;padding:14px;background:var(--primary);border:none;border-radius:var(--r4);
         color:white;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px;
-        box-shadow:0 4px 12px rgba(234,67,53,.25)">
+        box-shadow:0 4px 16px rgba(191,162,111,.3)">
         Confirmar cierre
       </button>
       <button id="btn-cierre-cancel" style="width:100%;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r4);
@@ -2682,11 +2727,9 @@ function confirmarCierreMes(){
     </div>`;
   document.body.appendChild(ov);
 
-  // Cancelar
   document.getElementById('btn-cierre-cancel').onclick = () => ov.remove();
   ov.addEventListener('click', (e) => { if(e.target === ov) ov.remove(); });
 
-  // Confirmar
   document.getElementById('btn-cierre-confirm').onclick = async () => {
     const btn = document.getElementById('btn-cierre-confirm');
     btn.textContent = 'Cerrando...';
@@ -2694,20 +2737,20 @@ function confirmarCierreMes(){
     btn.style.pointerEvents = 'none';
 
     // Calcular datos del cierre
+    const mesNum = rgMes + 1;
     const movsMes = movimientos.filter(m => {
       if(!m.fecha) return false;
       const parts = m.fecha.split('-');
       if(parts.length<3) return false;
-      return parseInt(parts[0])===rgAnio && parseInt(parts[1])===(rgMes+1);
+      return parseInt(parts[0])===rgAnio && parseInt(parts[1])===mesNum;
     });
     const gvMes = gastosVarios.filter(g => {
       if(!g.fecha) return false;
       const parts = g.fecha.split('-');
       if(parts.length<3) return false;
-      return parseInt(parts[0])===rgAnio && parseInt(parts[1])===(rgMes+1);
+      return parseInt(parts[0])===rgAnio && parseInt(parts[1])===mesNum;
     });
 
-    // Resumen por staff
     const staffResumen = {};
     movsMes.forEach(m => {
       if(!staffResumen[m.resp]) staffResumen[m.resp] = {movs:0, total:0};
@@ -2720,31 +2763,52 @@ function confirmarCierreMes(){
     const granTotal = totalProductos + totalGV;
 
     // Guardar cierre en el Sheet
-    const cierreData = {
-      action: 'cierreMes',
-      mes: MESES_NOMBRES[rgMes],
-      anio: rgAnio,
-      mesNum: rgMes + 1,
-      totalProductos: totalProductos.toFixed(2),
-      totalGastosVarios: totalGV.toFixed(2),
-      granTotal: granTotal.toFixed(2),
-      totalMovimientos: movsMes.length,
-      staff: JSON.stringify(staffResumen),
-      fecha: hoy(),
-      hora: horaGuayaquil()
-    };
-
     try {
       await fetch(SHEET_URL, {
         method: 'POST', mode: 'no-cors',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(cierreData)
+        body: JSON.stringify({
+          action: 'cierreMes',
+          mes: MESES_NOMBRES[rgMes],
+          anio: rgAnio,
+          mesNum: mesNum,
+          totalProductos: totalProductos.toFixed(2),
+          totalGastosVarios: totalGV.toFixed(2),
+          granTotal: granTotal.toFixed(2),
+          totalMovimientos: movsMes.length,
+          staff: JSON.stringify(staffResumen),
+          fecha: hoy(),
+          hora: horaGuayaquil()
+        })
       });
     } catch(e) { console.log('Cierre sync error:', e); }
 
+    // Marcar mes como cerrado
+    mesesCerrados.push({mes: mesNum, anio: rgAnio});
+
+    // Filtrar movimientos y gastos del mes cerrado de los arrays locales
+    movimientos = movimientos.filter(m => {
+      if(!m.fecha) return true;
+      const parts = m.fecha.split('-');
+      if(parts.length<3) return true;
+      return !(parseInt(parts[0])===rgAnio && parseInt(parts[1])===mesNum);
+    });
+    gastosVarios = gastosVarios.filter(g => {
+      if(!g.fecha) return true;
+      const parts = g.fecha.split('-');
+      if(parts.length<3) return true;
+      return !(parseInt(parts[0])===rgAnio && parseInt(parts[1])===mesNum);
+    });
+
+    // Refrescar todas las vistas
     ov.remove();
+    renderOwnerInicio();
+    renderStock('ow');
+    renderMovs('ow');
+    renderReportes();
+    renderGastos();
     playPin();
-    showConfirm('🔒', 'Mes cerrado', MESES_NOMBRES[rgMes] + ' ' + rgAnio + ' — ' + total + ' archivado');
+    showConfirm('🔒', 'Mes cerrado', mesNombre + ' archivado · Todo reiniciado a $0');
   };
 }
 
