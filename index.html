@@ -437,24 +437,47 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <body>
 
 <!-- ══ LOGIN ══ -->
-<div class="layer" id="login">
-  <div class="login-hero">
-    <div class="hero-mark"><img src="ICON.png" alt="SIRA"></div>
-    <div class="hero-eyebrow">Sistema inteligente de inventario</div>
-    <div class="hero-title">SIRA</div>
-    <div class="hero-sub">Control de inventario y flujo</div>
-  </div>
-  <div class="login-body">
-    <div id="step-login">
-      <div class="login-sec">Ingresá tu código de acceso</div>
-      <div style="margin-bottom:20px">
-        <input type="password" class="form-input" id="login-code" placeholder="Código de acceso" 
-          style="text-align:center;font-size:18px;font-weight:600;letter-spacing:4px;padding:16px"
-          onkeydown="if(event.key==='Enter')loginConCodigo()">
-      </div>
-      <div id="login-error" style="text-align:center;color:var(--danger);font-size:13px;margin-bottom:12px;opacity:0;transition:opacity 250ms var(--ease)">Código incorrecto</div>
-      <button class="btn-enter ready" onclick="loginConCodigo()" style="opacity:1;pointer-events:all">Entrar →</button>
+<div class="layer" id="login" style="background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow-y:auto">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:340px;padding:40px 28px 20px">
+    
+    <!-- Logo -->
+    <div style="margin-bottom:40px">
+      <img src="LOGO_SIRA_2.png" alt="SIRA" style="width:200px;height:auto">
     </div>
+
+    <!-- Inputs -->
+    <div style="width:100%;margin-bottom:14px">
+      <div style="position:relative">
+        <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text3)">👤</span>
+        <input type="text" class="form-input" id="login-user-display" placeholder="Usuario" readonly
+          style="padding:16px 16px 16px 44px;font-size:15px;font-weight:500;background:var(--card);cursor:default;color:var(--text2)"
+          tabindex="-1">
+      </div>
+    </div>
+    <div style="width:100%;margin-bottom:8px">
+      <div style="position:relative">
+        <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text3)">🔒</span>
+        <input type="password" class="form-input" id="login-code" placeholder="Contraseña"
+          style="padding:16px 16px 16px 44px;font-size:15px;font-weight:500;letter-spacing:2px"
+          oninput="updateLoginUser()" onkeydown="if(event.key==='Enter')loginConCodigo()">
+      </div>
+    </div>
+
+    <div id="login-error" style="text-align:center;color:var(--danger);font-size:13px;height:20px;margin-bottom:8px;opacity:0;transition:opacity 250ms var(--ease)">Código incorrecto</div>
+
+    <!-- Botón entrar -->
+    <button onclick="loginConCodigo()" style="width:100%;padding:16px;background:var(--primary);border:none;border-radius:var(--r4);
+      color:white;font-family:var(--font);font-size:15px;font-weight:700;letter-spacing:1px;cursor:pointer;
+      box-shadow:0 6px 24px rgba(191,162,111,.3);text-transform:uppercase">
+      Entrar
+    </button>
+  </div>
+
+  <!-- Footer -->
+  <div style="padding:20px 28px 40px;text-align:center;width:100%">
+    <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px">Sistema de inventario</div>
+    <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:16px">Control de ingresos y salidas de productos<br>con flujo inteligente</div>
+    <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);font-weight:600">Desarrollado por DesousaTech S.A.</div>
   </div>
 </div>
 
@@ -1091,6 +1114,20 @@ function showLoginError(){
   setTimeout(()=> err.style.opacity = '0', 2000);
 }
 
+function updateLoginUser(){
+  const input = document.getElementById('login-code');
+  const display = document.getElementById('login-user-display');
+  const codigo = (input.value||'').trim().toLowerCase();
+  const user = usuarios.find(u => u.codigo === codigo && u.activo);
+  if(user){
+    display.value = user.nombre + ' · ' + (user.cargo || user.rol);
+    display.style.color = 'var(--text)';
+  } else {
+    display.value = '';
+    display.style.color = 'var(--text2)';
+  }
+}
+
 // ══ PRODUCTOS ══════════════════════════════════════════════
 let productos = [];
 let movimientos = [];
@@ -1166,8 +1203,10 @@ function logout(){
   currentUser=null; currentRole=null;
   ['app-owner','app-ceo','app-staff'].forEach(id=>document.getElementById(id).classList.add('hidden'));
   document.getElementById('login').classList.remove('hidden');
-  const input = document.getElementById('login-code');
-  if(input) input.value = '';
+  const code = document.getElementById('login-code');
+  const user = document.getElementById('login-user-display');
+  if(code) code.value = '';
+  if(user) user.value = '';
 }
 
 // ══ CONFIRMAR LOGOUT ═════════════════════════════════════════
