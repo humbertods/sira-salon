@@ -517,7 +517,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
       <span class="rbadge owner">Dueño</span>
       <button class="icon-btn" onclick="openModal('entrada')">➕</button>
       <div style="position:relative">
-        <button class="icon-btn" onclick="toggleLogoutMenu(this)">🚪</button>
+        <button class="icon-btn" onclick="toggleLogoutMenu(this, event)">🚪</button>
         <div class="logout-menu" style="display:none;position:absolute;top:42px;right:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:50;min-width:160px">
           <button onclick="logout()" style="width:100%;padding:12px 14px;background:none;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--danger);cursor:pointer;display:flex;align-items:center;gap:8px;text-align:left">
             🔒 Cerrar sesión
@@ -753,7 +753,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     <div class="hdr-right">
       <span class="rbadge ceo">CEO</span>
       <div style="position:relative">
-        <button class="icon-btn" onclick="toggleLogoutMenu(this)">🚪</button>
+        <button class="icon-btn" onclick="toggleLogoutMenu(this, event)">🚪</button>
         <div class="logout-menu" style="display:none;position:absolute;top:42px;right:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:50;min-width:160px">
           <button onclick="logout()" style="width:100%;padding:12px 14px;background:none;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--danger);cursor:pointer;display:flex;align-items:center;gap:8px;text-align:left">
             🔒 Cerrar sesión
@@ -841,7 +841,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     <div class="hdr-right">
       <span class="rbadge staff">Turno</span>
       <div style="position:relative">
-        <button class="icon-btn" onclick="toggleLogoutMenu(this)">🚪</button>
+        <button class="icon-btn" onclick="toggleLogoutMenu(this, event)">🚪</button>
         <div class="logout-menu" style="display:none;position:absolute;top:42px;right:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:50;min-width:160px">
           <button onclick="logout()" style="width:100%;padding:12px 14px;background:none;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--danger);cursor:pointer;display:flex;align-items:center;gap:8px;text-align:left">
             🔒 Cerrar sesión
@@ -1303,23 +1303,31 @@ function logout(){
 }
 
 // ══ MENÚ LOGOUT ═════════════════════════════════════════════
-function toggleLogoutMenu(btn){
-  const menu = btn.nextElementSibling;
+function toggleLogoutMenu(btn, evt){
+  if(evt) evt.stopPropagation();
+  const parent = btn.parentElement;
+  const menu = parent.querySelector('.logout-menu');
+  if(!menu) return;
   const isOpen = menu.style.display === 'block';
   closeAllLogoutMenus();
-  if(!isOpen) menu.style.display = 'block';
+  if(!isOpen){
+    menu.style.display = 'block';
+    // Cerrar al tocar fuera después de un frame
+    setTimeout(()=>{
+      function closeHandler(e){
+        if(!menu.contains(e.target) && e.target !== btn){
+          menu.style.display = 'none';
+          document.removeEventListener('click', closeHandler, true);
+        }
+      }
+      document.addEventListener('click', closeHandler, true);
+    }, 50);
+  }
 }
 
 function closeAllLogoutMenus(){
   document.querySelectorAll('.logout-menu').forEach(m => m.style.display = 'none');
 }
-
-// Cerrar menú al tocar fuera
-document.addEventListener('click', function(e){
-  if(!e.target.closest('.logout-menu') && !e.target.closest('.icon-btn')){
-    closeAllLogoutMenus();
-  }
-});
 
 // ══ AUTO-LOGIN (sesión persistente) ══════════════════════════
 (function autoLogin(){
