@@ -137,7 +137,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .stat-card::before{content:'';display:block;width:28px;height:3px;border-radius:2px;margin-bottom:14px}
 .sc-burg::before{background:var(--primary)} .sc-danger::before{background:var(--danger)}
 .sc-ok::before{background:var(--ok)} .sc-gold::before{background:var(--primary-light)}
-.stat-icon{font-size:18px;margin-bottom:8px}
+.stat-icon{margin-bottom:8px;color:var(--text2)}
+.stat-icon svg{width:22px;height:22px}
+.nav-icon{transition:transform var(--dur) var(--ease)}
+.nav-icon svg{width:22px;height:22px;stroke:var(--text3);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-item.active .nav-icon svg{stroke:var(--primary)}
+.qb-icon{margin-bottom:10px}
+.qb-icon svg{width:26px;height:26px;stroke:var(--text2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.qb.primary .qb-icon svg{stroke:rgba(255,255,255,.9)}
+.qb.gold-a .qb-icon svg{stroke:var(--primary)}
+.ah-icon{margin-bottom:12px}
+.ah-icon svg{width:32px;height:32px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.al-icon svg{width:18px;height:18px}
+.icon-btn svg{width:18px;height:18px;stroke:var(--text2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .stat-val{font-family:var(--font);font-size:28px;font-weight:700;line-height:1}
 .stat-lbl{font-size:11px;color:var(--text2);margin-top:3px;font-weight:500}
 .sc-burg .stat-val{color:var(--text)} .sc-danger .stat-val{color:var(--danger)}
@@ -490,8 +502,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     </div>
     <div class="hdr-right">
       <span class="rbadge owner">Dueño</span>
-      <button class="icon-btn" onclick="openModal('entrada')">➕</button>
-      <button class="icon-btn" onclick="confirmarLogout()">🚪</button>
+      <button class="icon-btn" onclick="openModal('entrada')"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="icon-btn" onclick="confirmarLogout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button>
     </div>
   </div>
   <div class="app-body">
@@ -500,32 +512,32 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
       <p class="greeting">Hola, <em>Humberto</em> 👋</p>
       <p class="subline" id="ow-date"></p>
       <div class="stats-grid">
-        <div class="stat-card sc-burg"><div class="stat-icon">📦</div><div class="stat-val" id="ow-total">0</div><div class="stat-lbl">Productos</div></div>
-        <div class="stat-card sc-danger"><div class="stat-icon">🚨</div><div class="stat-val" id="ow-alertas">0</div><div class="stat-lbl">Stock bajo</div></div>
-        <div class="stat-card sc-ok"><div class="stat-icon">✅</div><div class="stat-val" id="ow-ok">0</div><div class="stat-lbl">En orden</div></div>
-        <div class="stat-card sc-gold"><div class="stat-icon">💰</div><div class="stat-val" id="ow-valor">$0</div><div class="stat-lbl">Valor stock</div></div>
+        <div class="stat-card sc-burg"><div class="stat-icon"><svg viewBox="0 0 24 24" stroke="var(--primary)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M21 8V21H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg></div><div class="stat-val" id="ow-total">0</div><div class="stat-lbl">Productos</div></div>
+        <div class="stat-card sc-danger"><div class="stat-icon"><svg viewBox="0 0 24 24" stroke="var(--danger)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></div><div class="stat-val" id="ow-alertas">0</div><div class="stat-lbl">Stock bajo</div></div>
+        <div class="stat-card sc-ok"><div class="stat-icon"><svg viewBox="0 0 24 24" stroke="var(--ok)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg></div><div class="stat-val" id="ow-ok">0</div><div class="stat-lbl">En orden</div></div>
+        <div class="stat-card sc-gold"><div class="stat-icon"><svg viewBox="0 0 24 24" stroke="var(--primary)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div><div class="stat-val" id="ow-valor">$0</div><div class="stat-lbl">Valor stock</div></div>
       </div>
       <p class="sec-title">Alertas urgentes</p>
       <div id="ow-alerts"></div>
       <p class="sec-title">Acciones rápidas</p>
       <div class="quick-grid">
-        <div class="qb primary" onclick="openModal('entrada')"><div class="qb-icon">📥</div><div class="qb-title">Entrada</div><div class="qb-sub">Registrar compra</div></div>
-        <div class="qb gold-a" onclick="openModal('salida')"><div class="qb-icon">📤</div><div class="qb-title">Salida</div><div class="qb-sub">Registrar uso</div></div>
-        <div class="qb" onclick="owNav('stock')"><div class="qb-icon">🗂️</div><div class="qb-title">Inventario</div><div class="qb-sub">Ver todos</div></div>
-        <div class="qb" onclick="openModal('gasto-varios')"><div class="qb-icon">💸</div><div class="qb-title">Gastos Varios</div><div class="qb-sub">Envíos, reparaciones</div></div>
+        <div class="qb primary" onclick="openModal('entrada')"><div class="qb-icon"><svg viewBox="0 0 24 24"><path d="M12 3v12M5 10l7 7 7-7"/><path d="M5 21h14"/></svg></div><div class="qb-title">Entrada</div><div class="qb-sub">Registrar compra</div></div>
+        <div class="qb gold-a" onclick="openModal('salida')"><div class="qb-icon"><svg viewBox="0 0 24 24"><path d="M12 21V9M5 14l7-7 7 7"/><path d="M5 3h14"/></svg></div><div class="qb-title">Salida</div><div class="qb-sub">Registrar uso</div></div>
+        <div class="qb" onclick="owNav('stock')"><div class="qb-icon"><svg viewBox="0 0 24 24"><path d="M21 8V21H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg></div><div class="qb-title">Inventario</div><div class="qb-sub">Ver todos</div></div>
+        <div class="qb" onclick="openModal('gasto-varios')"><div class="qb-icon"><svg viewBox="0 0 24 24"><path d="M19 5H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2z"/><path d="M3 10h18"/></svg></div><div class="qb-title">Gastos Varios</div><div class="qb-sub">Envíos, reparaciones</div></div>
       </div>
     </div>
     <!-- STOCK -->
     <div class="screen" id="ow-stock">
-      <div class="search-wrap"><span style="color:var(--text2)">🔍</span><input type="text" id="ow-search" placeholder="Buscar producto..." oninput="renderStock('ow')"></div>
+      <div class="search-wrap"><svg viewBox="0 0 24 24" width="18" height="18" stroke="var(--text3)" fill="none" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="text" id="ow-search" placeholder="Buscar producto..." oninput="renderStock('ow')"></div>
       <div class="pills">
         <div class="pill active" onclick="setArea('Todos',this,'ow')">Todos</div>
-        <div class="pill" onclick="setArea('Cejas',this,'ow')">✦ Cejas</div>
-        <div class="pill" onclick="setArea('Pestañas',this,'ow')">👁 Pestañas</div>
-        <div class="pill" onclick="setArea('Depilaciones',this,'ow')">🪶 Depilaciones</div>
-        <div class="pill" onclick="setArea('Limpieza Facial',this,'ow')">✨ Facial</div>
-        <div class="pill" onclick="setArea('Local',this,'ow')">🏪 Local</div>
-        <div class="pill" onclick="setArea('Coffee',this,'ow')">☕ Coffee</div>
+        <div class="pill" onclick="setArea('Cejas',this,'ow')">Cejas</div>
+        <div class="pill" onclick="setArea('Pestañas',this,'ow')">Pestañas</div>
+        <div class="pill" onclick="setArea('Depilaciones',this,'ow')">Depilaciones</div>
+        <div class="pill" onclick="setArea('Limpieza Facial',this,'ow')">Facial</div>
+        <div class="pill" onclick="setArea('Local',this,'ow')">Local</div>
+        <div class="pill" onclick="setArea('Coffee',this,'ow')">Coffee</div>
       </div>
       <div class="prod-list" id="ow-prod-list"></div>
       <div style="margin-top:16px">
@@ -561,7 +573,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
         <!-- Botón acordeón -->
         <div class="ac-dia-header" onclick="toggleAc('rg-body')" data-target="rg-body" style="background:var(--charcoal);border-radius:var(--r2)">
           <div style="display:flex;align-items:center;gap:10px">
-            <span style="font-size:18px">📊</span>
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="white" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
             <div>
               <div style="font-size:15px;font-weight:700">Resumen General</div>
               <div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:400" id="rg-total-preview">$0.00</div>
@@ -615,7 +627,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
       </div>
 
       <div class="divider"></div>
-      <p class="sec-title">📊 Gasto general × Mes</p>
+      <p class="sec-title">Gasto general × Mes</p>
       <div id="r-mes-label-staff" style="font-family:var(--font);font-size:17px;color:var(--text);margin-bottom:10px;text-align:center"></div>
       <div class="info-card" style="padding:0;overflow:hidden">
         <!-- Header de tabla -->
@@ -652,14 +664,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     <!-- MI MARCA -->
     <div class="screen" id="ow-marca">
       <div class="marca-header">
-        <div class="marca-logo">✦</div>
+        <div class="marca-logo"><svg viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="1.8" stroke-linecap="round" width="24" height="24"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26z"/></svg></div>
         <div><div class="marca-title">Mi Línea de Productos</div><div class="marca-sub">Inventario exclusivo · Dueño &amp; CEO</div></div>
       </div>
       <div class="stats-grid" style="margin-bottom:16px">
-        <div class="stat-card sc-burg"><div class="stat-icon">💄</div><div class="stat-val" id="m-total">0</div><div class="stat-lbl">Productos</div></div>
-        <div class="stat-card sc-danger"><div class="stat-icon">🚨</div><div class="stat-val" id="m-alertas">0</div><div class="stat-lbl">Stock bajo</div></div>
-        <div class="stat-card sc-ok"><div class="stat-icon">✅</div><div class="stat-val" id="m-ok">0</div><div class="stat-lbl">En orden</div></div>
-        <div class="stat-card sc-gold"><div class="stat-icon">📦</div><div class="stat-val" id="m-total-u">0</div><div class="stat-lbl">Unidades</div></div>
+        <div class="stat-card sc-burg"><div class="stat-icon"><svg viewBox="0 0 24 24" stroke="var(--primary)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26z"/></svg></div><div class="stat-val" id="m-total">0</div><div class="stat-lbl">Productos</div></div>
+        <div class="stat-card sc-danger"><div class="stat-icon"><svg viewBox="0 0 24 24" stroke="var(--danger)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></div><div class="stat-val" id="m-alertas">0</div><div class="stat-lbl">Stock bajo</div></div>
+        <div class="stat-card sc-ok"><div class="stat-icon"><svg viewBox="0 0 24 24" stroke="var(--ok)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg></div><div class="stat-val" id="m-ok">0</div><div class="stat-lbl">En orden</div></div>
+        <div class="stat-card sc-gold"><div class="stat-icon"><svg viewBox="0 0 24 24" stroke="var(--primary)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M21 8V21H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg></div><div class="stat-val" id="m-total-u">0</div><div class="stat-lbl">Unidades</div></div>
       </div>
       <p class="sec-title">Productos de la marca</p>
       <div class="prod-list" id="marca-prod-list"></div>
@@ -701,13 +713,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     </div>
   </div>
   <nav class="bottom-nav">
-    <div class="nav-item active" id="onav-inicio" onclick="owNav('inicio')"><span class="nav-icon">🏠</span><span class="nav-lbl">Inicio</span></div>
-    <div class="nav-item" id="onav-stock" onclick="owNav('stock')"><span class="nav-icon">📦</span><span class="nav-lbl">Stock</span></div>
-    <div class="nav-item" id="onav-movs" onclick="owNav('movs')"><span class="nav-icon">📋</span><span class="nav-lbl">Historial</span></div>
-    <div class="nav-item" id="onav-equipo" onclick="owNav('equipo')"><span class="nav-icon">👥</span><span class="nav-lbl">Equipo</span></div>
-    <div class="nav-item" id="onav-marca" onclick="owNav('marca')"><span class="nav-icon">✦</span><span class="nav-lbl">Mi Marca</span></div>
-    <div class="nav-item" id="onav-gastos" onclick="owNav('gastos')"><span class="nav-icon">💰</span><span class="nav-lbl">Gastos</span></div>
-    <div class="nav-item" id="onav-reportes" onclick="owNav('reportes')"><span class="nav-icon">📊</span><span class="nav-lbl">Reportes</span></div>
+    <div class="nav-item active" id="onav-inicio" onclick="owNav('inicio')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V13h6v8"/></svg></span><span class="nav-lbl">Inicio</span></div>
+    <div class="nav-item" id="onav-stock" onclick="owNav('stock')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 8V21H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg></span><span class="nav-lbl">Stock</span></div>
+    <div class="nav-item" id="onav-movs" onclick="owNav('movs')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h6"/></svg></span><span class="nav-lbl">Historial</span></div>
+    <div class="nav-item" id="onav-equipo" onclick="owNav('equipo')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></span><span class="nav-lbl">Equipo</span></div>
+    <div class="nav-item" id="onav-marca" onclick="owNav('marca')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26z"/></svg></span><span class="nav-lbl">Mi Marca</span></div>
+    <div class="nav-item" id="onav-gastos" onclick="owNav('gastos')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span><span class="nav-lbl">Gastos</span></div>
+    <div class="nav-item" id="onav-reportes" onclick="owNav('reportes')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></span><span class="nav-lbl">Reportes</span></div>
   </nav>
 </div>
 
@@ -720,7 +732,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     </div>
     <div class="hdr-right">
       <span class="rbadge ceo">CEO</span>
-      <button class="icon-btn" onclick="confirmarLogout()">🚪</button>
+      <button class="icon-btn" onclick="confirmarLogout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button>
     </div>
   </div>
   <div class="app-body">
@@ -728,31 +740,31 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
       <p class="greeting">Hola, <em>Mikaela</em> 👋</p>
       <p class="subline" id="ceo-date"></p>
       <div class="stats-grid">
-        <div class="stat-card sc-burg"><div class="stat-icon">📦</div><div class="stat-val" id="ceo-total">0</div><div class="stat-lbl">Productos</div></div>
-        <div class="stat-card sc-danger"><div class="stat-icon">🚨</div><div class="stat-val" id="ceo-alertas">0</div><div class="stat-lbl">Stock bajo</div></div>
-        <div class="stat-card sc-ok"><div class="stat-icon">✅</div><div class="stat-val" id="ceo-ok">0</div><div class="stat-lbl">En orden</div></div>
+        <div class="stat-card sc-burg"><div class="stat-icon"><svg viewBox="0 0 24 24" stroke="var(--primary)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M21 8V21H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg></div><div class="stat-val" id="ceo-total">0</div><div class="stat-lbl">Productos</div></div>
+        <div class="stat-card sc-danger"><div class="stat-icon"><svg viewBox="0 0 24 24" stroke="var(--danger)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></div><div class="stat-val" id="ceo-alertas">0</div><div class="stat-lbl">Stock bajo</div></div>
+        <div class="stat-card sc-ok"><div class="stat-icon"><svg viewBox="0 0 24 24" stroke="var(--ok)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg></div><div class="stat-val" id="ceo-ok">0</div><div class="stat-lbl">En orden</div></div>
 
       </div>
       <p class="sec-title">Alertas urgentes</p>
       <div id="ceo-alerts"></div>
       <p class="sec-title">Acciones rápidas</p>
       <div class="quick-grid">
-        <div class="qb primary" onclick="openModal('entrada')"><div class="qb-icon">📥</div><div class="qb-title">Entrada</div><div class="qb-sub">Registrar compra</div></div>
-        <div class="qb gold-a" onclick="openModal('salida')"><div class="qb-icon">📤</div><div class="qb-title">Salida</div><div class="qb-sub">Registrar uso</div></div>
-        <div class="qb" onclick="ceoNav('stock')"><div class="qb-icon">🗂️</div><div class="qb-title">Inventario</div><div class="qb-sub">Ver stock</div></div>
-        <div class="qb" onclick="openModal('gasto-varios')"><div class="qb-icon">💸</div><div class="qb-title">Gastos Varios</div><div class="qb-sub">Envíos, reparaciones</div></div>
+        <div class="qb primary" onclick="openModal('entrada')"><div class="qb-icon"><svg viewBox="0 0 24 24"><path d="M12 3v12M5 10l7 7 7-7"/><path d="M5 21h14"/></svg></div><div class="qb-title">Entrada</div><div class="qb-sub">Registrar compra</div></div>
+        <div class="qb gold-a" onclick="openModal('salida')"><div class="qb-icon"><svg viewBox="0 0 24 24"><path d="M12 21V9M5 14l7-7 7 7"/><path d="M5 3h14"/></svg></div><div class="qb-title">Salida</div><div class="qb-sub">Registrar uso</div></div>
+        <div class="qb" onclick="ceoNav('stock')"><div class="qb-icon"><svg viewBox="0 0 24 24"><path d="M21 8V21H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg></div><div class="qb-title">Inventario</div><div class="qb-sub">Ver stock</div></div>
+        <div class="qb" onclick="openModal('gasto-varios')"><div class="qb-icon"><svg viewBox="0 0 24 24"><path d="M19 5H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2z"/><path d="M3 10h18"/></svg></div><div class="qb-title">Gastos Varios</div><div class="qb-sub">Envíos, reparaciones</div></div>
       </div>
     </div>
     <div class="screen" id="ceo-stock">
-      <div class="search-wrap"><span style="color:var(--text2)">🔍</span><input type="text" id="ceo-search" placeholder="Buscar..." oninput="renderStock('ceo')"></div>
+      <div class="search-wrap"><svg viewBox="0 0 24 24" width="18" height="18" stroke="var(--text3)" fill="none" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="text" id="ceo-search" placeholder="Buscar..." oninput="renderStock('ceo')"></div>
       <div class="pills">
         <div class="pill active" onclick="setArea('Todos',this,'ceo')">Todos</div>
-        <div class="pill" onclick="setArea('Cejas',this,'ceo')">✦ Cejas</div>
-        <div class="pill" onclick="setArea('Pestañas',this,'ceo')">👁 Pestañas</div>
-        <div class="pill" onclick="setArea('Depilaciones',this,'ceo')">🪶 Depilaciones</div>
-        <div class="pill" onclick="setArea('Limpieza Facial',this,'ceo')">✨ Facial</div>
-        <div class="pill" onclick="setArea('Local',this,'ceo')">🏪 Local</div>
-        <div class="pill" onclick="setArea('Coffee',this,'ceo')">☕ Coffee</div>
+        <div class="pill" onclick="setArea('Cejas',this,'ceo')">Cejas</div>
+        <div class="pill" onclick="setArea('Pestañas',this,'ceo')">Pestañas</div>
+        <div class="pill" onclick="setArea('Depilaciones',this,'ceo')">Depilaciones</div>
+        <div class="pill" onclick="setArea('Limpieza Facial',this,'ceo')">Facial</div>
+        <div class="pill" onclick="setArea('Local',this,'ceo')">Local</div>
+        <div class="pill" onclick="setArea('Coffee',this,'ceo')">Coffee</div>
       </div>
       <div class="prod-list" id="ceo-prod-list"></div>
       <div style="margin-top:16px"><button class="btn-p" onclick="openModal('nuevo-producto')">+ Agregar producto</button></div>
@@ -765,14 +777,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     <!-- MI MARCA CEO -->
     <div class="screen" id="ceo-marca">
       <div class="marca-header">
-        <div class="marca-logo">✦</div>
+        <div class="marca-logo"><svg viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="1.8" stroke-linecap="round" width="24" height="24"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26z"/></svg></div>
         <div><div class="marca-title">Mi Línea de Productos</div><div class="marca-sub">Inventario exclusivo · Dueño &amp; CEO</div></div>
       </div>
       <div class="stats-grid" style="margin-bottom:16px">
-        <div class="stat-card sc-burg"><div class="stat-icon">💄</div><div class="stat-val" id="cm-total">0</div><div class="stat-lbl">Productos</div></div>
-        <div class="stat-card sc-danger"><div class="stat-icon">🚨</div><div class="stat-val" id="cm-alertas">0</div><div class="stat-lbl">Stock bajo</div></div>
-        <div class="stat-card sc-ok"><div class="stat-icon">✅</div><div class="stat-val" id="cm-ok">0</div><div class="stat-lbl">En orden</div></div>
-        <div class="stat-card sc-gold"><div class="stat-icon">📦</div><div class="stat-val" id="cm-total-u">0</div><div class="stat-lbl">Unidades</div></div>
+        <div class="stat-card sc-burg"><div class="stat-icon"><svg viewBox="0 0 24 24" stroke="var(--primary)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26z"/></svg></div><div class="stat-val" id="cm-total">0</div><div class="stat-lbl">Productos</div></div>
+        <div class="stat-card sc-danger"><div class="stat-icon"><svg viewBox="0 0 24 24" stroke="var(--danger)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></div><div class="stat-val" id="cm-alertas">0</div><div class="stat-lbl">Stock bajo</div></div>
+        <div class="stat-card sc-ok"><div class="stat-icon"><svg viewBox="0 0 24 24" stroke="var(--ok)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg></div><div class="stat-val" id="cm-ok">0</div><div class="stat-lbl">En orden</div></div>
+        <div class="stat-card sc-gold"><div class="stat-icon"><svg viewBox="0 0 24 24" stroke="var(--primary)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M21 8V21H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg></div><div class="stat-val" id="cm-total-u">0</div><div class="stat-lbl">Unidades</div></div>
       </div>
       <p class="sec-title">Productos de la marca</p>
       <div class="prod-list" id="cmarca-prod-list"></div>
@@ -785,10 +797,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     </div>
   </div>
   <nav class="bottom-nav">
-    <div class="nav-item active" id="cnav-inicio" onclick="ceoNav('inicio')"><span class="nav-icon">🏠</span><span class="nav-lbl">Inicio</span></div>
-    <div class="nav-item" id="cnav-stock" onclick="ceoNav('stock')"><span class="nav-icon">📦</span><span class="nav-lbl">Stock</span></div>
-    <div class="nav-item" id="cnav-movs" onclick="ceoNav('movs')"><span class="nav-icon">📋</span><span class="nav-lbl">Historial</span></div>
-    <div class="nav-item" id="cnav-marca" onclick="ceoNav('marca')"><span class="nav-icon">✦</span><span class="nav-lbl">Mi Marca</span></div>
+    <div class="nav-item active" id="cnav-inicio" onclick="ceoNav('inicio')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V13h6v8"/></svg></span><span class="nav-lbl">Inicio</span></div>
+    <div class="nav-item" id="cnav-stock" onclick="ceoNav('stock')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 8V21H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg></span><span class="nav-lbl">Stock</span></div>
+    <div class="nav-item" id="cnav-movs" onclick="ceoNav('movs')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h6"/></svg></span><span class="nav-lbl">Historial</span></div>
+    <div class="nav-item" id="cnav-marca" onclick="ceoNav('marca')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26z"/></svg></span><span class="nav-lbl">Mi Marca</span></div>
   </nav>
 </div>
 
@@ -801,7 +813,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     </div>
     <div class="hdr-right">
       <span class="rbadge staff">Turno</span>
-      <button class="icon-btn" onclick="confirmarLogout()">🚪</button>
+      <button class="icon-btn" onclick="confirmarLogout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button>
     </div>
   </div>
   <div class="app-body">
@@ -809,24 +821,24 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
       <p class="greeting">Hola, <em id="staff-name-disp">—</em> 👋</p>
       <p class="subline">¿Qué vas a registrar hoy?</p>
       <div class="action-hero entrada" onclick="openModal('entrada')">
-        <div class="ah-icon">📥</div>
+        <div class="ah-icon" style="color:#2d7a50"><svg viewBox="0 0 24 24"><path d="M12 3v12M5 10l7 7 7-7"/><path d="M5 21h14"/></svg></div>
         <div class="ah-title">Registrar Entrada</div>
         <div class="ah-sub">Llegó material o producto nuevo</div>
       </div>
       <div class="action-hero salida" onclick="openModal('salida')">
-        <div class="ah-icon">📤</div>
+        <div class="ah-icon" style="color:var(--primary)"><svg viewBox="0 0 24 24"><path d="M12 21V9M5 14l7-7 7 7"/><path d="M5 3h14"/></svg></div>
         <div class="ah-title">Registrar Salida</div>
         <div class="ah-sub">Usé un producto en un servicio</div>
       </div>
       <p class="sec-title">Mis movimientos de hoy</p>
       <div class="action-hero" style="background:linear-gradient(135deg,#fff9ef,#fff6e8);border:1px solid rgba(218,185,127,.35)" onclick="openModal('combos')">
-        <div class="ah-icon">☕</div>
+        <div class="ah-icon" style="color:var(--primary)"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><path d="M6 1v3M10 1v3M14 1v3"/></svg></div>
         <div class="ah-title">Registrar Bebida</div>
         <div class="ah-sub">Café o té servido a un cliente</div>
       </div>
       <div id="kit-lashista-btn" style="display:none">
         <div class="action-hero" style="background:linear-gradient(135deg,#e8f0fe,#f0f4ff);border:1px solid rgba(66,133,244,.25)" onclick="openModal('kit')">
-          <div class="ah-icon">👁</div>
+          <div class="ah-icon" style="color:#4285F4"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
           <div class="ah-title">Kit Lashista</div>
           <div class="ah-sub">Frasco + Funda + Tarjeta pestaña</div>
         </div>
@@ -835,7 +847,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     </div>
   </div>
   <nav class="bottom-nav" style="justify-content:center">
-    <div class="nav-item active"><span class="nav-icon">🏠</span><span class="nav-lbl">Mi turno</span></div>
+    <div class="nav-item active"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V13h6v8"/></svg></span><span class="nav-lbl">Mi turno</span></div>
   </nav>
 </div>
 
@@ -843,9 +855,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <div class="modal-ov" id="modal-entrada">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">📥 Registrar Entrada</div>
+    <div class="modal-title">Registrar Entrada</div>
     <div class="form-group"><div class="form-label">Producto</div>
-      <input type="text" class="form-input" id="e-search" placeholder="🔍 Buscar producto..." oninput="filtrarSelect('e-prod',this.value)" style="margin-bottom:6px">
+      <input type="text" class="form-input" id="e-search" placeholder="Buscar producto..." oninput="filtrarSelect('e-prod',this.value)" style="margin-bottom:6px">
       <select class="form-input" id="e-prod"><option value="">Seleccioná un producto</option></select></div>
     <div class="form-row">
       <div class="form-group"><div class="form-label">Cantidad</div>
@@ -864,7 +876,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <div class="modal-ov" id="modal-kit">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">👁 Kit Lashista</div>
+    <div class="modal-title">Kit Lashista</div>
     <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Frasco para shampo · Funda kit pestaña · Tarjeta pestaña</p>
     <div class="form-group"><div class="form-label">¿Cuántos kits?</div>
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:6px">
@@ -883,25 +895,25 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <div class="modal-ov" id="modal-combos">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">☕ Registrar Bebida</div>
+    <div class="modal-title">Registrar Bebida</div>
     <div class="form-group"><div class="form-label">Bebida servida</div>
       <select class="form-input" id="combo-sel">
         <option value="">Seleccioná una bebida</option>
-        <option value="Capuccino frio">☕ Capuccino frío</option>
-        <option value="Capuccino caliente">☕ Capuccino caliente</option>
-        <option value="Cafe negro">☕ Café negro</option>
-        <option value="Te de manzanilla c/m">🍵 Té de manzanilla c/m</option>
-        <option value="Te de manzanilla">🍵 Té de manzanilla</option>
-        <option value="Te de anis">🍵 Té de anís</option>
-        <option value="Te de frutos rojos">🍵 Té de frutos rojos</option>
-        <option value="Te de frutos rojos c/J">🍵 Té de frutos rojos c/J</option>
-        <option value="Te relajante">🍵 Té relajante</option>
-        <option value="Te de manzana con canela">🍵 Té de manzana con canela</option>
-        <option value="Te de hierva luisa">🍵 Té de hierva luisa</option>
-        <option value="Te de jamaica">🍵 Té de jamaica</option>
-        <option value="Champagne">🥂 Champagne</option>
-        <option value="Vino tinto">🍷 Vino tinto</option>
-        <option value="Vino rosado">🍷 Vino rosado</option>
+        <option value="Capuccino frio">Capuccino frío</option>
+        <option value="Capuccino caliente">Capuccino caliente</option>
+        <option value="Cafe negro">Café negro</option>
+        <option value="Te de manzanilla c/m">Té de manzanilla c/m</option>
+        <option value="Te de manzanilla">Té de manzanilla</option>
+        <option value="Te de anis">Té de anís</option>
+        <option value="Te de frutos rojos">Té de frutos rojos</option>
+        <option value="Te de frutos rojos c/J">Té de frutos rojos c/J</option>
+        <option value="Te relajante">Té relajante</option>
+        <option value="Te de manzana con canela">Té de manzana con canela</option>
+        <option value="Te de hierva luisa">Té de hierva luisa</option>
+        <option value="Te de jamaica">Té de jamaica</option>
+        <option value="Champagne">Champagne</option>
+        <option value="Vino tinto">Vino tinto</option>
+        <option value="Vino rosado">Vino rosado</option>
       </select>
     </div>
     <div id="combo-preview" style="background:var(--bg);border-radius:var(--r);padding:10px 14px;margin:8px 0;font-size:12px;color:var(--text2);display:none">
@@ -914,9 +926,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <div class="modal-ov" id="modal-salida">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">📤 Registrar Salida</div>
+    <div class="modal-title">Registrar Salida</div>
     <div class="form-group"><div class="form-label">Producto</div>
-      <input type="text" class="form-input" id="s-search" placeholder="🔍 Buscar producto..." oninput="filtrarSelect('s-prod',this.value)" style="margin-bottom:6px">
+      <input type="text" class="form-input" id="s-search" placeholder="Buscar producto..." oninput="filtrarSelect('s-prod',this.value)" style="margin-bottom:6px">
       <select class="form-input" id="s-prod"><option value="">Seleccioná un producto</option></select></div>
     <div class="form-row">
       <div class="form-group"><div class="form-label">Cantidad</div>
@@ -943,7 +955,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <div class="modal-ov" id="modal-nuevo-producto">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">➕ Nuevo Producto</div>
+    <div class="modal-title">Nuevo Producto</div>
     <div class="form-group"><div class="form-label">Nombre del producto</div>
       <input type="text" class="form-input" id="np-nombre" placeholder="Ej: Cera caliente 400g"></div>
     <div class="form-row">
@@ -981,7 +993,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <div class="modal-ov" id="modal-nuevo-marca">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">💄 Nuevo Producto de Marca</div>
+    <div class="modal-title">Nuevo Producto de Marca</div>
     <div class="form-group"><div class="form-label">Nombre del producto</div>
       <input type="text" class="form-input" id="nm-nombre" placeholder="Ej: Gel fijador de cejas"></div>
     <div class="form-row">
@@ -1027,7 +1039,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <div class="modal-ov" id="modal-nuevo-pedido">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">📋 Registrar Pedido</div>
+    <div class="modal-title">Registrar Pedido</div>
     <div class="form-group"><div class="form-label">Producto</div>
       <select class="form-input" id="np2-prod"></select></div>
     <div class="form-row">
@@ -1047,15 +1059,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <div class="modal-ov" id="modal-gasto-varios">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">💸 Registrar Gasto Varios</div>
+    <div class="modal-title">Registrar Gasto Varios</div>
     <div class="form-group"><div class="form-label">Categoría</div>
       <select class="form-input" id="gv-cat">
-        <option value="Envío">🚚 Envío de productos</option>
-        <option value="Reparación">🔧 Reparación del local</option>
-        <option value="Servicio">⚡ Servicio (luz, agua, internet)</option>
-        <option value="Transporte">🚕 Transporte</option>
-        <option value="Insumo extra">🛒 Insumo no inventariado</option>
-        <option value="Otro">📎 Otro</option>
+        <option value="Envío">Envío de productos</option>
+        <option value="Reparación">Reparación del local</option>
+        <option value="Servicio">Servicio (luz, agua, internet)</option>
+        <option value="Transporte">Transporte</option>
+        <option value="Insumo extra">Insumo no inventariado</option>
+        <option value="Otro">Otro</option>
       </select></div>
     <div class="form-group"><div class="form-label">Descripción</div>
       <input type="text" class="form-input" id="gv-desc" placeholder="Ej: Envío de cera desde Quito"></div>
@@ -1216,7 +1228,7 @@ function confirmarLogout(){
   ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;padding:20px';
   ov.innerHTML = `
     <div style="background:var(--card);border-radius:var(--r2);padding:28px 24px;max-width:300px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.2)">
-      <div style="font-size:36px;margin-bottom:12px">🚪</div>
+      <div style="margin-bottom:12px"><svg viewBox="0 0 24 24" width="40" height="40" stroke="var(--text2)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></div>
       <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">¿Cerrar sesión?</div>
       <div style="font-size:13px;color:var(--text2);margin-bottom:20px">${nombre}, tendrás que volver a ingresar tu PIN</div>
       <button id="btn-logout-yes" style="width:100%;padding:14px;background:var(--danger);border:none;border-radius:var(--r4);
