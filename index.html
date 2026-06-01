@@ -903,18 +903,18 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     <div class="form-group"><div class="form-label">Bebida servida</div>
       <select class="form-input" id="combo-sel">
         <option value="">Seleccioná una bebida</option>
-        <option value="Capuccino frio">Capuccino frío</option>
+        <option value="Capuccino frío">Capuccino frío</option>
         <option value="Capuccino caliente">Capuccino caliente</option>
-        <option value="Cafe negro">Café negro</option>
-        <option value="Te de manzanilla c/m">Té de manzanilla c/m</option>
-        <option value="Te de manzanilla">Té de manzanilla</option>
-        <option value="Te de anis">Té de anís</option>
-        <option value="Te de frutos rojos">Té de frutos rojos</option>
-        <option value="Te de frutos rojos c/J">Té de frutos rojos c/J</option>
-        <option value="Te relajante">Té relajante</option>
-        <option value="Te de manzana con canela">Té de manzana con canela</option>
-        <option value="Te de hierva luisa">Té de hierva luisa</option>
-        <option value="Te de jamaica">Té de jamaica</option>
+        <option value="Café negro">Café negro</option>
+        <option value="Té de manzanilla c/m">Té de manzanilla c/m</option>
+        <option value="Té de manzanilla">Té de manzanilla</option>
+        <option value="Té de anís">Té de anís</option>
+        <option value="Té de frutos rojos">Té de frutos rojos</option>
+        <option value="Té de frutos rojos c/J">Té de frutos rojos c/J</option>
+        <option value="Té relajante">Té relajante</option>
+        <option value="Té de manzana con canela">Té de manzana con canela</option>
+        <option value="Té de hierva luisa">Té de hierva luisa</option>
+        <option value="Té de jamaica">Té de jamaica</option>
         <option value="Champagne">Champagne</option>
         <option value="Vino tinto">Vino tinto</option>
         <option value="Vino rosado">Vino rosado</option>
@@ -1767,21 +1767,21 @@ function doKitLashista(){
 
 // ══ COMBOS BEBIDAS ═══════════════════════════════════════════
 const COMBOS = {
-  'Capuccino frio':         ['Capuccino frio','Servilleta logo','Galleta'],
-  'Capuccino caliente':     ['Capuccino caliente','Servilleta logo','Galleta'],
-  'Cafe negro':             ['Cafe negro','Servilleta logo','Galleta'],
-  'Te de manzanilla c/m':  ['Te de manzanilla c/m','Servilleta logo','Galleta'],
-  'Te de manzanilla':      ['Te de manzanilla','Servilleta logo','Galleta'],
-  'Te de anis':            ['Te de anis','Servilleta logo','Galleta'],
-  'Te de frutos rojos':    ['Te de frutos rojos','Servilleta logo','Galleta'],
-  'Te de frutos rojos c/J':['Te de frutos rojos c/J','Servilleta logo','Galleta'],
-  'Te relajante':          ['Te relajante','Servilleta logo','Galleta'],
-  'Te de manzana con canela':['Te de manzana con canela','Servilleta logo','Galleta'],
-  'Te de hierva luisa':    ['Te de hierva luisa','Servilleta logo','Galleta'],
-  'Te de jamaica':         ['Te de jamaica','Servilleta logo','Galleta'],
-  'Champagne':             ['Champagne','Servilleta logo','Galleta'],
-  'Vino tinto':            ['Vino tinto','Servilleta logo','Galleta'],
-  'Vino rosado':           ['Vino rosado','Servilleta logo','Galleta'],
+  'Capuccino frío':          ['Capuccino frio','Servilleta logo','Galleta'],
+  'Capuccino caliente':      ['Capuccino caliente','Servilleta logo','Galleta'],
+  'Café negro':              ['Cafe negro','Servilleta logo','Galleta'],
+  'Té de manzanilla c/m':   ['Te de manzanilla c/m','Servilleta logo','Galleta'],
+  'Té de manzanilla':       ['Te de manzanilla','Servilleta logo','Galleta'],
+  'Té de anís':             ['Te de anis','Servilleta logo','Galleta'],
+  'Té de frutos rojos':     ['Te de frutos rojos','Servilleta logo','Galleta'],
+  'Té de frutos rojos c/J': ['Te de frutos rojos c/J','Servilleta logo','Galleta'],
+  'Té relajante':           ['Te relajante','Servilleta logo','Galleta'],
+  'Té de manzana con canela':['Te de manzana con canela','Servilleta logo','Galleta'],
+  'Té de hierva luisa':     ['Te de hierva luisa','Servilleta logo','Galleta'],
+  'Té de jamaica':          ['Te de jamaica','Servilleta logo','Galleta'],
+  'Champagne':              ['Champagne','Servilleta logo','Galleta'],
+  'Vino tinto':             ['Vino tinto','Servilleta logo','Galleta'],
+  'Vino rosado':            ['Vino rosado','Servilleta logo','Galleta'],
 };
 
 document.addEventListener('change', function(e){
@@ -1789,8 +1789,9 @@ document.addEventListener('change', function(e){
     const val = e.target.value;
     const preview = document.getElementById('combo-preview');
     const txt = document.getElementById('combo-preview-txt');
-    if(val && COMBOS[val]){
-      txt.textContent = COMBOS[val].join(' + ');
+    const ck = Object.keys(COMBOS).find(k => norm(k) === norm(val));
+    if(val && ck){
+      txt.textContent = COMBOS[ck].join(' + ');
       preview.style.display='block';
     } else {
       preview.style.display='none';
@@ -1804,19 +1805,20 @@ function doCombo(){
   if(_procesando) return;
   _procesando = true;
   const bebida = document.getElementById('combo-sel').value;
-  if(!bebida){ showToast('⚠️ Seleccioná una bebida'); _procesando=false; return; }
-  const items = COMBOS[bebida];
-  if(!items){ showToast('⚠️ Combo no encontrado'); _procesando=false; return; }
+  if(!bebida){ showToast('Seleccioná una bebida'); _procesando=false; return; }
+  // Buscar combo por norm() para evitar problemas de tildes
+  const comboKey = Object.keys(COMBOS).find(k => norm(k) === norm(bebida));
+  const items = comboKey ? COMBOS[comboKey] : null;
+  if(!items){ showToast('Combo no encontrado: '+bebida); _procesando=false; return; }
   const resp = currentUser ? currentUser.nombre : '—';
   const fecha = hoy();
   let errores = [];
-  // Verificar stock antes de descontar
   items.forEach(nombre => {
     const p = productos.find(x => norm(x.nombre) === norm(nombre));
     if(!p){ errores.push(nombre + ' (no existe)'); }
     else if(p.stock <= 0){ errores.push(nombre + ' (sin stock)'); }
   });
-  if(errores.length > 0){ showToast('⚠️ Sin stock: ' + errores.join(', ')); _procesando=false; return; }
+  if(errores.length > 0){ showToast('Sin stock: ' + errores.join(', ')); _procesando=false; return; }
   // Descontar cada producto y preparar batch
   const tsC = new Date();
   const horaC = horaGuayaquil();
