@@ -1371,7 +1371,12 @@ function confirmarLogout(){
 }
 
 // ══ AUTO-LOGIN (sesión persistente) ══════════════════════════
-(function autoLogin(){
+// IMPORTANTE: se ejecuta en DOMContentLoaded, NO de inmediato.
+// Si corre antes de que el resto del script declare sus variables
+// (gastosVarios, flujoTab, mesesCerrados, etc.), enterApp() lanza un
+// error de "Cannot access ... before initialization" que el try/catch
+// se traga, dejando login oculto + panel oculto = pantalla en blanco.
+function autoLogin(){
   try{
     const saved = localStorage.getItem('sira_session');
     if(!saved) return;
@@ -1382,8 +1387,13 @@ function confirmarLogout(){
     currentUser = user;
     currentRole = user.rol;
     enterApp();
-  }catch(e){}
-})();
+  }catch(e){ console.error('autoLogin error:', e); }
+}
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', autoLogin);
+} else {
+  autoLogin();
+}
 
 // ══ DATE ════════════════════════════════════════════════════
 function setDate(){
