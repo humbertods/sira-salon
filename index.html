@@ -1330,6 +1330,7 @@ function enterApp(){
     cargarMarcaDesdeSheet();
     cargarMovimientosDesdeSheet();
     cargarGastosVariosDesdeSheet();
+    cargarFotosDesdeSheet();
   } else {
     document.getElementById('staff-user-lbl').textContent=currentUser.nombre+' · '+currentUser.cargo;
     document.getElementById('staff-name-disp').textContent=currentUser.nombre;
@@ -1337,6 +1338,7 @@ function enterApp(){
     document.getElementById('app-staff').classList.remove('hidden');
     cargarProductosDesdeSheet();
     cargarMovimientosDesdeSheet();
+    cargarFotosDesdeSheet();
   }
 }
 
