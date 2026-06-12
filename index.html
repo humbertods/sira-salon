@@ -1206,9 +1206,7 @@ async function guardarFoto(){
   renderStock(currentUser.rol==='owner'?'ow':'ceo');
   // Guardar en Sheet
   try{
-    await fetch(SHEET_URL, {method:'POST', mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'guardarFoto', nombre, foto:fotoTempBase64})});
+    await postSheet({action:'guardarFoto', nombre, foto:fotoTempBase64});
   }catch(e){console.log('Foto sync error:',e)}
   fotoTempBase64 = '';
 }
@@ -2042,8 +2040,7 @@ function doMovMarca(){
   showToast(tipoMovMarca==='entrada'?`✅ +${cant} ${prod.nombre}`:`✅ -${cant} ${prod.nombre}`);
   renderMarca(currentUser.rol==='owner'?'ow':'ceo');
   // Sincronizar stock al Sheet
-  fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'actualizarStockMarca',nombre:prod.nombre,stock:prod.stock})});
+  postSheet({action:'actualizarStockMarca',nombre:prod.nombre,stock:prod.stock}).catch(e=>console.log('Marca stock sync error:',e));
 }
 function agregarProductoMarca(){
   const nombre=document.getElementById('nm-nombre').value.trim();
@@ -2059,8 +2056,7 @@ function agregarProductoMarca(){
   showToast('✅ '+nombre+' agregado');
   renderMarca(currentUser.rol==='owner'?'ow':'ceo');
   // Guardar en Sheet
-  fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'nuevoProductoMarca',id:newProd.id,nombre,stock,min,precio,unidad})});
+  postSheet({action:'nuevoProductoMarca',id:newProd.id,nombre,stock,min,precio,unidad}).catch(e=>console.log('Marca producto sync error:',e));
 }
 function poblarModalPedido(){
   document.getElementById('np2-prod').innerHTML=productosMarca.map(p=>`<option>${p.nombre}</option>`).join('');
@@ -2205,12 +2201,23 @@ async function cargarProductosDesdeSheet(){
 // ══ SHEET SYNC ════════════════════════════════════════════════
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzyEBabD-2BXhSd1tmIXpWXwzHPWE5CoF4VcGD1c5ILkACl8FmWbQRTL0juM70sxZnw/exec';
 
+async function postSheet(payload){
+  if(!SHEET_URL) return {ok:false,error:'SHEET_URL no configurado'};
+  const resp = await fetch(SHEET_URL,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify(payload)
+  });
+  const text = await resp.text();
+  const data = text ? JSON.parse(text) : {ok:resp.ok};
+  if(!data.ok) throw new Error(data.error || 'Error al sincronizar');
+  return data;
+}
+
 async function enviarAlSheet(tipo,producto,cantidad,responsable,area,tipoUnidad,hora,grupo){
   if(!SHEET_URL) return;
   try{
-    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'movimiento',tipo,producto,cantidad,responsable,area,fecha:hoy(),tipoUnidad:tipoUnidad||'Unidad',hora:hora||'',grupo:grupo||''})});
+    await postSheet({action:'movimiento',tipo,producto,cantidad,responsable,area,fecha:hoy(),tipoUnidad:tipoUnidad||'Unidad',hora:hora||'',grupo:grupo||''});
   }catch(e){console.log('Sync error:',e)}
 }
 
@@ -2218,9 +2225,7 @@ async function enviarAlSheet(tipo,producto,cantidad,responsable,area,tipoUnidad,
 async function enviarBatchAlSheet(movs){
   if(!SHEET_URL || !movs || movs.length===0) return;
   try{
-    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'movimientoBatch',movimientos:movs})});
+    await postSheet({action:'movimientoBatch',movimientos:movs});
   }catch(e){console.log('Batch sync error:',e)}
 }
 
@@ -2228,18 +2233,20 @@ async function enviarBatchAlSheet(movs){
 async function actualizarStockBatchEnSheet(items){
   if(!SHEET_URL || !items || items.length===0) return;
   try{
-    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'actualizarStockBatch',items:items})});
+    await postSheet({action:'actualizarStockBatch',items:items});
   }catch(e){console.log('Stock batch sync error:',e)}
 }
 
 function actualizarStockEnSheet(nombre, nuevoStock){
   if(!SHEET_URL) return;
-  fetch(SHEET_URL,{method:'POST',mode:'no-cors',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'actualizarStock',producto:nombre,nuevoStock,fecha:hoy()})
-  }).catch(e=>console.log('Stock sync error:',e));
+  postSheet({action:'actualizarStock',producto:nombre,nuevoStock,fecha:hoy()}).catch(e=>console.log('Stock sync error:',e));
+}
+
+async function guardarProductoEnSheet(prod){
+  if(!SHEET_URL || !prod) return;
+  try{
+    await postSheet({action:'nuevoProducto',nombre:prod.nombre,area:prod.area,unidad:prod.unidad,stock:prod.stock,min:prod.min,costo:prod.costo,notas:prod.notas});
+  }catch(e){console.log('Producto sync error:',e)}
 }
 
 // ══ REPORTE MENSUAL ══════════════════════════════════════════
@@ -2628,9 +2635,7 @@ function registrarGastoVarios(){
 async function enviarGastoVariosAlSheet(g){
   if(!SHEET_URL) return;
   try{
-    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'gastoVarios',fecha:g.fecha,hora:g.hora,categoria:g.cat,descripcion:g.desc,monto:g.monto,responsable:g.resp,notas:g.notas})});
+    await postSheet({action:'gastoVarios',fecha:g.fecha,hora:g.hora,categoria:g.cat,descripcion:g.desc,monto:g.monto,responsable:g.resp,notas:g.notas});
   }catch(e){console.log('GV sync error:',e)}
 }
 
@@ -2929,22 +2934,18 @@ function confirmarCierreMes(){
 
     // Guardar cierre en el Sheet
     try {
-      await fetch(SHEET_URL, {
-        method: 'POST', mode: 'no-cors',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          action: 'cierreMes',
-          mes: MESES_NOMBRES[rgMes],
-          anio: rgAnio,
-          mesNum: mesNum,
-          totalProductos: totalProductos.toFixed(2),
-          totalGastosVarios: totalGV.toFixed(2),
-          granTotal: granTotal.toFixed(2),
-          totalMovimientos: movsMes.length,
-          staff: JSON.stringify(staffResumen),
-          fecha: hoy(),
-          hora: horaGuayaquil()
-        })
+      await postSheet({
+        action: 'cierreMes',
+        mes: MESES_NOMBRES[rgMes],
+        anio: rgAnio,
+        mesNum: mesNum,
+        totalProductos: totalProductos.toFixed(2),
+        totalGastosVarios: totalGV.toFixed(2),
+        granTotal: granTotal.toFixed(2),
+        totalMovimientos: movsMes.length,
+        staff: JSON.stringify(staffResumen),
+        fecha: hoy(),
+        hora: horaGuayaquil()
       });
     } catch(e) { console.log('Cierre sync error:', e); }
 
