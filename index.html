@@ -2217,10 +2217,11 @@ function sheetUrl(params={}){
 
 async function postSheet(payload){
   if(!SHEET_URL) return {ok:false,error:'SHEET_URL no configurado'};
+  const authUser = currentUser ? {userId:currentUser.id, userRol:currentUser.rol} : {};
   const resp = await fetch(SHEET_URL,{
     method:'POST',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify({...payload, token:SIRA_API_TOKEN})
+    body:JSON.stringify({...payload, ...authUser, token:SIRA_API_TOKEN})
   });
   const text = await resp.text();
   const data = text ? JSON.parse(text) : {ok:resp.ok};
