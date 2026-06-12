@@ -1138,14 +1138,14 @@ const AREA_EMOJI = {Cejas:'✦',Pestañas:'👁',Depilaciones:'🪶','Limpieza F
 
 // ══ USUARIOS ══════════════════════════════════════════════
 let usuarios = [
-  {id:'humberto', nombre:'Humberto', rol:'owner', codigo:'hu001',  activo:true},
-  {id:'mikaela',  nombre:'Mikaela',  rol:'ceo',   codigo:'mi5678', activo:true,  cargo:'CEO'},
-  {id:'diana',    nombre:'Diana',    rol:'staff',  codigo:'di2026', activo:true,  cargo:'Lashista'},
-  {id:'yadira',   nombre:'Yadira',   rol:'staff',  codigo:'ya2026', activo:true,  cargo:'Lashista'},
-  {id:'keyla',    nombre:'Keyla',    rol:'staff',  codigo:'ke2026', activo:true,  cargo:'Cajista'},
-  {id:'lesly',    nombre:'Lesly',    rol:'staff',  codigo:'le2026', activo:true,  cargo:'Cejista'},
-  {id:'maria',    nombre:'Maria',    rol:'staff',  codigo:'ma2026', activo:true,  cargo:'Cejista'},
-  {id:'laura',    nombre:'Laura',    rol:'staff',  codigo:'la2026', activo:true,  cargo:'Cosmetóloga'},
+  {id:'humberto', nombre:'Humberto', rol:'owner', activo:true, cargo:'Dueño'},
+  {id:'mikaela',  nombre:'Mikaela',  rol:'ceo',   activo:true, cargo:'CEO'},
+  {id:'diana',    nombre:'Diana',    rol:'staff', activo:true, cargo:'Lashista'},
+  {id:'yadira',   nombre:'Yadira',   rol:'staff', activo:true, cargo:'Lashista'},
+  {id:'keyla',    nombre:'Keyla',    rol:'staff', activo:true, cargo:'Cajista'},
+  {id:'lesly',    nombre:'Lesly',    rol:'staff', activo:true, cargo:'Cejista'},
+  {id:'maria',    nombre:'Maria',    rol:'staff', activo:true, cargo:'Cejista'},
+  {id:'laura',    nombre:'Laura',    rol:'staff', activo:true, cargo:'Cosmetóloga'},
 ];
 
 let productoFotos = {}; // {nombre: base64}
@@ -1233,18 +1233,25 @@ function getProductoFoto(nombre){
 }
 
 // ══ LOGIN CON CÓDIGO ════════════════════════════════════════
-function loginConCodigo(){
+async function loginConCodigo(){
   const input = document.getElementById('login-code');
   const codigo = (input.value||'').trim().toLowerCase();
   if(!codigo){ showLoginError(); return; }
 
-  const user = usuarios.find(u => u.codigo === codigo && u.activo);
-  if(!user){ showLoginError(); return; }
+  try{
+    const data = await postSheet({action:'login', codigo});
+    if(!data.ok || !data.user){ showLoginError(); return; }
+    const meta = usuarios.find(u => u.id === data.user.id) || {};
+    const user = {...meta, ...data.user};
 
-  currentUser = user;
-  currentRole = user.rol;
-  input.value = '';
-  enterApp();
+    currentUser = user;
+    currentRole = user.rol;
+    input.value = '';
+    enterApp();
+  }catch(e){
+    console.log('Login error:', e);
+    showLoginError();
+  }
 }
 
 function showLoginError(){
@@ -1257,9 +1264,8 @@ function updateLoginUser(){
   const input = document.getElementById('login-code');
   const display = document.getElementById('login-user-display');
   const codigo = (input.value||'').trim().toLowerCase();
-  const user = usuarios.find(u => u.codigo === codigo && u.activo);
-  if(user){
-    display.value = user.nombre + ' · ' + (user.cargo || user.rol);
+  if(codigo){
+    display.value = 'Validación segura al entrar';
     display.style.color = 'var(--text)';
   } else {
     display.value = '';
@@ -1309,7 +1315,7 @@ function avatarSVG(color='#8a7060'){
 function enterApp(){
   if(!currentUser) return;
   // Guardar sesión
-  try{ localStorage.setItem('sira_session', JSON.stringify({id:currentUser.id, rol:currentUser.rol})); }catch(e){}
+  try{ localStorage.setItem('sira_session', JSON.stringify({user:currentUser})); }catch(e){}
   document.getElementById('login').classList.add('hidden');
   setDate();
   populateSelects();
@@ -1422,8 +1428,10 @@ function autoLogin(){
     const saved = localStorage.getItem('sira_session');
     if(!saved) return;
     const session = JSON.parse(saved);
-    if(!session || !session.id) return;
-    const user = usuarios.find(u => u.id === session.id);
+    const savedUser = session && (session.user || null);
+    if(!savedUser || !savedUser.id) return;
+    const meta = usuarios.find(u => u.id === savedUser.id) || {};
+    const user = {...meta, ...savedUser};
     if(!user || !user.activo) return;
     currentUser = user;
     currentRole = user.rol;
