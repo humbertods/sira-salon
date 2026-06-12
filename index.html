@@ -1214,7 +1214,7 @@ async function guardarFoto(){
 async function cargarFotosDesdeSheet(){
   if(!SHEET_URL) return;
   try{
-    const resp = await fetch(SHEET_URL+'?action=getFotos&t='+Date.now(),{method:'GET'});
+    const resp = await fetch(sheetUrl({action:'getFotos',t:Date.now()}),{method:'GET'});
     const text = await resp.text();
     const data = JSON.parse(text);
     if(data.ok && data.fotos){
@@ -2091,7 +2091,7 @@ function cancelarPedido(idx){
 async function cargarMarcaDesdeSheet(){
   if(!SHEET_URL) return;
   try{
-    const resp = await fetch(SHEET_URL + '?action=getMarca&t=' + Date.now(), {method:'GET'});
+    const resp = await fetch(sheetUrl({action:'getMarca',t:Date.now()}), {method:'GET'});
     const text = await resp.text();
     const data = JSON.parse(text);
     if(data.ok && data.productos && data.productos.length > 0){
@@ -2105,7 +2105,7 @@ async function cargarMarcaDesdeSheet(){
 async function cargarMovimientosDesdeSheet(){
   if(!SHEET_URL) return;
   try{
-    const resp = await fetch(SHEET_URL + '?action=getMovimientos&t=' + Date.now(), {method:'GET'});
+    const resp = await fetch(sheetUrl({action:'getMovimientos',t:Date.now()}), {method:'GET'});
     const text = await resp.text();
     const data = JSON.parse(text);
     if(data.ok && data.movimientos && data.movimientos.length > 0){
@@ -2163,7 +2163,7 @@ async function cargarProductosDesdeSheet(){
   if(!SHEET_URL) return;
   try{
     showSyncBadge('Sincronizando...');
-    const resp = await fetch(SHEET_URL + '?t=' + Date.now(), {
+    const resp = await fetch(sheetUrl({t:Date.now()}), {
       method: 'GET',
       headers: {'Content-Type': 'text/plain'},
     });
@@ -2200,13 +2200,19 @@ async function cargarProductosDesdeSheet(){
 
 // ══ SHEET SYNC ════════════════════════════════════════════════
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzyEBabD-2BXhSd1tmIXpWXwzHPWE5CoF4VcGD1c5ILkACl8FmWbQRTL0juM70sxZnw/exec';
+const SIRA_API_TOKEN = 'sira_2026_nexserv_bridge_7f4c9a';
+
+function sheetUrl(params={}){
+  const qp = new URLSearchParams({...params, token:SIRA_API_TOKEN});
+  return SHEET_URL + '?' + qp.toString();
+}
 
 async function postSheet(payload){
   if(!SHEET_URL) return {ok:false,error:'SHEET_URL no configurado'};
   const resp = await fetch(SHEET_URL,{
     method:'POST',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify(payload)
+    body:JSON.stringify({...payload, token:SIRA_API_TOKEN})
   });
   const text = await resp.text();
   const data = text ? JSON.parse(text) : {ok:resp.ok};
@@ -2599,7 +2605,7 @@ function filtrarMovsCerrados(){
 async function cargarCierresDesdeSheet(){
   if(!SHEET_URL) return;
   try{
-    const resp = await fetch(SHEET_URL+'?action=getCierres&t='+Date.now(),{method:'GET'});
+    const resp = await fetch(sheetUrl({action:'getCierres',t:Date.now()}),{method:'GET'});
     const text = await resp.text();
     const data = JSON.parse(text);
     if(data.ok && data.cierres && data.cierres.length>0){
@@ -2642,7 +2648,7 @@ async function enviarGastoVariosAlSheet(g){
 async function cargarGastosVariosDesdeSheet(){
   if(!SHEET_URL) return;
   try{
-    const resp = await fetch(SHEET_URL+'?action=getGastosVarios&t='+Date.now(),{method:'GET'});
+    const resp = await fetch(sheetUrl({action:'getGastosVarios',t:Date.now()}),{method:'GET'});
     const text = await resp.text();
     const data = JSON.parse(text);
     if(data.ok && data.gastos && data.gastos.length>0){
