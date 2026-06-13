@@ -8,6 +8,7 @@ Esta carpeta contiene la extraccion gradual del antiguo `index.html` monolitico.
 - `api/sheet-api.js`: cliente de Google Apps Script (`sheetUrl`, `postSheet`).
 - `ui/helpers.js`: constantes compartidas, fecha Ecuador, normalizacion, estado, avatar y variables globales de fotos.
 - `ui/feedback.js`: toast, badge de sincronizacion, sonidos y confirmaciones visuales.
+- `ui/modals.js`: apertura/cierre de modales y cierre tocando el fondo.
 - `auth/session.js`: usuarios publicos, login, sesion local, logout, autologin y menu de sesion.
 
 ## Modulos objetivo
@@ -16,6 +17,6 @@ Esta carpeta contiene la extraccion gradual del antiguo `index.html` monolitico.
 - `inventario/`: productos, stock, alertas.
 - `movimientos/`: entradas, salidas, combos, kits.
 - `reportes/`: gastos, resumen mensual, cierres.
-- `ui/`: helpers y feedback extraidos; pendientes modales y navegacion.
+- `ui/`: helpers, feedback y modales extraidos; pendiente navegacion.
 
 La migracion debe hacerse por partes pequeñas y probadas para no romper los handlers inline existentes.
