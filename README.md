@@ -1,27 +1,81 @@
-# Frontend Modules
+# SIRA
 
-Esta carpeta contiene la extraccion gradual del antiguo `index.html` monolitico.
+Sistema Inteligente de Registro y Administracion para inventario operativo del salon.
 
-## Estado actual
+## Estado Final
 
-- `config.js`: configuracion central de URL/API token.
-- `api/sheet-api.js`: cliente de Google Apps Script (`sheetUrl`, `postSheet`).
-- `ui/helpers.js`: constantes compartidas, fecha Ecuador, normalizacion, estado, avatar y variables globales de fotos.
-- `ui/feedback.js`: toast, badge de sincronizacion, sonidos y confirmaciones visuales.
-- `ui/modals.js`: apertura/cierre de modales y cierre tocando el fondo.
-- `ui/navigation.js`: navegacion de pantallas owner y CEO.
-- `inventario/photos.js`: carga, procesamiento y guardado de fotos de productos.
-- `inventario/sync.js`: carga de productos y escritura de movimientos/stock/productos en Apps Script.
-- `inventario/render.js`: dashboard de inventario, stock, alertas y filtro por area.
-- `movimientos/sync.js`: carga y normalizacion de movimientos desde Apps Script.
-- `auth/session.js`: usuarios publicos, login, sesion local, logout, autologin y menu de sesion.
+SIRA queda organizado como una aplicacion web/PWA publicada con GitHub Pages y conectada a Google Sheets mediante Google Apps Script.
 
-## Modulos objetivo
+Estado actual:
 
-- `auth/`: login, sesion y permisos visuales. Parcialmente extraido.
-- `inventario/`: fotos, sincronizacion y render principal extraidos.
-- `movimientos/`: carga de movimientos extraida; pendientes render, entradas, salidas, combos y kits.
-- `reportes/`: gastos, resumen mensual, cierres.
-- `ui/`: helpers, feedback, modales y navegacion extraidos.
+- Frontend modularizado parcialmente y listo para publicacion.
+- Login seguro validado en backend, sin PINs en el HTML.
+- Operaciones principales conectadas a Apps Script.
+- Backend con router por `action`.
+- Documentacion operativa y checklist de release disponibles.
 
-La migracion debe hacerse por partes pequeñas y probadas para no romper los handlers inline existentes.
+## Archivos Oficiales
+
+- Frontend PWA: `apps/web/index.html`
+- Manifest PWA: `apps/web/manifest.json`
+- Configuracion frontend: `apps/web/src/config.js`
+- Cliente API frontend: `apps/web/src/api/sheet-api.js`
+- Sesion/login frontend: `apps/web/src/auth/session.js`
+- Backend Google Apps Script: `backend/apps-script/main.gs`
+- Archivo completo para copiar en Apps Script: `backend/apps-script/COPIAR_EN_APPS_SCRIPT.gs`
+
+## Estructura
+
+- `apps/web/`: aplicacion web/PWA actual.
+- `apps/web/src/`: archivos frontend separados por responsabilidad.
+- `backend/apps-script/`: backend actual basado en Google Apps Script.
+- `backend/api-contract/`: contrato API observado e inicio de especificacion futura.
+- `docs/`: documentacion tecnica, operativa y decisiones de arquitectura.
+- `data/samples/`: ejemplos de datos para pruebas/migracion.
+- `archive/old-versions/`: versiones anteriores conservadas como referencia.
+- `archive/artifacts/`: binarios, ZIPs u otros artefactos no operativos.
+- `private/`: documentos privados, PDFs y archivos Excel.
+
+## Publicacion
+
+Frontend:
+
+- Se publica en GitHub Pages desde la carpeta/raiz configurada del repositorio publico.
+- Los archivos que deben existir publicados son `index.html`, `manifest.json`, `ICON.png`, `LOGO_SIRAA.png` y la carpeta `src/`.
+
+Backend:
+
+- Se publica desde Google Apps Script asociado al Google Sheet de SIRA.
+- Para actualizarlo, reemplazar completo `Codigo.gs` con `backend/apps-script/COPIAR_EN_APPS_SCRIPT.gs` y crear una nueva version de la implementacion.
+
+## Configuracion Critica
+
+- `SHEET_URL` vive en `apps/web/src/config.js`.
+- `API_TOKEN` del frontend vive en `apps/web/src/config.js`.
+- `API_TOKEN` del backend vive en `backend/apps-script/main.gs` y `backend/apps-script/COPIAR_EN_APPS_SCRIPT.gs`.
+- Si se cambia el token, debe actualizarse en los tres lugares.
+
+## Operacion Normal
+
+Antes de considerar una version como lista:
+
+- Ejecutar el checklist de `docs/checklist-release.md`.
+- Confirmar que la consola del navegador no tenga errores rojos propios de SIRA.
+- Confirmar que el inventario carga productos desde Google Sheets.
+- Probar login y operaciones con owner, CEO y staff.
+
+## Documentos Tecnicos
+
+- Manual operativo: `docs/manual-operativo.md`
+- Checklist release: `docs/checklist-release.md`
+- Seguridad: `docs/seguridad.md`
+- Hojas usadas por backend: `docs/hojas-backend.md`
+- Brechas frontend/backend: `docs/brechas-backend-frontend.md`
+- Transicion CORS: `docs/cors-transicion.md`
+- Contrato API observado: `backend/api-contract/sira-api-v0.md`
+- OpenAPI inicial: `backend/api-contract/openapi.yaml`
+- Integracion Nexserv: `docs/integracion-nexserv.md`
+
+## Regla De Mantenimiento
+
+No editar versiones antiguas dentro de `archive/`. Todo cambio operativo debe hacerse sobre los archivos oficiales listados arriba.
