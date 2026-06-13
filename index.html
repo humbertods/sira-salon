@@ -1140,6 +1140,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <script src="src/ui/modals.js"></script>
 <script src="src/ui/navigation.js"></script>
 <script src="src/inventario/photos.js"></script>
+<script src="src/inventario/sync.js"></script>
 <script>
 // ══ PRODUCTOS ══════════════════════════════════════════════
 let productos = [];
@@ -1808,82 +1809,6 @@ async function cargarMovimientosDesdeSheet(){
       }
     }
   }catch(e){ console.log('Movs sync error:',e); }
-}
-
-async function cargarProductosDesdeSheet(){
-  if(!SHEET_URL) return;
-  try{
-    showSyncBadge('Sincronizando...');
-    const resp = await fetch(sheetUrl({t:Date.now()}), {method: 'GET'});
-    const text = await resp.text();
-    const data = JSON.parse(text);
-    if(!data.ok) throw new Error(data.error || 'Respuesta inválida del backend');
-    if(!Array.isArray(data.productos)) throw new Error('El backend no devolvió productos');
-
-    // Convertir productos del Sheet al formato de la app.
-    productos = data.productos.map((p,i) => ({
-      id: p.id || (i+1),
-      nombre: p.nombre,
-      area: p.area || 'Sin área',
-      unidad: p.unidad || 'Unidad',
-      stock: parseInt(p.stock) || 0,
-      min: parseInt(p.min) || 0,
-      costo: parseFloat(p.costo) || 0,
-      notas: p.notas || ''
-    }));
-    populateSelects();
-
-    // Refresh all visible screens
-    if(currentUser){
-      if(currentUser.rol==='owner'){ renderOwnerInicio(); renderStock('ow'); renderReportes(); }
-      else if(currentUser.rol==='ceo'){ renderCEOInicio(); renderStock('ceo'); }
-      else { renderStaffHoy(); }
-    }
-    showSyncBadge('✓ Sincronizado');
-    setTimeout(()=>hideSyncBadge(), 2000);
-  }catch(e){
-    console.error('Productos sync error:', e);
-    showSyncBadge('Sin conexión');
-    showToast('Error cargando productos');
-    setTimeout(()=>hideSyncBadge(), 2000);
-  }
-}
-
-// ══ SHEET SYNC ════════════════════════════════════════════════
-
-async function enviarAlSheet(tipo,producto,cantidad,responsable,area,tipoUnidad,hora,grupo){
-  if(!SHEET_URL) return;
-  try{
-    await postSheet({action:'movimiento',tipo,producto,cantidad,responsable,area,fecha:hoy(),tipoUnidad:tipoUnidad||'Unidad',hora:hora||'',grupo:grupo||''});
-  }catch(e){console.log('Sync error:',e)}
-}
-
-// Enviar múltiples movimientos en UNA sola petición (para combos y kits)
-async function enviarBatchAlSheet(movs){
-  if(!SHEET_URL || !movs || movs.length===0) return;
-  try{
-    await postSheet({action:'movimientoBatch',movimientos:movs});
-  }catch(e){console.log('Batch sync error:',e)}
-}
-
-// Actualizar stock de múltiples productos en UNA sola petición
-async function actualizarStockBatchEnSheet(items){
-  if(!SHEET_URL || !items || items.length===0) return;
-  try{
-    await postSheet({action:'actualizarStockBatch',items:items});
-  }catch(e){console.log('Stock batch sync error:',e)}
-}
-
-function actualizarStockEnSheet(nombre, nuevoStock){
-  if(!SHEET_URL) return;
-  postSheet({action:'actualizarStock',producto:nombre,nuevoStock,fecha:hoy()}).catch(e=>console.log('Stock sync error:',e));
-}
-
-async function guardarProductoEnSheet(prod){
-  if(!SHEET_URL || !prod) return;
-  try{
-    await postSheet({action:'nuevoProducto',nombre:prod.nombre,area:prod.area,unidad:prod.unidad,stock:prod.stock,min:prod.min,costo:prod.costo,notas:prod.notas});
-  }catch(e){console.log('Producto sync error:',e)}
 }
 
 // ══ REPORTE MENSUAL ══════════════════════════════════════════
