@@ -9,6 +9,7 @@
 <meta name="theme-color" content="#FAFAF9">
 <link rel="manifest" href="manifest.json">
 <title>SIRA</title>
+<link rel="icon" href="ICON.png">
 <link rel="apple-touch-icon" href="ICON.png">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -1133,14 +1134,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 
 <script src="src/config.js"></script>
 <script src="src/api/sheet-api.js"></script>
+<script src="src/ui/helpers.js"></script>
 <script>
-// ══ ÁREAS ══════════════════════════════════════════════════
-const AREAS = ['Cejas','Pestañas','Depilaciones','Limpieza Facial','Local','Coffee'];
-const AREA_EMOJI = {Cejas:'✦',Pestañas:'👁',Depilaciones:'🪶','Limpieza Facial':'✨',Local:'🏪',Coffee:'☕'};
-
-let productoFotos = {}; // {nombre: base64}
-let fotoTempBase64 = '';
-
 // ══ FOTOS DE PRODUCTOS ══════════════════════════════════════
 function abrirFoto(nombre){
   if(currentUser.rol !== 'owner') return;
@@ -1226,47 +1221,6 @@ function getProductoFoto(nombre){
 let productos = [];
 let movimientos = [];
 let activeArea = 'Todos';
-
-function hoy(){
-  const ahora = new Date();
-  const y = ahora.toLocaleString('en-CA',{timeZone:'America/Guayaquil',year:'numeric'});
-  const m = ahora.toLocaleString('en-CA',{timeZone:'America/Guayaquil',month:'2-digit'});
-  const d = ahora.toLocaleString('en-CA',{timeZone:'America/Guayaquil',day:'2-digit'});
-  return y+'-'+m+'-'+d;
-}
-
-function horaGuayaquil(){
-  const ahora = new Date();
-  const opciones = {hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Guayaquil'};
-  return ahora.toLocaleTimeString('es-EC', opciones).substring(0,5);
-}
-
-function norm(str){
-  return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
-}
-
-function getEstado(stock, min){
-  if(stock===0) return 'Agotado';
-  if(stock<=min) return 'Stock Bajo';
-  return 'OK';
-}
-
-// ══ SVG AVATAR ══════════════════════════════════════════════
-function avatarSVG(color='#8a7060'){
-  return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="8" r="4" fill="${color}"/>
-    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="${color}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-  </svg>`;
-}
-
-// ══ DATE ════════════════════════════════════════════════════
-function setDate(){
-  const d=new Date();
-  const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-  const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  const str=`${dias[d.getDay()]} ${d.getDate()} de ${meses[d.getMonth()]}`;
-  ['ow-date','ceo-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=str;});
-}
 
 // ══ NAV ═════════════════════════════════════════════════════
 function owNav(s){
@@ -1986,37 +1940,37 @@ async function cargarProductosDesdeSheet(){
   if(!SHEET_URL) return;
   try{
     showSyncBadge('Sincronizando...');
-    const resp = await fetch(sheetUrl({t:Date.now()}), {
-      method: 'GET',
-      headers: {'Content-Type': 'text/plain'},
-    });
+    const resp = await fetch(sheetUrl({t:Date.now()}), {method: 'GET'});
     const text = await resp.text();
     const data = JSON.parse(text);
-    if(data.ok && data.productos && data.productos.length > 0){
-      // Convertir productos del Sheet al formato de la app
-      productos = data.productos.map((p,i) => ({
-        id: p.id || (i+1),
-        nombre: p.nombre,
-        area: p.area || 'Sin área',
-        unidad: p.unidad || 'Unidad',
-        stock: parseInt(p.stock) || 0,
-        min: parseInt(p.min) || 0,
-        costo: parseFloat(p.costo) || 0,
-        notas: p.notas || ''
-      }));
-      // Refresh all visible screens
-      if(currentUser){
-        if(currentUser.rol==='owner'){ renderOwnerInicio(); renderStock('ow'); renderReportes(); }
-        else if(currentUser.rol==='ceo'){ renderCEOInicio(); renderStock('ceo'); }
-        else { renderStaffHoy(); }
-      }
-      showSyncBadge('✓ Sincronizado');
-      setTimeout(()=>hideSyncBadge(), 2000);
-    } else {
-      hideSyncBadge();
+    if(!data.ok) throw new Error(data.error || 'Respuesta inválida del backend');
+    if(!Array.isArray(data.productos)) throw new Error('El backend no devolvió productos');
+
+    // Convertir productos del Sheet al formato de la app.
+    productos = data.productos.map((p,i) => ({
+      id: p.id || (i+1),
+      nombre: p.nombre,
+      area: p.area || 'Sin área',
+      unidad: p.unidad || 'Unidad',
+      stock: parseInt(p.stock) || 0,
+      min: parseInt(p.min) || 0,
+      costo: parseFloat(p.costo) || 0,
+      notas: p.notas || ''
+    }));
+    populateSelects();
+
+    // Refresh all visible screens
+    if(currentUser){
+      if(currentUser.rol==='owner'){ renderOwnerInicio(); renderStock('ow'); renderReportes(); }
+      else if(currentUser.rol==='ceo'){ renderCEOInicio(); renderStock('ceo'); }
+      else { renderStaffHoy(); }
     }
+    showSyncBadge('✓ Sincronizado');
+    setTimeout(()=>hideSyncBadge(), 2000);
   }catch(e){
+    console.error('Productos sync error:', e);
     showSyncBadge('Sin conexión');
+    showToast('Error cargando productos');
     setTimeout(()=>hideSyncBadge(), 2000);
   }
 }
