@@ -1145,6 +1145,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <script src="src/movimientos/sync.js"></script>
 <script src="src/movimientos/render.js"></script>
 <script src="src/equipo/render.js"></script>
+<script src="src/reportes/helpers.js"></script>
 <script>
 // ══ PRODUCTOS ══════════════════════════════════════════════
 let productos = [];
@@ -1536,10 +1537,6 @@ async function cargarMarcaDesdeSheet(){
   }catch(e){ console.log('Marca sync error:',e); }
 }
 
-// ══ REPORTE MENSUAL ══════════════════════════════════════════
-const MESES_NOMBRES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-
 function renderTopUsados(){
   const container = document.getElementById('r-top-usados');
   if(!container) return;
@@ -1636,24 +1633,6 @@ function setGastoTab(tab, el){
   document.querySelectorAll('.g-tab').forEach(t=>t.classList.remove('active'));
   if(el) el.classList.add('active');
   renderGastos();
-}
-
-function getWeekRange(){
-  const now = new Date();
-  const day = now.getDay();
-  const start = new Date(now);
-  start.setDate(now.getDate() - day + (day===0?-6:1)); // lunes
-  start.setHours(0,0,0,0);
-  const end = new Date(start);
-  end.setDate(start.getDate()+6);
-  return {start, end};
-}
-
-function getMonthRange(){
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), 1);
-  const end = new Date(now.getFullYear(), now.getMonth()+1, 0);
-  return {start, end};
 }
 
 function filtrarEntradasPorPeriodo(periodo){
