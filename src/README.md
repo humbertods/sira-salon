@@ -14,14 +14,18 @@ Esta carpeta contiene la extraccion gradual del antiguo `index.html` monolitico.
 - `inventario/sync.js`: carga de productos y escritura de movimientos/stock/productos en Apps Script.
 - `inventario/render.js`: dashboard de inventario, stock, alertas y filtro por area.
 - `movimientos/sync.js`: carga y normalizacion de movimientos desde Apps Script.
+- `movimientos/render.js`: historial owner/CEO y movimientos del dia para staff.
+- `equipo/render.js`: listado visual de equipo y activacion local de usuarios.
+- `reportes/helpers.js`: nombres de meses y rangos de semana/mes compartidos.
+- `marca/index.js`: modulo Mi Marca, productos, stock, pedidos y sync basico.
 - `auth/session.js`: usuarios publicos, login, sesion local, logout, autologin y menu de sesion.
 
 ## Modulos objetivo
 
 - `auth/`: login, sesion y permisos visuales. Parcialmente extraido.
 - `inventario/`: fotos, sincronizacion y render principal extraidos.
-- `movimientos/`: carga de movimientos extraida; pendientes render, entradas, salidas, combos y kits.
-- `reportes/`: gastos, resumen mensual, cierres.
+- `movimientos/`: carga y render de movimientos extraidos; pendientes entradas, salidas, combos y kits.
+- `reportes/`: helpers de fecha extraidos; pendientes gastos, resumen mensual y cierres.
 - `ui/`: helpers, feedback, modales y navegacion extraidos.
 
 La migracion debe hacerse por partes pequeñas y probadas para no romper los handlers inline existentes.
