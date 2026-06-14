@@ -17,7 +17,10 @@ Esta carpeta contiene la extraccion gradual del antiguo `index.html` monolitico.
 - `movimientos/render.js`: historial owner/CEO y movimientos del dia para staff.
 - `equipo/render.js`: listado visual de equipo y activacion local de usuarios.
 - `reportes/helpers.js`: nombres de meses y rangos de semana/mes compartidos.
+- `reportes/index.js`: dashboard de reportes, productos mas usados, staff mensual, resumen general y flujo financiero.
 - `marca/index.js`: modulo Mi Marca, productos, stock, pedidos y sync basico.
+- `gastos/index.js`: dashboard de gastos de inventario, filtros por periodo y carga/envio de gastos varios.
+- `cierres/index.js`: carga de meses cerrados, filtro de datos cerrados y cierre mensual.
 - `auth/session.js`: usuarios publicos, login, sesion local, logout, autologin y menu de sesion.
 
 ## Modulos objetivo
@@ -25,7 +28,7 @@ Esta carpeta contiene la extraccion gradual del antiguo `index.html` monolitico.
 - `auth/`: login, sesion y permisos visuales. Parcialmente extraido.
 - `inventario/`: fotos, sincronizacion y render principal extraidos.
 - `movimientos/`: carga y render de movimientos extraidos; pendientes entradas, salidas, combos y kits.
-- `reportes/`: helpers de fecha extraidos; pendientes gastos, resumen mensual y cierres.
+- `reportes/`: helpers, resumen mensual y flujo financiero extraidos.
 - `ui/`: helpers, feedback, modales y navegacion extraidos.
 
 La migracion debe hacerse por partes pequeñas y probadas para no romper los handlers inline existentes.
