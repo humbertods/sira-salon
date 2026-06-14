@@ -3,6 +3,30 @@ const AREA_COLORS = ['c1','c2','c3','c4','c5','c6'];
 const DIAS_SEMANA_CORTO = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 let gastosVarios = [];
 
+const GV_CAT_EMOJI = {'Envío':'🚚','Reparación':'🔧','Servicio':'⚡','Transporte':'🚕','Insumo extra':'🛒','Otro':'📎'};
+
+function registrarGastoVarios(){
+  if(_procesando) return;
+  _procesando = true;
+  const cat = document.getElementById('gv-cat').value;
+  const desc = document.getElementById('gv-desc').value.trim();
+  const monto = parseFloat(document.getElementById('gv-monto').value);
+  const resp = document.getElementById('gv-resp').value;
+  const notas = document.getElementById('gv-notas').value.trim();
+  if(!desc){showToast('⚠️ Ingresá una descripción');_procesando=false;return}
+  if(!monto||monto<=0){showToast('⚠️ Ingresá un monto válido');_procesando=false;return}
+  const fecha = hoy();
+  const hora = horaGuayaquil();
+  const gasto = {id:Date.now(),cat,desc,monto,resp,notas,fecha,hora};
+  gastosVarios.push(gasto);
+  closeModal('gasto-varios');
+  ['gv-desc','gv-monto','gv-notas'].forEach(id=>document.getElementById(id).value='');
+  showConfirm('💸','Gasto registrado','$'+monto.toFixed(2)+' · '+desc);
+  refreshAll();
+  enviarGastoVariosAlSheet(gasto);
+  setTimeout(()=>{_procesando=false;}, 500);
+}
+
 function setGastoTab(tab, el){
   gastoTab = tab;
   document.querySelectorAll('.g-tab').forEach(t=>t.classList.remove('active'));
