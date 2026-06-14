@@ -1146,38 +1146,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <script src="src/movimientos/render.js"></script>
 <script src="src/equipo/render.js"></script>
 <script src="src/reportes/helpers.js"></script>
+<script src="src/reportes/index.js"></script>
 <script src="src/marca/index.js"></script>
 <script src="src/gastos/index.js"></script>
+<script src="src/cierres/index.js"></script>
 <script>
 // ══ PRODUCTOS ══════════════════════════════════════════════
 let productos = [];
 let movimientos = [];
 let activeArea = 'Todos';
-
-// ══ RENDER REPORTES ══════════════════════════════════════════
-function renderReportes(){
-  const alertas=productos.filter(p=>p.stock<=p.min&&p.stock>0);
-  const agotados=productos.filter(p=>p.stock===0);
-  const ok=productos.filter(p=>p.stock>p.min);
-  const valor=productos.reduce((s,p)=>s+p.stock*p.costo,0);
-  document.getElementById('r-total').textContent=productos.length;
-  document.getElementById('r-ok').textContent=ok.length;
-  document.getElementById('r-warn').textContent=alertas.length;
-  document.getElementById('r-danger').textContent=agotados.length;
-  document.getElementById('r-valor').textContent='$'+valor.toFixed(2);
-  const byArea={};productos.forEach(p=>{byArea[p.area]=(byArea[p.area]||[]).concat(p)});
-  document.getElementById('r-areas').innerHTML=Object.entries(byArea).map(([area,prods])=>{
-    const bajos=prods.filter(p=>p.stock<=p.min).length;
-    return`<div class="info-card">
-      <div class="info-card-title">${AREA_EMOJI[area]||''} ${area}</div>
-      <div class="data-row"><span class="data-key">Productos</span><span class="data-val">${prods.length}</span></div>
-      <div class="data-row"><span class="data-key">Con alerta</span><span class="data-val ${bajos>0?'warn':''}">${bajos}</span></div>
-    </div>`;}).join('');
-  renderTopUsados();
-  renderFlujoFinanciero();
-  renderStaffMes();
-  renderResumenGeneral();
-}
 
 // ══ MODALS ════════════════════════════════════════════════════
 function populateSelects(){
@@ -1396,126 +1373,6 @@ function refreshAll(){
   else renderStaffHoy();
 }
 
-function renderTopUsados(){
-  const container = document.getElementById('r-top-usados');
-  if(!container) return;
-
-  // Obtener rango de la semana actual (lunes a hoy)
-  const {start, end} = getWeekRange();
-
-  // Filtrar solo salidas de esta semana
-  const salidasSemana = movimientos.filter(m => {
-    if(m.tipo !== 'salida') return false;
-    const d = new Date(m.fecha + 'T12:00:00');
-    return d >= start && d <= end;
-  });
-
-  if(salidasSemana.length === 0){
-    container.innerHTML = '<div class="no-data">Sin salidas esta semana</div>';
-    return;
-  }
-
-  // Agrupar por producto: total de unidades y por área
-  const byProd = {};
-  salidasSemana.forEach(m => {
-    const key = m.producto;
-    if(!byProd[key]) byProd[key] = {total: 0, areas: {}};
-    byProd[key].total += m.cant;
-    const area = m.area || 'Sin área';
-    byProd[key].areas[area] = (byProd[key].areas[area] || 0) + m.cant;
-  });
-
-  // Ordenar de más usado a menos usado, top 20
-  const sorted = Object.entries(byProd)
-    .sort((a, b) => b[1].total - a[1].total)
-    .slice(0, 20);
-
-  const maxTotal = sorted[0][1].total;
-
-  // Colores por área
-  const areaColores = {
-    'Cejas': '#BFA26F',
-    'Pestañas': '#34A853',
-    'Depilaciones': '#4285F4',
-    'Limpieza Facial': '#F5A623',
-    'Local': '#8A8A8A',
-    'Coffee': '#6D4C41',
-    'Sin área': '#B0B0B0'
-  };
-
-  container.innerHTML = sorted.map(([nombre, data], i) => {
-    const pct = Math.max(8, (data.total / maxTotal) * 100);
-
-    // Calcular % por área
-    const areaEntries = Object.entries(data.areas).sort((a, b) => b[1] - a[1]);
-    const areaBarsHtml = areaEntries.map(([area, cant]) => {
-      const areaPct = Math.round((cant / data.total) * 100);
-      const color = areaColores[area] || '#B0B0B0';
-      return `<div style="display:flex;align-items:center;gap:6px;margin-top:3px">
-        <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></div>
-        <span style="font-size:11px;color:var(--text2);flex:1">${area}</span>
-        <div style="width:60px;height:6px;background:var(--border);border-radius:3px;overflow:hidden">
-          <div style="width:${areaPct}%;height:100%;background:${color};border-radius:3px"></div>
-        </div>
-        <span style="font-size:11px;font-weight:700;color:var(--text);min-width:32px;text-align:right">${areaPct}%</span>
-      </div>`;
-    }).join('');
-
-    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;box-shadow:var(--shadow)">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-        <div style="width:28px;height:28px;border-radius:50%;background:${i<3?'var(--primary)':'var(--border)'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <span style="font-size:12px;font-weight:700;color:${i<3?'white':'var(--text2)'}">${i+1}</span>
-        </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nombre}</div>
-        </div>
-        <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:18px;font-weight:700;color:var(--text)">${data.total}</div>
-          <div style="font-size:10px;color:var(--text2)">unid.</div>
-        </div>
-      </div>
-      <div style="width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:8px">
-        <div style="width:${pct}%;height:100%;background:var(--primary);border-radius:3px;transition:width 500ms"></div>
-      </div>
-      ${areaBarsHtml}
-    </div>`;
-  }).join('');
-}
-
-// ══ GASTOS VARIOS ════════════════════════════════════════════
-let mesesCerrados = []; // [{mes:5, anio:2026}, ...]
-
-function esMesCerrado(mesNum, anio){
-  return mesesCerrados.some(c => c.mes === mesNum && c.anio === anio);
-}
-
-function filtrarMovsCerrados(){
-  movimientos = movimientos.filter(m => {
-    if(!m.fecha) return true;
-    const parts = m.fecha.split('-');
-    if(parts.length<3) return true;
-    return !esMesCerrado(parseInt(parts[1]), parseInt(parts[0]));
-  });
-  gastosVarios = gastosVarios.filter(g => {
-    if(!g.fecha) return true;
-    const parts = g.fecha.split('-');
-    if(parts.length<3) return true;
-    return !esMesCerrado(parseInt(parts[1]), parseInt(parts[0]));
-  });
-}
-
-async function cargarCierresDesdeSheet(){
-  if(!SHEET_URL) return;
-  try{
-    const resp = await fetch(sheetUrl({action:'getCierres',t:Date.now()}),{method:'GET'});
-    const text = await resp.text();
-    const data = JSON.parse(text);
-    if(data.ok && data.cierres && data.cierres.length>0){
-      mesesCerrados = data.cierres.map(c=>({mes:parseInt(c.mesNum), anio:parseInt(c.anio)}));
-      filtrarMovsCerrados();
-    }
-  }catch(e){console.log('Cierres load error:',e)}
-}
 const GV_CAT_EMOJI = {'Envío':'🚚','Reparación':'🔧','Servicio':'⚡','Transporte':'🚕','Insumo extra':'🛒','Otro':'📎'};
 
 function registrarGastoVarios(){
@@ -1540,6 +1397,7 @@ function registrarGastoVarios(){
   setTimeout(()=>{_procesando=false;}, 500);
 }
 
+/* Reportes movidos a src/reportes/index.js.
 // ══ GASTO GENERAL × MES POR STAFF ════════════════════════════
 function renderStaffMes(){
   const now = new Date();
@@ -1724,120 +1582,6 @@ function renderResumenGeneral(){
   const granTotal = totalStaff + totalGV;
   document.getElementById('rg-gran-total').textContent = '$' + granTotal.toFixed(2);
   document.getElementById('rg-total-preview').textContent = 'Total: $' + granTotal.toFixed(2);
-}
-
-// ══ CIERRE DE MES ═══════════════════════════════════════════
-function confirmarCierreMes(){
-  const mesNombre = MESES_NOMBRES[rgMes] + ' ' + rgAnio;
-  const total = document.getElementById('rg-gran-total').textContent;
-
-  // Verificar si ya está cerrado
-  if(esMesCerrado(rgMes+1, rgAnio)){
-    showToast('⚠️ ' + mesNombre + ' ya fue cerrado');
-    return;
-  }
-
-  const ov = document.createElement('div');
-  ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px';
-  ov.innerHTML = `
-    <div style="background:var(--card);border-radius:var(--r2);padding:28px 24px;max-width:320px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.2)">
-      <div style="font-size:40px;margin-bottom:12px">🔒</div>
-      <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px">Cierre de ${mesNombre}</div>
-      <div style="font-size:14px;color:var(--text2);margin-bottom:6px">Total del mes: <strong style="color:var(--primary)">${total}</strong></div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:20px;line-height:1.5">
-        Los contadores se reiniciarán a $0.<br>El registro queda guardado en tu Sheet.
-      </div>
-      <button id="btn-cierre-confirm" style="width:100%;padding:14px;background:var(--primary);border:none;border-radius:var(--r4);
-        color:white;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px;
-        box-shadow:0 4px 16px rgba(191,162,111,.3)">
-        Confirmar cierre
-      </button>
-      <button id="btn-cierre-cancel" style="width:100%;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r4);
-        color:var(--text2);font-family:var(--font);font-size:14px;cursor:pointer">
-        Cancelar
-      </button>
-    </div>`;
-  document.body.appendChild(ov);
-
-  document.getElementById('btn-cierre-cancel').onclick = () => ov.remove();
-  ov.addEventListener('click', (e) => { if(e.target === ov) ov.remove(); });
-
-  document.getElementById('btn-cierre-confirm').onclick = async () => {
-    const btn = document.getElementById('btn-cierre-confirm');
-    btn.textContent = 'Cerrando...';
-    btn.style.opacity = '0.5';
-    btn.style.pointerEvents = 'none';
-
-    // Calcular datos del cierre
-    const mesNum = rgMes + 1;
-    const movsMes = movimientos.filter(m => {
-      if(!m.fecha) return false;
-      const parts = m.fecha.split('-');
-      if(parts.length<3) return false;
-      return parseInt(parts[0])===rgAnio && parseInt(parts[1])===mesNum;
-    });
-    const gvMes = gastosVarios.filter(g => {
-      if(!g.fecha) return false;
-      const parts = g.fecha.split('-');
-      if(parts.length<3) return false;
-      return parseInt(parts[0])===rgAnio && parseInt(parts[1])===mesNum;
-    });
-
-    const staffResumen = {};
-    movsMes.forEach(m => {
-      if(!staffResumen[m.resp]) staffResumen[m.resp] = {movs:0, total:0};
-      staffResumen[m.resp].movs++;
-      const prod = productos.find(p => norm(p.nombre) === norm(m.producto));
-      staffResumen[m.resp].total += (prod ? prod.costo : 0) * m.cant;
-    });
-    const totalProductos = Object.values(staffResumen).reduce((s,d) => s + d.total, 0);
-    const totalGV = gvMes.reduce((s,g) => s + g.monto, 0);
-    const granTotal = totalProductos + totalGV;
-
-    // Guardar cierre en el Sheet
-    try {
-      await postSheet({
-        action: 'cierreMes',
-        mes: MESES_NOMBRES[rgMes],
-        anio: rgAnio,
-        mesNum: mesNum,
-        totalProductos: totalProductos.toFixed(2),
-        totalGastosVarios: totalGV.toFixed(2),
-        granTotal: granTotal.toFixed(2),
-        totalMovimientos: movsMes.length,
-        staff: JSON.stringify(staffResumen),
-        fecha: hoy(),
-        hora: horaGuayaquil()
-      });
-    } catch(e) { console.log('Cierre sync error:', e); }
-
-    // Marcar mes como cerrado
-    mesesCerrados.push({mes: mesNum, anio: rgAnio});
-
-    // Filtrar movimientos y gastos del mes cerrado de los arrays locales
-    movimientos = movimientos.filter(m => {
-      if(!m.fecha) return true;
-      const parts = m.fecha.split('-');
-      if(parts.length<3) return true;
-      return !(parseInt(parts[0])===rgAnio && parseInt(parts[1])===mesNum);
-    });
-    gastosVarios = gastosVarios.filter(g => {
-      if(!g.fecha) return true;
-      const parts = g.fecha.split('-');
-      if(parts.length<3) return true;
-      return !(parseInt(parts[0])===rgAnio && parseInt(parts[1])===mesNum);
-    });
-
-    // Refrescar todas las vistas
-    ov.remove();
-    renderOwnerInicio();
-    renderStock('ow');
-    renderMovs('ow');
-    renderReportes();
-    renderGastos();
-    playPin();
-    showConfirm('🔒', 'Mes cerrado', mesNombre + ' archivado · Todo reiniciado a $0');
-  };
 }
 
 // ══ FLUJO FINANCIERO — ACORDEÓN POR DÍA ═════════════════════
@@ -2053,6 +1797,7 @@ function renderFlujoFinanciero(){
   }).join('');
 }
 
+*/
 const WA_GROUP = 'https://chat.whatsapp.com/G0B5u1opWm66yLR4pRizd6';
 </script>
 <script src="src/auth/session.js"></script>
