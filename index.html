@@ -1135,6 +1135,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 
 <script src="src/config.js"></script>
 <script src="src/api/sheet-api.js"></script>
+<script src="src/state/app-state.js"></script>
 <script src="src/ui/helpers.js"></script>
 <script src="src/ui/feedback.js"></script>
 <script src="src/ui/modals.js"></script>
@@ -1152,14 +1153,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <script src="src/marca/index.js"></script>
 <script src="src/gastos/index.js"></script>
 <script src="src/cierres/index.js"></script>
-<script>
-// ══ PRODUCTOS ══════════════════════════════════════════════
-let productos = [];
-let movimientos = [];
-let activeArea = 'Todos';
-
-const WA_GROUP = 'https://chat.whatsapp.com/G0B5u1opWm66yLR4pRizd6';
-</script>
 <script src="src/auth/session.js"></script>
 <div class="confirm-overlay" id="confirm-overlay" style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(44,24,16,.45);opacity:0;pointer-events:none;transition:opacity .25s">
   <div class="confirm-box" style="background:white;border-radius:24px;padding:32px 28px;text-align:center;max-width:280px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,.2);transform:scale(.9);transition:transform .25s">
