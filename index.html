@@ -664,6 +664,24 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
       <div id="rf-acordeon"></div>
 
       <div class="divider"></div>
+      <p class="sec-title">Detalle de uso por producto</p>
+      <div class="info-card" id="r-detalle-uso" style="padding:16px;margin-bottom:16px">
+        <select class="form-input" id="du-prod" onchange="renderDetalleUsoProducto()" style="margin-bottom:10px">
+          <option value="">Seleccioná un producto</option>
+        </select>
+        <div class="gastos-tabs" style="margin-bottom:12px">
+          <div class="g-tab active" id="du-tab-mes" onclick="setDetalleUsoModo('mes',this)">Mes</div>
+          <div class="g-tab" id="du-tab-anio" onclick="setDetalleUsoModo('anio',this)">Año</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+          <select class="form-input" id="du-mes" onchange="renderDetalleUsoProducto()"></select>
+          <select class="form-input" id="du-anio" onchange="renderDetalleUsoProducto()"></select>
+        </div>
+        <div id="du-resumen"></div>
+        <div id="du-detalle" style="margin-top:12px"></div>
+      </div>
+
+      <div class="divider"></div>
       <p class="sec-title">🔥 Productos más usados esta semana</p>
       <div id="r-top-usados"></div>
     </div>
