@@ -8,14 +8,6 @@ function renderReportes(){
   document.getElementById('r-warn').textContent=alertas.length;
   document.getElementById('r-danger').textContent=agotados.length;
   document.getElementById('r-valor').textContent='$'+valor.toFixed(2);
-  const byArea={};productos.forEach(p=>{byArea[p.area]=(byArea[p.area]||[]).concat(p)});
-  document.getElementById('r-areas').innerHTML=Object.entries(byArea).map(([area,prods])=>{
-    const bajos=prods.filter(p=>p.stock<=p.min).length;
-    return`<div class="info-card">
-      <div class="info-card-title">${AREA_EMOJI[area]||''} ${area}</div>
-      <div class="data-row"><span class="data-key">Productos</span><span class="data-val">${prods.length}</span></div>
-      <div class="data-row"><span class="data-key">Con alerta</span><span class="data-val ${bajos>0?'warn':''}">${bajos}</span></div>
-    </div>`;}).join('');
   renderTopUsados();
   renderFlujoFinanciero();
   renderStaffMes();
