@@ -10,8 +10,167 @@ function renderReportes(){
   document.getElementById('r-valor').textContent='$'+valor.toFixed(2);
   renderTopUsados();
   renderFlujoFinanciero();
+  renderDetalleUsoProducto();
   renderStaffMes();
   renderResumenGeneral();
+}
+
+let detalleUsoModo = 'mes';
+
+function setDetalleUsoModo(modo, el){
+  detalleUsoModo = modo;
+  document.querySelectorAll('#r-detalle-uso .g-tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  const mesSelect = document.getElementById('du-mes');
+  if(mesSelect) mesSelect.style.display = modo === 'mes' ? 'block' : 'none';
+  renderDetalleUsoProducto();
+}
+
+function prepararControlesDetalleUso(){
+  const prodSel = document.getElementById('du-prod');
+  const mesSel = document.getElementById('du-mes');
+  const anioSel = document.getElementById('du-anio');
+  if(!prodSel || !mesSel || !anioSel) return;
+
+  if(!prodSel.dataset.ready || parseInt(prodSel.dataset.count||'0') !== productos.length){
+    const previo = prodSel.value;
+    prodSel.innerHTML = '<option value="">Seleccioná un producto</option>' + productos
+      .slice()
+      .sort((a,b)=>String(a.nombre||'').localeCompare(String(b.nombre||'')))
+      .map(p=>`<option value="${p.id}">${p.nombre}</option>`)
+      .join('');
+    if(previo) prodSel.value = previo;
+    prodSel.dataset.ready = '1';
+    prodSel.dataset.count = productos.length;
+  }
+
+  if(!mesSel.dataset.ready){
+    const now = new Date();
+    mesSel.innerHTML = MESES_NOMBRES.map((m,i)=>`<option value="${i+1}" ${i===now.getMonth()?'selected':''}>${m}</option>`).join('');
+    mesSel.dataset.ready = '1';
+  }
+
+  if(!anioSel.dataset.ready || parseInt(anioSel.dataset.movs||'0') !== movimientos.length){
+    const now = new Date();
+    const previo = anioSel.value;
+    const anios = new Set([now.getFullYear()]);
+    movimientos.forEach(m=>{
+      if(!m.fecha) return;
+      const y = parseInt(String(m.fecha).split('-')[0]);
+      if(y) anios.add(y);
+    });
+    anioSel.innerHTML = Array.from(anios).sort((a,b)=>b-a).map(y=>`<option value="${y}">${y}</option>`).join('');
+    anioSel.value = previo || String(now.getFullYear());
+    anioSel.dataset.ready = '1';
+    anioSel.dataset.movs = movimientos.length;
+  }
+}
+
+function getProductoDetalleUso(){
+  const prodSel = document.getElementById('du-prod');
+  if(!prodSel || !prodSel.value) return null;
+  return productos.find(p=>String(p.id) === String(prodSel.value)) || null;
+}
+
+function movimientosProductoPorPeriodo(producto, anio, mesNum){
+  if(!producto) return [];
+  return movimientos.filter(m=>{
+    if(!m.fecha || norm(m.producto) !== norm(producto.nombre)) return false;
+    const parts = String(m.fecha).split('-');
+    if(parts.length < 3) return false;
+    const y = parseInt(parts[0]);
+    const mes = parseInt(parts[1]);
+    if(y !== anio) return false;
+    return mesNum ? mes === mesNum : true;
+  });
+}
+
+function renderDetalleUsoProducto(){
+  prepararControlesDetalleUso();
+  const prodSel = document.getElementById('du-prod');
+  const mesSel = document.getElementById('du-mes');
+  const anioSel = document.getElementById('du-anio');
+  const resumen = document.getElementById('du-resumen');
+  const detalle = document.getElementById('du-detalle');
+  if(!prodSel || !mesSel || !anioSel || !resumen || !detalle) return;
+
+  mesSel.style.display = detalleUsoModo === 'mes' ? 'block' : 'none';
+  const prod = getProductoDetalleUso();
+  if(!prod){
+    resumen.innerHTML = productos.length
+      ? '<div class="no-data">Seleccioná un producto para ver su detalle</div>'
+      : '<div class="no-data">Cargando productos...</div>';
+    detalle.innerHTML = '';
+    return;
+  }
+
+  const anio = parseInt(anioSel.value) || new Date().getFullYear();
+  const mesNum = parseInt(mesSel.value) || (new Date().getMonth()+1);
+  const costo = prod ? prod.costo : 0;
+
+  if(detalleUsoModo === 'mes'){
+    const movs = movimientosProductoPorPeriodo(prod, anio, mesNum);
+    const entradas = movs.filter(m=>m.tipo==='entrada');
+    const salidas = movs.filter(m=>m.tipo==='salida');
+    const comprados = entradas.reduce((s,m)=>s+m.cant,0);
+    const usados = salidas.reduce((s,m)=>s+m.cant,0);
+    const byArea = {};
+    movs.forEach(m=>{
+      const area = m.area || (prod ? prod.area : 'Sin área');
+      if(!byArea[area]) byArea[area] = {entradas:0, salidas:0};
+      if(m.tipo==='entrada') byArea[area].entradas += m.cant;
+      if(m.tipo==='salida') byArea[area].salidas += m.cant;
+    });
+    const areas = Object.entries(byArea).sort((a,b)=>(b[1].salidas+b[1].entradas)-(a[1].salidas+a[1].entradas));
+    resumen.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div class="stat-card" style="box-shadow:none"><div class="stat-val">${comprados}</div><div class="stat-lbl">Comprados</div></div>
+      <div class="stat-card" style="box-shadow:none"><div class="stat-val">${usados}</div><div class="stat-lbl">Usados</div></div>
+      <div class="stat-card" style="box-shadow:none"><div class="stat-val">$${(usados*costo).toFixed(0)}</div><div class="stat-lbl">Uso estimado</div></div>
+    </div>`;
+    detalle.innerHTML = areas.length ? areas.map(([area,data])=>`
+      <div class="gasto-item">
+        <div class="gasto-item-icon">${AREA_EMOJI[area]||'📦'}</div>
+        <div class="gasto-item-info">
+          <div class="gasto-item-name">${area}</div>
+          <div class="gasto-item-meta">Comprados ${data.entradas} · Usados ${data.salidas}</div>
+        </div>
+        <div class="gasto-item-val">${data.salidas}</div>
+      </div>`).join('') : '<div class="no-data">Sin movimientos de este producto en el mes seleccionado</div>';
+    return;
+  }
+
+  const movsAnio = movimientosProductoPorPeriodo(prod, anio, null);
+  const salidasAnio = movsAnio.filter(m=>m.tipo==='salida');
+  const byMes = Array.from({length:12},(_,i)=>({mes:i+1, usados:0}));
+  const byArea = {};
+  salidasAnio.forEach(m=>{
+    const parts = String(m.fecha).split('-');
+    const mes = parseInt(parts[1]);
+    if(mes >= 1 && mes <= 12) byMes[mes-1].usados += m.cant;
+    const area = m.area || (prod ? prod.area : 'Sin área');
+    byArea[area] = (byArea[area] || 0) + m.cant;
+  });
+  const mesTop = byMes.slice().sort((a,b)=>b.usados-a.usados)[0];
+  const areasOrdenadas = Object.entries(byArea).sort((a,b)=>b[1]-a[1]);
+  const maxMes = Math.max(...byMes.map(m=>m.usados), 1);
+  resumen.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div class="stat-card" style="box-shadow:none"><div class="stat-val">${salidasAnio.reduce((s,m)=>s+m.cant,0)}</div><div class="stat-lbl">Usados en ${anio}</div></div>
+    <div class="stat-card" style="box-shadow:none"><div class="stat-val">${mesTop.usados ? MESES_NOMBRES[mesTop.mes-1] : '—'}</div><div class="stat-lbl">Mes de mayor uso</div></div>
+  </div>`;
+  const mesesHtml = byMes.map(m=>{
+    const pct = m.usados > 0 ? Math.max(5,(m.usados/maxMes)*100) : 0;
+    return `<div class="chart-bar-row">
+      <div class="chart-bar-label">${MESES_NOMBRES[m.mes-1].slice(0,3)}</div>
+      <div class="chart-bar-track">${m.usados>0?`<div class="chart-bar-fill c1" style="width:${pct}%"><span class="chart-bar-val">${m.usados}</span></div>`:''}</div>
+    </div>`;
+  }).join('');
+  const areasHtml = areasOrdenadas.length ? areasOrdenadas.map(([area,cant])=>`
+    <div class="gasto-item">
+      <div class="gasto-item-icon">${AREA_EMOJI[area]||'📦'}</div>
+      <div class="gasto-item-info"><div class="gasto-item-name">${area}</div><div class="gasto-item-meta">Uso anual del producto</div></div>
+      <div class="gasto-item-val">${cant}</div>
+    </div>`).join('') : '<div class="no-data">Sin usos de este producto en el año seleccionado</div>';
+  detalle.innerHTML = `<div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:10px">Uso por mes</div>${mesesHtml}<div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin:16px 0 10px">Áreas que más lo usan</div>${areasHtml}`;
 }
 
 function renderTopUsados(){
@@ -257,7 +416,7 @@ let flujoTab = 'dia';
 
 function setFlujoTab(tab, el){
   flujoTab = tab;
-  document.querySelectorAll('#ow-reportes .g-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#rf-tab-dia,#rf-tab-semana,#rf-tab-mes').forEach(t=>t.classList.remove('active'));
   if(el) el.classList.add('active');
   renderFlujoFinanciero();
 }
