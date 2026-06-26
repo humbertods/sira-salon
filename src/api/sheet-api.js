@@ -8,7 +8,7 @@ function sheetUrl(params = {}) {
 
 async function postSheet(payload) {
   if (!SHEET_URL) return { ok: false, error: 'SHEET_URL no configurado' };
-  const authUser = currentUser ? { userId: currentUser.id, userRol: currentUser.rol } : {};
+  const authUser = currentUser ? { sessionToken: currentUser.sessionToken || '' } : {};
   const resp = await fetch(SHEET_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
