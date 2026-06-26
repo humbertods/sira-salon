@@ -21,7 +21,7 @@ async function loginConCodigo() {
     const data = await postSheet({ action: 'login', codigo });
     if (!data.ok || !data.user) { showLoginError(); return; }
     const meta = usuarios.find(u => u.id === data.user.id) || {};
-    const user = { ...meta, ...data.user };
+    const user = { ...meta, ...data.user, sessionToken: data.sessionToken || '', sessionExp: data.sessionExp || 0 };
 
     currentUser = user;
     currentRole = user.rol;
@@ -151,15 +151,17 @@ function abrirMenuSesion() {
   document.getElementById('menu-logout').onclick = () => { ov.remove(); confirmarLogout(); };
 }
 
-function autoLogin() {
+async function autoLogin() {
   try {
     const saved = localStorage.getItem('sira_session');
     if (!saved) return;
     const session = JSON.parse(saved);
     const savedUser = session && (session.user || null);
-    if (!savedUser || !savedUser.id) return;
+    if (!savedUser || !savedUser.id || !savedUser.sessionToken) return logout();
+    const valid = await postSheet({ action: 'validateSession', sessionToken: savedUser.sessionToken });
+    if (!valid.ok || !valid.user) return logout();
     const meta = usuarios.find(u => u.id === savedUser.id) || {};
-    const user = { ...meta, ...savedUser };
+    const user = { ...meta, ...savedUser, ...valid.user, sessionToken: savedUser.sessionToken, sessionExp: valid.sessionExp || savedUser.sessionExp || 0 };
     if (!user || !user.activo) return;
     currentUser = user;
     currentRole = user.rol;
