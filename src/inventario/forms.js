@@ -1,6 +1,14 @@
+function productoOptionValue(p){
+  return p && p.idEstable ? String(p.idEstable) : String(p ? p.id : '');
+}
+
+function buscarProductoPorOptionValue(value){
+  return productos.find(p => productoOptionValue(p) === String(value)) || null;
+}
+
 function populateSelects(){
   const opts='<option value="">Seleccioná un producto</option>'+
-    productos.map(p=>`<option value="${p.id}">${p.nombre} (${p.stock} ${p.unidad})</option>`).join('');
+    productos.map(p=>`<option value="${productoOptionValue(p)}">${p.nombre} (${p.stock} ${p.unidad})</option>`).join('');
   ['e-prod','s-prod'].forEach(id=>document.getElementById(id).innerHTML=opts);
 
   const areaOpts='<option value="">— Área —</option>'+AREAS.map(a=>`<option>${a}</option>`).join('');
@@ -18,7 +26,7 @@ function filtrarSelect(selectId, query){
     .filter(p => !q || p.nombre.toLowerCase().includes(q))
     .sort((a,b) => a.nombre.localeCompare(b.nombre));
   select.innerHTML = '<option value="">Seleccioná un producto</option>' +
-    opts.map(p => `<option value="${p.id}">${p.nombre} (${p.stock} ${p.unidad})</option>`).join('');
+    opts.map(p => `<option value="${productoOptionValue(p)}">${p.nombre} (${p.stock} ${p.unidad})</option>`).join('');
 }
 
 function agregarProducto(){
@@ -37,7 +45,8 @@ function agregarProducto(){
   closeModal('nuevo-producto');
   ['np-nombre','np-stock','np-min','np-costo','np-notas'].forEach(id=>document.getElementById(id).value='');
   showToast(`✅ ${nombre} guardando en Drive...`);
-  guardarProductoEnSheet(newProd).then(()=>{
+  guardarProductoEnSheet(newProd).then((data)=>{
+    if(data && data.idEstable) newProd.idEstable = data.idEstable;
     showToast(`✅ ${nombre} guardado en Drive`);
   });
   refreshAll();
