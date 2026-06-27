@@ -31,8 +31,8 @@ function doKitLashista(){
     if(p){
       p.stock = Math.max(0, p.stock - cant);
       movimientos.push({tipo:'salida',producto:p.nombre,cant,resp,area:'Pestañas',fecha,tipoUnidad:'Unidad',hora:horaK,grupo:grupoK,esKit:true});
-      batchMovs.push({tipo:'salida',producto:p.nombre,cantidad:cant,responsable:resp,area:'Pestañas',fecha,tipoUnidad:'Unidad',hora:horaK,grupo:grupoK});
-      batchStock.push({nombre:p.nombre,stock:p.stock});
+      batchMovs.push({tipo:'salida',producto:p.nombre,idProducto:p.idEstable||'',cantidad:cant,responsable:resp,area:'Pestañas',fecha,tipoUnidad:'Unidad',hora:horaK,grupo:grupoK});
+      batchStock.push({nombre:p.nombre,idProducto:p.idEstable||'',stock:p.stock});
     }
   });
   enviarBatchAlSheet(batchMovs);
@@ -107,8 +107,8 @@ function doCombo(){
     if(p){
       p.stock = Math.max(0, p.stock - 1);
       movimientos.push({tipo:'salida',producto:p.nombre,cant:1,resp,area:'Coffee',fecha,tipoUnidad:'Unidad',hora:horaC,grupo:grupoC,esCombo:true,nombreCombo:bebida});
-      batchMovs.push({tipo:'salida',producto:p.nombre,cantidad:1,responsable:resp,area:'Coffee',fecha,tipoUnidad:'Unidad',hora:horaC,grupo:grupoC});
-      batchStock.push({nombre:p.nombre,stock:p.stock});
+      batchMovs.push({tipo:'salida',producto:p.nombre,idProducto:p.idEstable||'',cantidad:1,responsable:resp,area:'Coffee',fecha,tipoUnidad:'Unidad',hora:horaC,grupo:grupoC});
+      batchStock.push({nombre:p.nombre,idProducto:p.idEstable||'',stock:p.stock});
     }
   });
   if(batchMovs.length !== items.length){
@@ -128,14 +128,14 @@ function doMov(tipo){
   if(_procesando) return;
   _procesando = true;
   const c=tipo[0];
-  const pid=parseInt(document.getElementById(c+'-prod').value);
+  const pid=document.getElementById(c+'-prod').value;
   const cant=parseInt(document.getElementById(c+'-cant').value);
   const area=document.getElementById(c+'-area-mov').value;
   const resp=document.getElementById(c+'-resp').value;
   const tipoUnidad=tipo==='salida'?(document.getElementById('s-tipo-unidad').value||'Unidad'):'';
   if(!pid){showToast('⚠️ Seleccioná un producto');_procesando=false;return}
   if(!cant||cant<=0){showToast('⚠️ Ingresá una cantidad válida');_procesando=false;return}
-  const prod=productos.find(p=>p.id===pid);
+  const prod=buscarProductoPorOptionValue(pid);
   if(!prod){_procesando=false;return}
   if(tipo==='salida'&&cant>prod.stock){showToast(`Sin stock suficiente (${prod.stock} unid.)`);_procesando=false;return}
   prod.stock+=tipo==='entrada'?cant:-cant;
@@ -148,7 +148,7 @@ function doMov(tipo){
   showConfirm(tipo==='entrada'?'📥':'✅', tipo==='entrada'?'Entrada registrada':'Salida registrada', (tipo==='entrada'?'+':'-')+cant+' '+prod.nombre, waNotif);
   refreshAll();
   populateSelects();
-  enviarAlSheet(tipo,prod.nombre,cant,resp,area||prod.area,tipoUnidad,horaStr,grupoId);
+  enviarAlSheet(tipo,prod.nombre,cant,resp,area||prod.area,tipoUnidad,horaStr,grupoId,prod.idEstable||'');
   setTimeout(()=>{_procesando=false;}, 500);
 }
 
