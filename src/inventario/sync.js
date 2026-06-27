@@ -10,6 +10,7 @@ async function cargarProductosDesdeSheet(){
 
     productos = data.productos.map((p,i) => ({
       id: p.id || (i+1),
+      idEstable: p.idEstable || '',
       nombre: p.nombre,
       area: p.area || 'Sin área',
       unidad: p.unidad || 'Unidad',
@@ -35,10 +36,10 @@ async function cargarProductosDesdeSheet(){
   }
 }
 
-async function enviarAlSheet(tipo,producto,cantidad,responsable,area,tipoUnidad,hora,grupo){
+async function enviarAlSheet(tipo,producto,cantidad,responsable,area,tipoUnidad,hora,grupo,idProducto){
   if(!SHEET_URL) return;
   try{
-    await postSheet({action:'movimiento',tipo,producto,cantidad,responsable,area,fecha:hoy(),tipoUnidad:tipoUnidad||'Unidad',hora:hora||'',grupo:grupo||''});
+    await postSheet({action:'movimiento',tipo,producto,cantidad,responsable,area,fecha:hoy(),tipoUnidad:tipoUnidad||'Unidad',hora:hora||'',grupo:grupo||'',idProducto:idProducto||''});
   }catch(e){console.log('Sync error:',e)}
 }
 
@@ -56,9 +57,9 @@ async function actualizarStockBatchEnSheet(items){
   }catch(e){console.log('Stock batch sync error:',e)}
 }
 
-function actualizarStockEnSheet(nombre, nuevoStock){
+function actualizarStockEnSheet(nombre, nuevoStock, idProducto){
   if(!SHEET_URL) return;
-  postSheet({action:'actualizarStock',producto:nombre,nuevoStock,fecha:hoy()}).catch(e=>console.log('Stock sync error:',e));
+  postSheet({action:'actualizarStock',producto:nombre,nuevoStock,fecha:hoy(),idProducto:idProducto||''}).catch(e=>console.log('Stock sync error:',e));
 }
 
 async function guardarProductoEnSheet(prod){
