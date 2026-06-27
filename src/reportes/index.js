@@ -37,7 +37,7 @@ function prepararControlesDetalleUso(){
     prodSel.innerHTML = '<option value="">Seleccioná un producto</option>' + productos
       .slice()
       .sort((a,b)=>String(a.nombre||'').localeCompare(String(b.nombre||'')))
-      .map(p=>`<option value="${p.id}">${p.nombre}</option>`)
+      .map(p=>`<option value="${productoOptionValue(p)}">${p.nombre}</option>`)
       .join('');
     if(previo) prodSel.value = previo;
     prodSel.dataset.ready = '1';
@@ -69,13 +69,16 @@ function prepararControlesDetalleUso(){
 function getProductoDetalleUso(){
   const prodSel = document.getElementById('du-prod');
   if(!prodSel || !prodSel.value) return null;
-  return productos.find(p=>String(p.id) === String(prodSel.value)) || null;
+  return buscarProductoPorOptionValue(prodSel.value);
 }
 
 function movimientosProductoPorPeriodo(producto, anio, mesNum){
   if(!producto) return [];
   return movimientos.filter(m=>{
-    if(!m.fecha || norm(m.producto) !== norm(producto.nombre)) return false;
+    if(!m.fecha) return false;
+    if(m.idProducto){
+      if(String(m.idProducto) !== String(producto.idEstable || '')) return false;
+    } else if(norm(m.producto) !== norm(producto.nombre)) return false;
     const parts = String(m.fecha).split('-');
     if(parts.length < 3) return false;
     const y = parseInt(parts[0]);
