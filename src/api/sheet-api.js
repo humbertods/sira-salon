@@ -2,7 +2,8 @@ const SHEET_URL = window.SIRA_CONFIG.SHEET_URL;
 const SIRA_API_TOKEN = window.SIRA_CONFIG.API_TOKEN;
 
 function sheetUrl(params = {}) {
-  const qp = new URLSearchParams({ ...params, token: SIRA_API_TOKEN });
+  const authUser = currentUser ? { sessionToken: currentUser.sessionToken || '' } : {};
+  const qp = new URLSearchParams({ ...params, ...authUser, token: SIRA_API_TOKEN });
   return SHEET_URL + '?' + qp.toString();
 }
 
