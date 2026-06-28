@@ -44,7 +44,7 @@ function renderMarca(prefix){
   if(pedList) pedList.innerHTML=pedidosMarca.length===0
     ?'<div class="empty" style="padding:16px"><div class="empty-text">Sin pedidos pendientes</div></div>'
     :pedidosMarca.map((p,i)=>`<div class="pedido-card">
-      <div class="pedido-info"><div class="pedido-prod">${p.producto}</div><div class="pedido-det">Proveedor: ${p.proveedor} · Llega: ${p.fecha}</div></div>
+      <div class="pedido-info"><div class="pedido-prod">${p.producto}</div><div class="pedido-det">Proveedor: ${p.proveedor} · Llega: ${p.fechaEstimada || p.fecha}</div></div>
       <div class="pedido-cant">${p.cantidad}</div>
       <div class="pedido-actions">
         <button class="btn-mini ok" onclick="recibirPedido(${i})">✓</button>
@@ -109,11 +109,13 @@ function agregarPedido(){
   const prov=document.getElementById('np2-prov').value.trim()||'Sin especificar';
   const fecha=document.getElementById('np2-fecha').value||'Sin fecha';
   if(!cant||cant<=0){showToast('⚠️ Ingresá una cantidad');return}
-  pedidosMarca.push({producto:prod,cantidad:cant,proveedor:prov,fecha});
+  const pedido={id:Date.now(),producto:prod,cantidad:cant,proveedor:prov,fechaEstimada:fecha,fecha:hoy(),responsable:currentUser?currentUser.nombre:''};
+  pedidosMarca.push(pedido);
   closeModal('nuevo-pedido');
   ['np2-cant','np2-prov','np2-fecha'].forEach(id=>document.getElementById(id).value='');
   showToast('✅ Pedido registrado');
   renderMarca(currentUser.rol==='owner'?'ow':'ceo');
+  postSheet({action:'nuevoPedidoMarca',...pedido}).catch(e=>console.log('Marca pedido sync error:',e));
 }
 
 function recibirPedido(idx){
@@ -123,12 +125,15 @@ function recibirPedido(idx){
   pedidosMarca.splice(idx,1);
   showToast('✅ Pedido recibido — stock actualizado');
   renderMarca(currentUser.rol==='owner'?'ow':'ceo');
+  if(p && p.id) postSheet({action:'recibirPedidoMarca',id:p.id}).catch(e=>console.log('Marca recibir pedido sync error:',e));
 }
 
 function cancelarPedido(idx){
+  const p=pedidosMarca[idx];
   pedidosMarca.splice(idx,1);
   showToast('Pedido cancelado');
   renderMarca(currentUser.rol==='owner'?'ow':'ceo');
+  if(p && p.id) postSheet({action:'cancelarPedidoMarca',id:p.id}).catch(e=>console.log('Marca cancelar pedido sync error:',e));
 }
 
 async function cargarMarcaDesdeSheet(){
@@ -139,6 +144,7 @@ async function cargarMarcaDesdeSheet(){
     const data = JSON.parse(text);
     if(data.ok && data.productos && data.productos.length > 0){
       productosMarca = data.productos;
+      pedidosMarca = Array.isArray(data.pedidos) ? data.pedidos : [];
       renderMarca(currentUser.rol==='owner'?'ow':'ceo');
     }
   }catch(e){ console.log('Marca sync error:',e); }
