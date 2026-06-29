@@ -66,6 +66,7 @@ function enterApp() {
     cargarMovimientosDesdeSheet();
     cargarGastosVariosDesdeSheet();
     cargarFotosDesdeSheet();
+    cargarVigilanciaDesdeSheet();
   } else if (currentUser.rol === 'ceo') {
     renderCEOInicio(); renderStock('ceo'); renderMovs('ceo');
     document.getElementById('app-ceo').classList.remove('hidden');
@@ -74,6 +75,7 @@ function enterApp() {
     cargarMovimientosDesdeSheet();
     cargarGastosVariosDesdeSheet();
     cargarFotosDesdeSheet();
+    cargarVigilanciaDesdeSheet();
   } else {
     document.getElementById('staff-user-lbl').textContent = currentUser.nombre + ' · ' + currentUser.cargo;
     document.getElementById('staff-name-disp').textContent = currentUser.nombre;
@@ -121,9 +123,49 @@ function confirmarLogout() {
   document.getElementById('btn-logout-yes').onclick = () => { ov.remove(); logout(); };
 }
 
-function recargarApp() {
-  try { showSyncBadge('Actualizando…'); } catch (e) {}
-  setTimeout(() => { location.reload(); }, 350);
+async function recargarApp() {
+  if (!currentUser) {
+    location.reload();
+    return;
+  }
+  try {
+    showSyncBadge('Actualizando…');
+    if (currentUser.rol === 'owner') {
+      await Promise.all([
+        cargarProductosDesdeSheet(),
+        cargarMarcaDesdeSheet(),
+        cargarMovimientosDesdeSheet(),
+        cargarGastosVariosDesdeSheet(),
+        cargarFotosDesdeSheet(),
+        cargarVigilanciaDesdeSheet()
+      ]);
+      refreshAll();
+    } else if (currentUser.rol === 'ceo') {
+      await Promise.all([
+        cargarProductosDesdeSheet(),
+        cargarMarcaDesdeSheet(),
+        cargarMovimientosDesdeSheet(),
+        cargarGastosVariosDesdeSheet(),
+        cargarFotosDesdeSheet(),
+        cargarVigilanciaDesdeSheet()
+      ]);
+      refreshAll();
+    } else {
+      await Promise.all([
+        cargarProductosDesdeSheet(),
+        cargarMovimientosDesdeSheet(),
+        cargarFotosDesdeSheet()
+      ]);
+      renderStaffHoy();
+    }
+    showSyncBadge('✓ Actualizado');
+    setTimeout(()=>hideSyncBadge(), 1500);
+  } catch (e) {
+    console.log('Refresh error:', e);
+    showSyncBadge('Error actualizando');
+    showToast('No se pudo actualizar');
+    setTimeout(()=>hideSyncBadge(), 2000);
+  }
 }
 
 function abrirMenuSesion() {
