@@ -32,11 +32,79 @@ async function cargarCierresDesdeSheet(){
   }catch(e){console.log('Cierres load error:',e)}
 }
 
-function confirmarCierreMes(){
-  const mesNombre = MESES_NOMBRES[rgMes] + ' ' + rgAnio;
-  const total = document.getElementById('rg-gran-total').textContent;
+function calcularResumenCierreDesdeDatos(mesNum, anio, movs, gastos, prods){
+  const movsMes = movs.filter(m => {
+    if(!m.fecha) return false;
+    const parts = String(m.fecha).split('-');
+    if(parts.length<3) return false;
+    return parseInt(parts[0])===anio && parseInt(parts[1])===mesNum;
+  });
+  const gvMes = gastos.filter(g => {
+    if(!g.fecha) return false;
+    const parts = String(g.fecha).split('-');
+    if(parts.length<3) return false;
+    return parseInt(parts[0])===anio && parseInt(parts[1])===mesNum;
+  });
 
-  if(esMesCerrado(rgMes+1, rgAnio)){
+  const staffResumen = {};
+  movsMes.forEach(m => {
+    if(!staffResumen[m.resp]) staffResumen[m.resp] = {movs:0, total:0};
+    staffResumen[m.resp].movs++;
+    const prod = prods.find(p => norm(p.nombre) === norm(m.producto));
+    staffResumen[m.resp].total += (prod ? prod.costo : 0) * m.cant;
+  });
+  const totalProductos = Object.values(staffResumen).reduce((s,d) => s + d.total, 0);
+  const totalGV = gvMes.reduce((s,g) => s + g.monto, 0);
+  return {movsMes, gvMes, staffResumen, totalProductos, totalGV, granTotal: totalProductos + totalGV};
+}
+
+function calcularResumenCierreLocal(mesNum, anio){
+  return calcularResumenCierreDesdeDatos(mesNum, anio, movimientos, gastosVarios, productos);
+}
+
+async function obtenerResumenCierreActualizado(mesNum, anio){
+  if(!SHEET_URL) return calcularResumenCierreLocal(mesNum, anio);
+  try{
+    const [prodResp, movResp, gvResp] = await Promise.all([
+      fetch(sheetUrl({action:'getProductos',t:Date.now()}),{method:'GET'}),
+      fetch(sheetUrl({action:'getMovimientos',t:Date.now()}),{method:'GET'}),
+      fetch(sheetUrl({action:'getGastosVarios',t:Date.now()}),{method:'GET'})
+    ]);
+    const [prodData, movData, gvData] = await Promise.all([prodResp.text(), movResp.text(), gvResp.text()]);
+    const prods = JSON.parse(prodData).productos || productos;
+    const movs = (JSON.parse(movData).movimientos || []).map(m => {
+      let fechaLimpia = '';
+      if(m.fecha){
+        const f = String(m.fecha);
+        const match = f.match(/(\d{4})-(\d{2})-(\d{2})/);
+        fechaLimpia = match ? match[0] : f.substring(0,10);
+      }
+      return {tipo:m.tipo==='Entrada'?'entrada':'salida',producto:m.producto,cant:parseInt(m.cantidad)||1,resp:m.responsable,area:m.area||'',fecha:fechaLimpia};
+    });
+    const gastos = (JSON.parse(gvData).gastos || []).map(g => ({
+      id:g.id||Date.now(),cat:g.categoria||'Otro',desc:g.descripcion||'',monto:parseFloat(g.monto)||0,resp:g.responsable||'',notas:g.notas||'',fecha:g.fecha||'',hora:g.hora||''
+    }));
+    return calcularResumenCierreDesdeDatos(mesNum, anio, movs, gastos, prods.map(p=>({
+      ...p,
+      stock: parseInt(p.stock)||0,
+      min: parseInt(p.min)||0,
+      costo: parseFloat(p.costo)||0
+    })));
+  }catch(e){
+    console.log('Cierre fresh calc error:', e);
+    return calcularResumenCierreLocal(mesNum, anio);
+  }
+}
+
+async function confirmarCierreMes(){
+  const mesNombre = MESES_NOMBRES[rgMes] + ' ' + rgAnio;
+  const mesNum = rgMes + 1;
+  showSyncBadge('Calculando cierre...');
+  const resumenInicial = await obtenerResumenCierreActualizado(mesNum, rgAnio);
+  hideSyncBadge();
+  const total = '$' + resumenInicial.granTotal.toFixed(2);
+
+  if(esMesCerrado(mesNum, rgAnio)){
     showToast('⚠️ ' + mesNombre + ' ya fue cerrado');
     return;
   }
@@ -72,30 +140,7 @@ function confirmarCierreMes(){
     btn.style.opacity = '0.5';
     btn.style.pointerEvents = 'none';
 
-    const mesNum = rgMes + 1;
-    const movsMes = movimientos.filter(m => {
-      if(!m.fecha) return false;
-      const parts = m.fecha.split('-');
-      if(parts.length<3) return false;
-      return parseInt(parts[0])===rgAnio && parseInt(parts[1])===mesNum;
-    });
-    const gvMes = gastosVarios.filter(g => {
-      if(!g.fecha) return false;
-      const parts = g.fecha.split('-');
-      if(parts.length<3) return false;
-      return parseInt(parts[0])===rgAnio && parseInt(parts[1])===mesNum;
-    });
-
-    const staffResumen = {};
-    movsMes.forEach(m => {
-      if(!staffResumen[m.resp]) staffResumen[m.resp] = {movs:0, total:0};
-      staffResumen[m.resp].movs++;
-      const prod = productos.find(p => norm(p.nombre) === norm(m.producto));
-      staffResumen[m.resp].total += (prod ? prod.costo : 0) * m.cant;
-    });
-    const totalProductos = Object.values(staffResumen).reduce((s,d) => s + d.total, 0);
-    const totalGV = gvMes.reduce((s,g) => s + g.monto, 0);
-    const granTotal = totalProductos + totalGV;
+    const resumen = await obtenerResumenCierreActualizado(mesNum, rgAnio);
 
     try {
       await postSheet({
@@ -103,11 +148,11 @@ function confirmarCierreMes(){
         mes: MESES_NOMBRES[rgMes],
         anio: rgAnio,
         mesNum: mesNum,
-        totalProductos: totalProductos.toFixed(2),
-        totalGastosVarios: totalGV.toFixed(2),
-        granTotal: granTotal.toFixed(2),
-        totalMovimientos: movsMes.length,
-        staff: JSON.stringify(staffResumen),
+        totalProductos: resumen.totalProductos.toFixed(2),
+        totalGastosVarios: resumen.totalGV.toFixed(2),
+        granTotal: resumen.granTotal.toFixed(2),
+        totalMovimientos: resumen.movsMes.length,
+        staff: JSON.stringify(resumen.staffResumen),
         fecha: hoy(),
         hora: horaGuayaquil()
       });
