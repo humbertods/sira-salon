@@ -11,6 +11,7 @@ function owNav(s){
   if(s==='reportes') renderReportes();
   if(s==='marca') renderMarca('ow');
   if(s==='gastos') renderGastos();
+  if(s==='vigilancia'){ renderVigilancia('ow'); cargarVigilanciaDesdeSheet(); }
 }
 
 function ceoNav(s){
@@ -22,4 +23,5 @@ function ceoNav(s){
   if(s==='stock')  renderStock('ceo');
   if(s==='movs')   renderMovs('ceo');
   if(s==='marca')  renderMarca('ceo');
+  if(s==='vigilancia'){ renderVigilancia('ceo'); cargarVigilanciaDesdeSheet(); }
 }
