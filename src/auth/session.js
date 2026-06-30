@@ -179,6 +179,18 @@ function abrirMenuSesion() {
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         <span>Equipo</span>
       </button>
+      <button id="menu-gastos" class="sesion-menu-opt">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span>Gastos</span>
+      </button>
+      <button id="menu-vigilancia" class="sesion-menu-opt">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span>Vigilar</span>
+      </button>
+      <button id="menu-reportes" class="sesion-menu-opt">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        <span>Reportes</span>
+      </button>
       <div style="height:1px;background:var(--border);margin:4px 8px"></div>` : ''}
       <button id="menu-logout" class="sesion-menu-opt danger">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--danger)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
@@ -189,6 +201,9 @@ function abrirMenuSesion() {
   ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
   if (esOwner) {
     document.getElementById('menu-equipo').onclick = () => { ov.remove(); owNav('equipo'); };
+    document.getElementById('menu-gastos').onclick = () => { ov.remove(); owNav('gastos'); };
+    document.getElementById('menu-vigilancia').onclick = () => { ov.remove(); owNav('vigilancia'); };
+    document.getElementById('menu-reportes').onclick = () => { ov.remove(); owNav('reportes'); };
   }
   document.getElementById('menu-logout').onclick = () => { ov.remove(); confirmarLogout(); };
 }
