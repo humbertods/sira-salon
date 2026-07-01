@@ -33,7 +33,11 @@ async function cargarMovimientosDesdeSheet(){
           tipoUnidad: m.tipoUnidad || 'Unidad',
           esCombo: m.esCombo==='true'||m.esCombo===true,
           esKit: m.esKit==='true'||m.esKit===true,
-          nombreCombo: m.nombreCombo || ''
+          nombreCombo: m.nombreCombo || '',
+          // Stage 2: idProducto estable (P-XXXXXXX) desde col N de Movimientos.
+          // Permite cruzar movimientos con productos por ID en vez de por nombre,
+          // necesario para reportes precisos cuando el nombre de un producto cambia.
+          idProducto: m.idProducto || ''
         };
       });
       if(currentUser && currentUser.rol==='owner'){
