@@ -66,7 +66,7 @@ function enterApp() {
     cargarMovimientosDesdeSheet();
     cargarGastosVariosDesdeSheet();
     cargarFotosDesdeSheet();
-    cargarVigilanciaDesdeSheet();
+    if (typeof cargarVigilanciaDesdeSheet === 'function') cargarVigilanciaDesdeSheet();
   } else if (currentUser.rol === 'ceo') {
     renderCEOInicio(); renderStock('ceo'); renderMovs('ceo');
     document.getElementById('app-ceo').classList.remove('hidden');
@@ -75,7 +75,7 @@ function enterApp() {
     cargarMovimientosDesdeSheet();
     cargarGastosVariosDesdeSheet();
     cargarFotosDesdeSheet();
-    cargarVigilanciaDesdeSheet();
+    if (typeof cargarVigilanciaDesdeSheet === 'function') cargarVigilanciaDesdeSheet();
   } else {
     document.getElementById('staff-user-lbl').textContent = currentUser.nombre + ' · ' + currentUser.cargo;
     document.getElementById('staff-name-disp').textContent = currentUser.nombre;
@@ -137,7 +137,7 @@ async function recargarApp() {
         cargarMovimientosDesdeSheet(),
         cargarGastosVariosDesdeSheet(),
         cargarFotosDesdeSheet(),
-        cargarVigilanciaDesdeSheet()
+        typeof cargarVigilanciaDesdeSheet === 'function' ? cargarVigilanciaDesdeSheet() : Promise.resolve()
       ]);
       refreshAll();
     } else if (currentUser.rol === 'ceo') {
@@ -147,7 +147,7 @@ async function recargarApp() {
         cargarMovimientosDesdeSheet(),
         cargarGastosVariosDesdeSheet(),
         cargarFotosDesdeSheet(),
-        cargarVigilanciaDesdeSheet()
+        typeof cargarVigilanciaDesdeSheet === 'function' ? cargarVigilanciaDesdeSheet() : Promise.resolve()
       ]);
       refreshAll();
     } else {
@@ -218,13 +218,30 @@ async function autoLogin() {
     const valid = await postSheet({ action: 'validateSession', sessionToken: savedUser.sessionToken });
     if (!valid.ok || !valid.user) return logout();
     const meta = usuarios.find(u => u.id === savedUser.id) || {};
-    const user = { ...meta, ...savedUser, ...valid.user, sessionToken: savedUser.sessionToken, sessionExp: valid.sessionExp || savedUser.sessionExp || 0 };
+    const user = { ...meta, ...savedUser, ...valid.user, sessionToken: valid.sessionToken || savedUser.sessionToken, sessionExp: valid.sessionExp || savedUser.sessionExp || 0 };
     if (!user || !user.activo) return;
     currentUser = user;
     currentRole = user.rol;
     enterApp();
   } catch (e) { console.error('autoLogin error:', e); }
 }
+
+async function renovarSesionSiHaceFalta(){
+  if(!currentUser || !currentUser.sessionToken) return;
+  try{
+    const valid = await postSheet({ action: 'validateSession', sessionToken: currentUser.sessionToken });
+    if(!valid.ok || !valid.user) return logout();
+    currentUser = { ...currentUser, ...valid.user, sessionToken: valid.sessionToken || currentUser.sessionToken, sessionExp: valid.sessionExp || currentUser.sessionExp || 0 };
+    currentRole = currentUser.rol;
+    localStorage.setItem('sira_session', JSON.stringify({ user: currentUser }));
+  }catch(e){
+    console.log('Session refresh error:', e);
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible') renovarSesionSiHaceFalta();
+});
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', autoLogin);
