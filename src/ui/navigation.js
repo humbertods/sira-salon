@@ -11,7 +11,9 @@ function owNav(s){
   if(s==='reportes') renderReportes();
   if(s==='marca') renderMarca('ow');
   if(s==='gastos') renderGastos();
-  if(s==='vigilancia'){ renderVigilancia('ow'); cargarVigilanciaDesdeSheet(); }
+  if(s==='vigilancia'){
+    abrirVigilanciaSira('ow');
+  }
 }
 
 function ceoNav(s){
@@ -23,5 +25,19 @@ function ceoNav(s){
   if(s==='stock')  renderStock('ceo');
   if(s==='movs')   renderMovs('ceo');
   if(s==='marca')  renderMarca('ceo');
-  if(s==='vigilancia'){ renderVigilancia('ceo'); cargarVigilanciaDesdeSheet(); }
+  if(s==='vigilancia'){
+    abrirVigilanciaSira('ceo');
+  }
+}
+
+function abrirVigilanciaSira(prefix){
+  if(typeof renderVigilancia === 'function'){
+    renderVigilancia(prefix);
+    if(typeof cargarVigilanciaDesdeSheet === 'function') cargarVigilanciaDesdeSheet();
+    return;
+  }
+  const root = document.getElementById(prefix+'-vigilancia-root');
+  if(root){
+    root.innerHTML = '<div class="empty" style="padding:20px"><div class="empty-text">No se pudo cargar Vigilancia. Falta publicar src/vigilancia/index.js en GitHub.</div></div>';
+  }
 }
