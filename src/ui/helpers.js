@@ -22,6 +22,20 @@ function norm(str){
   return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
 }
 
+function escapeHtml(value){
+  return String(value == null ? '' : value)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function safeDomId(prefix, value, index){
+  const base = norm(value).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'item';
+  return prefix + '-' + base + '-' + (index == null ? '0' : index);
+}
+
 function getEstado(stock, min){
   if(stock===0) return 'Agotado';
   if(stock<=min) return 'Stock Bajo';
