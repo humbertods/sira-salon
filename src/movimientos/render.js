@@ -63,7 +63,7 @@ function renderMovs(prefix){
         grupos[gid].items.push(m);
       });
 
-      const movsHtml = orden.map(gid => {
+      const renderGrupoHistorial = (gid) => {
         const g = grupos[gid];
         const fechaParts = g.fecha ? g.fecha.split('-') : ['','',''];
         const fechaCorta = fechaParts.length===3 ? fechaParts[2]+'/'+fechaParts[1] : g.fecha;
@@ -79,7 +79,37 @@ function renderMovs(prefix){
             <span style="font-size:14px;font-weight:700;color:${m.tipo==='entrada'?'var(--ok)':'var(--danger)'}">${m.tipo==='entrada'?'+':'-'}${m.cant}</span>
           </div>`
         ).join('');
-      }).join('');
+      };
+
+      const movsHtml = histTab === 'semana'
+        ? (() => {
+            const byFecha = {};
+            orden.forEach(gid => {
+              const fecha = grupos[gid].fecha || 'Sin fecha';
+              if(!byFecha[fecha]) byFecha[fecha] = [];
+              byFecha[fecha].push(gid);
+            });
+            return Object.entries(byFecha).sort((a,b)=>String(b[0]).localeCompare(String(a[0]))).map(([fecha, gids], dIdx) => {
+              const fechaParts = fecha ? fecha.split('-') : ['','',''];
+              const fechaCorta = fechaParts.length===3 ? fechaParts[2]+'/'+fechaParts[1] : fecha;
+              const itemsDia = gids.flatMap(gid => grupos[gid].items);
+              const totalDiaE = itemsDia.filter(m=>m.tipo==='entrada').reduce((s,m)=>s+m.cant,0);
+              const totalDiaS = itemsDia.filter(m=>m.tipo==='salida').reduce((s,m)=>s+m.cant,0);
+              const diaId = pId+'-dia-'+dIdx;
+              return `<div style="border-bottom:1px solid var(--border)">
+                <div class="ac-sec-header" onclick="toggleAc('${diaId}')" data-target="${diaId}" style="border:0;border-radius:0;box-shadow:none;background:var(--bg)">
+                  <span>${fechaCorta}</span>
+                  <span style="display:flex;align-items:center;gap:8px">
+                    ${totalDiaE>0?'<span style="font-size:12px;font-weight:700;color:var(--ok)">+'+totalDiaE+'</span>':''}
+                    ${totalDiaS>0?'<span style="font-size:12px;font-weight:700;color:var(--danger)">-'+totalDiaS+'</span>':''}
+                    <span class="ac-dia-arrow">▾</span>
+                  </span>
+                </div>
+                <div class="ac-sec-body" id="${diaId}">${gids.map(renderGrupoHistorial).join('')}</div>
+              </div>`;
+            }).join('');
+          })()
+        : orden.map(renderGrupoHistorial).join('');
 
       return `<div style="margin-bottom:10px">
         <div class="ac-dia-header" onclick="toggleAc('${pId}')" data-target="${pId}" style="background:var(--card);color:var(--text);border:1px solid var(--border);box-shadow:var(--shadow-sm)">
