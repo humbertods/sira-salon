@@ -10,21 +10,17 @@ function renderReportes(){
   document.getElementById('r-valor').textContent='$'+valor.toFixed(2);
   renderTopUsados();
   renderFlujoFinanciero();
-  renderDetalleUsoProducto();
+  prepararControlesDetalleUso();
+  renderDetalleUsoProductoEstadoInicial();
+  prepararControlesDetalleStaff();
+  renderDetalleStaffEstadoInicial();
   renderStaffMes();
   renderResumenGeneral();
 }
 
-let detalleUsoModo = 'mes';
-
-function setDetalleUsoModo(modo, el){
-  detalleUsoModo = modo;
-  document.querySelectorAll('#r-detalle-uso .g-tab').forEach(t=>t.classList.remove('active'));
-  if(el) el.classList.add('active');
-  const mesSelect = document.getElementById('du-mes');
-  if(mesSelect) mesSelect.style.display = modo === 'mes' ? 'block' : 'none';
-  renderDetalleUsoProducto();
-}
+let detalleUsoConsultando = false;
+let detalleStaffConsultando = false;
+let staffOpcionesCargadas = false;
 
 function prepararControlesDetalleUso(){
   const prodSel = document.getElementById('du-prod');
@@ -37,7 +33,7 @@ function prepararControlesDetalleUso(){
     prodSel.innerHTML = '<option value="">Seleccioná un producto</option>' + productos
       .slice()
       .sort((a,b)=>String(a.nombre||'').localeCompare(String(b.nombre||'')))
-      .map(p=>`<option value="${productoOptionValue(p)}">${p.nombre}</option>`)
+      .map(p=>`<option value="${escapeHtml(productoOptionValue(p))}">${escapeHtml(p.nombre)}</option>`)
       .join('');
     if(previo) prodSel.value = previo;
     prodSel.dataset.ready = '1';
@@ -53,13 +49,9 @@ function prepararControlesDetalleUso(){
   if(!anioSel.dataset.ready || parseInt(anioSel.dataset.movs||'0') !== movimientos.length){
     const now = new Date();
     const previo = anioSel.value;
-    const anios = new Set([now.getFullYear()]);
-    movimientos.forEach(m=>{
-      if(!m.fecha) return;
-      const y = parseInt(String(m.fecha).split('-')[0]);
-      if(y) anios.add(y);
-    });
-    anioSel.innerHTML = Array.from(anios).sort((a,b)=>b-a).map(y=>`<option value="${y}">${y}</option>`).join('');
+    const anios = [];
+    for(let y = now.getFullYear() + 1; y >= 2020; y--) anios.push(y);
+    anioSel.innerHTML = anios.map(y=>`<option value="${y}">${y}</option>`).join('');
     anioSel.value = previo || String(now.getFullYear());
     anioSel.dataset.ready = '1';
     anioSel.dataset.movs = movimientos.length;
@@ -72,108 +64,162 @@ function getProductoDetalleUso(){
   return buscarProductoPorOptionValue(prodSel.value);
 }
 
-function movimientosProductoPorPeriodo(producto, anio, mesNum){
-  if(!producto) return [];
-  return movimientos.filter(m=>{
-    if(!m.fecha) return false;
-    if(m.idProducto){
-      if(String(m.idProducto) !== String(producto.idEstable || '')) return false;
-    } else if(norm(m.producto) !== norm(producto.nombre)) return false;
-    const parts = String(m.fecha).split('-');
-    if(parts.length < 3) return false;
-    const y = parseInt(parts[0]);
-    const mes = parseInt(parts[1]);
-    if(y !== anio) return false;
-    return mesNum ? mes === mesNum : true;
-  });
+function renderDetalleUsoProductoEstadoInicial(){
+  prepararControlesDetalleUso();
+  const resumen = document.getElementById('du-resumen');
+  const detalle = document.getElementById('du-detalle');
+  if(resumen) resumen.innerHTML = '<div class="no-data">Seleccioná un producto y presioná Buscar</div>';
+  if(detalle) detalle.innerHTML = '';
 }
 
-function renderDetalleUsoProducto(){
-  prepararControlesDetalleUso();
-  const prodSel = document.getElementById('du-prod');
+async function buscarDetalleUsoProducto(){
+  if(detalleUsoConsultando) return;
+  const prod = getProductoDetalleUso();
   const mesSel = document.getElementById('du-mes');
   const anioSel = document.getElementById('du-anio');
   const resumen = document.getElementById('du-resumen');
   const detalle = document.getElementById('du-detalle');
-  if(!prodSel || !mesSel || !anioSel || !resumen || !detalle) return;
-
-  mesSel.style.display = detalleUsoModo === 'mes' ? 'block' : 'none';
-  const prod = getProductoDetalleUso();
+  const btn = document.getElementById('du-buscar');
+  if(!resumen || !detalle) return;
   if(!prod){
-    resumen.innerHTML = productos.length
-      ? '<div class="no-data">Seleccioná un producto para ver su detalle</div>'
-      : '<div class="no-data">Cargando productos...</div>';
+    resumen.innerHTML = '<div class="no-data">Seleccioná un producto y presioná Buscar</div>';
     detalle.innerHTML = '';
     return;
   }
+  detalleUsoConsultando = true;
+  if(btn){ btn.disabled = true; btn.textContent = 'Buscando...'; }
+  resumen.innerHTML = '<div class="no-data">Buscando...</div>';
+  detalle.innerHTML = '';
+  try{
+    const data = await fetch(sheetUrl({ action:'getReporteDetalleProducto', idProducto: prod.idEstable || '', producto: prod.nombre || '', mes: mesSel.value, anio: anioSel.value })).then(r=>r.json());
+    if(!data.ok) throw new Error(data.error || 'Error de consulta');
+    renderDetalleUsoProductoResultado(data);
+  }catch(err){
+    resumen.innerHTML = `<div class="no-data">Error de consulta: ${escapeHtml(err.message)}</div>`;
+  }finally{
+    detalleUsoConsultando = false;
+    if(btn){ btn.disabled = false; btn.textContent = 'BUSCAR'; }
+  }
+}
 
-  const anio = parseInt(anioSel.value) || new Date().getFullYear();
-  const mesNum = parseInt(mesSel.value) || (new Date().getMonth()+1);
-  const costo = prod ? prod.costo : 0;
-
-  if(detalleUsoModo === 'mes'){
-    const movs = movimientosProductoPorPeriodo(prod, anio, mesNum);
-    const entradas = movs.filter(m=>m.tipo==='entrada');
-    const salidas = movs.filter(m=>m.tipo==='salida');
-    const comprados = entradas.reduce((s,m)=>s+m.cant,0);
-    const usados = salidas.reduce((s,m)=>s+m.cant,0);
-    const byArea = {};
-    movs.forEach(m=>{
-      const area = m.area || (prod ? prod.area : 'Sin área');
-      if(!byArea[area]) byArea[area] = {entradas:0, salidas:0};
-      if(m.tipo==='entrada') byArea[area].entradas += m.cant;
-      if(m.tipo==='salida') byArea[area].salidas += m.cant;
-    });
-    const areas = Object.entries(byArea).sort((a,b)=>(b[1].salidas+b[1].entradas)-(a[1].salidas+a[1].entradas));
-    resumen.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-      <div class="stat-card" style="box-shadow:none"><div class="stat-val">${comprados}</div><div class="stat-lbl">Comprados</div></div>
-      <div class="stat-card" style="box-shadow:none"><div class="stat-val">${usados}</div><div class="stat-lbl">Usados</div></div>
-      <div class="stat-card" style="box-shadow:none"><div class="stat-val">$${(usados*costo).toFixed(0)}</div><div class="stat-lbl">Uso estimado</div></div>
-    </div>`;
-    detalle.innerHTML = areas.length ? areas.map(([area,data])=>`
-      <div class="gasto-item">
-        <div class="gasto-item-icon">${AREA_EMOJI[area]||'📦'}</div>
-        <div class="gasto-item-info">
-          <div class="gasto-item-name">${area}</div>
-          <div class="gasto-item-meta">Comprados ${data.entradas} · Usados ${data.salidas}</div>
-        </div>
-        <div class="gasto-item-val">${data.salidas}</div>
-      </div>`).join('') : '<div class="no-data">Sin movimientos de este producto en el mes seleccionado</div>';
+function renderDetalleUsoProductoResultado(data){
+  const resumen = document.getElementById('du-resumen');
+  const detalle = document.getElementById('du-detalle');
+  const salidas = data.resumenSalidas || {movimientos:0,unidades:0,valor:0};
+  const ingresos = data.resumenIngresos || {movimientos:0,unidades:0,valor:0};
+  const totalMovs = salidas.movimientos + ingresos.movimientos;
+  if(totalMovs === 0){
+    resumen.innerHTML = `<div class="no-data">No existen movimientos para este producto en ${escapeHtml((data.periodo || {}).etiqueta || '')}.</div>`;
+    detalle.innerHTML = '';
     return;
   }
-
-  const movsAnio = movimientosProductoPorPeriodo(prod, anio, null);
-  const salidasAnio = movsAnio.filter(m=>m.tipo==='salida');
-  const byMes = Array.from({length:12},(_,i)=>({mes:i+1, usados:0}));
-  const byArea = {};
-  salidasAnio.forEach(m=>{
-    const parts = String(m.fecha).split('-');
-    const mes = parseInt(parts[1]);
-    if(mes >= 1 && mes <= 12) byMes[mes-1].usados += m.cant;
-    const area = m.area || (prod ? prod.area : 'Sin área');
-    byArea[area] = (byArea[area] || 0) + m.cant;
-  });
-  const mesTop = byMes.slice().sort((a,b)=>b.usados-a.usados)[0];
-  const areasOrdenadas = Object.entries(byArea).sort((a,b)=>b[1]-a[1]);
-  const maxMes = Math.max(...byMes.map(m=>m.usados), 1);
-  resumen.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-    <div class="stat-card" style="box-shadow:none"><div class="stat-val">${salidasAnio.reduce((s,m)=>s+m.cant,0)}</div><div class="stat-lbl">Usados en ${anio}</div></div>
-    <div class="stat-card" style="box-shadow:none"><div class="stat-val">${mesTop.usados ? MESES_NOMBRES[mesTop.mes-1] : '—'}</div><div class="stat-lbl">Mes de mayor uso</div></div>
-  </div>`;
-  const mesesHtml = byMes.map(m=>{
-    const pct = m.usados > 0 ? Math.max(5,(m.usados/maxMes)*100) : 0;
-    return `<div class="chart-bar-row">
-      <div class="chart-bar-label">${MESES_NOMBRES[m.mes-1].slice(0,3)}</div>
-      <div class="chart-bar-track">${m.usados>0?`<div class="chart-bar-fill c1" style="width:${pct}%"><span class="chart-bar-val">${m.usados}</span></div>`:''}</div>
+  resumen.innerHTML = `<div style="font-size:15px;font-weight:700;margin-bottom:4px">DETALLE DE USO — ${escapeHtml((data.producto || {}).nombre || '')}</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">${escapeHtml((data.periodo || {}).etiqueta || '')}</div>
+    <div class="rep-summary">
+      <div class="rep-sum-box salida"><div class="rep-sum-val">${salidas.movimientos}</div><div class="rep-sum-lbl">Salidas · $${Number(salidas.valor||0).toFixed(2)}</div></div>
+      <div class="rep-sum-box entrada"><div class="rep-sum-val">${ingresos.movimientos}</div><div class="rep-sum-lbl">Ingresos · $${Number(ingresos.valor||0).toFixed(2)}</div></div>
     </div>`;
-  }).join('');
-  const areasHtml = areasOrdenadas.length ? areasOrdenadas.map(([area,cant])=>`
+  const staff = data.staff || [];
+  detalle.innerHTML = `<div class="info-card-title">Staff relacionada</div>` + (staff.length ? staff.map(s=>`
     <div class="gasto-item">
-      <div class="gasto-item-icon">${AREA_EMOJI[area]||'📦'}</div>
-      <div class="gasto-item-info"><div class="gasto-item-name">${area}</div><div class="gasto-item-meta">Uso anual del producto</div></div>
-      <div class="gasto-item-val">${cant}</div>
-    </div>`).join('') : '<div class="no-data">Sin usos de este producto en el año seleccionado</div>';
-  detalle.innerHTML = `<div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:10px">Uso por mes</div>${mesesHtml}<div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin:16px 0 10px">Áreas que más lo usan</div>${areasHtml}`;
+      <div class="gasto-item-info"><div class="gasto-item-name">${escapeHtml(s.nombre)}</div><div class="gasto-item-meta">Salidas: ${s.salidas} · Ingresos: ${s.ingresos}</div></div>
+    </div>`).join('') : '<div class="no-data">Sin staff relacionada</div>');
+}
+
+function prepararControlesDetalleStaff(){
+  const staffSel = document.getElementById('ds-staff');
+  const mesSel = document.getElementById('ds-mes');
+  const anioSel = document.getElementById('ds-anio');
+  if(!staffSel || !mesSel || !anioSel) return;
+  if(!mesSel.dataset.ready){
+    const now = new Date();
+    mesSel.innerHTML = MESES_NOMBRES.map((m,i)=>`<option value="${i+1}" ${i===now.getMonth()?'selected':''}>${m}</option>`).join('');
+    mesSel.dataset.ready = '1';
+  }
+  if(!anioSel.dataset.ready){
+    const now = new Date();
+    const anios = [];
+    for(let y = now.getFullYear() + 1; y >= 2020; y--) anios.push(y);
+    anioSel.innerHTML = anios.map(y=>`<option value="${y}">${y}</option>`).join('');
+    anioSel.value = String(now.getFullYear());
+    anioSel.dataset.ready = '1';
+  }
+  if(!staffOpcionesCargadas) cargarOpcionesDetalleStaff();
+}
+
+async function cargarOpcionesDetalleStaff(){
+  const staffSel = document.getElementById('ds-staff');
+  if(!staffSel || staffOpcionesCargadas) return;
+  try{
+    const data = await fetch(sheetUrl({ action:'getReporteDetalleStaff' })).then(r=>r.json());
+    if(!data.ok) throw new Error(data.error || 'Error de consulta');
+    const staff = data.staffDisponibles || [];
+    staffSel.innerHTML = '<option value="">Seleccioná una staff</option>' + staff.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+    staffOpcionesCargadas = true;
+  }catch(err){
+    staffSel.innerHTML = '<option value="">Error al cargar staff</option>';
+  }
+}
+
+function renderDetalleStaffEstadoInicial(){
+  const resumen = document.getElementById('ds-resumen');
+  const detalle = document.getElementById('ds-detalle');
+  if(resumen) resumen.innerHTML = '<div class="no-data">Seleccioná una staff y presioná Buscar</div>';
+  if(detalle) detalle.innerHTML = '';
+}
+
+async function buscarDetalleStaff(){
+  if(detalleStaffConsultando) return;
+  const staffSel = document.getElementById('ds-staff');
+  const mesSel = document.getElementById('ds-mes');
+  const anioSel = document.getElementById('ds-anio');
+  const resumen = document.getElementById('ds-resumen');
+  const detalle = document.getElementById('ds-detalle');
+  const btn = document.getElementById('ds-buscar');
+  const staff = staffSel ? staffSel.value : '';
+  if(!resumen || !detalle) return;
+  if(!staff){
+    resumen.innerHTML = '<div class="no-data">Seleccioná una staff y presioná Buscar</div>';
+    detalle.innerHTML = '';
+    return;
+  }
+  detalleStaffConsultando = true;
+  if(btn){ btn.disabled = true; btn.textContent = 'Buscando...'; }
+  resumen.innerHTML = '<div class="no-data">Buscando...</div>';
+  detalle.innerHTML = '';
+  try{
+    const data = await fetch(sheetUrl({ action:'getReporteDetalleStaff', staff, mes: mesSel.value, anio: anioSel.value })).then(r=>r.json());
+    if(!data.ok) throw new Error(data.error || 'Error de consulta');
+    renderDetalleStaffResultado(data);
+  }catch(err){
+    resumen.innerHTML = `<div class="no-data">Error de consulta: ${escapeHtml(err.message)}</div>`;
+  }finally{
+    detalleStaffConsultando = false;
+    if(btn){ btn.disabled = false; btn.textContent = 'BUSCAR'; }
+  }
+}
+
+function renderDetalleStaffResultado(data){
+  const resumen = document.getElementById('ds-resumen');
+  const detalle = document.getElementById('ds-detalle');
+  const ingresos = data.ingresos || {movimientos:0,unidades:0,valor:0};
+  const salidas = data.salidas || {movimientos:0,unidades:0,valor:0};
+  if((ingresos.movimientos + salidas.movimientos) === 0){
+    resumen.innerHTML = `<div class="no-data">No existen movimientos para esta staff en ${escapeHtml((data.periodo || {}).etiqueta || '')}.</div>`;
+    detalle.innerHTML = '';
+    return;
+  }
+  resumen.innerHTML = `<div style="font-size:15px;font-weight:700;margin-bottom:4px">DETALLE DE MOVIMIENTOS — ${escapeHtml(data.staff || '')}</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">${escapeHtml((data.periodo || {}).etiqueta || '')}</div>
+    <div class="rep-summary">
+      <div class="rep-sum-box entrada"><div class="rep-sum-val">${ingresos.movimientos}</div><div class="rep-sum-lbl">Ingresos · $${Number(ingresos.valor||0).toFixed(2)}</div></div>
+      <div class="rep-sum-box salida"><div class="rep-sum-val">${salidas.movimientos}</div><div class="rep-sum-lbl">Salidas · $${Number(salidas.valor||0).toFixed(2)}</div></div>
+    </div>`;
+  const productosData = data.productos || [];
+  detalle.innerHTML = '<div class="info-card-title">Productos</div>' + (productosData.length ? productosData.map(p=>`
+    <div class="gasto-item">
+      <div class="gasto-item-info"><div class="gasto-item-name">${escapeHtml(p.producto)}</div><div class="gasto-item-meta">Ingresos: ${p.ingresos} · Salidas: ${p.salidas}</div></div>
+    </div>`).join('') : '<div class="no-data">Sin productos</div>');
 }
 
 function renderTopUsados(){
@@ -222,7 +268,7 @@ function renderTopUsados(){
       const color = areaColores[area] || '#B0B0B0';
       return `<div style="display:flex;align-items:center;gap:6px;margin-top:3px">
         <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></div>
-        <span style="font-size:11px;color:var(--text2);flex:1">${area}</span>
+        <span style="font-size:11px;color:var(--text2);flex:1">${escapeHtml(area)}</span>
         <div style="width:60px;height:6px;background:var(--border);border-radius:3px;overflow:hidden">
           <div style="width:${areaPct}%;height:100%;background:${color};border-radius:3px"></div>
         </div>
@@ -236,7 +282,7 @@ function renderTopUsados(){
           <span style="font-size:12px;font-weight:700;color:${i<3?'white':'var(--text2)'}">${i+1}</span>
         </div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nombre}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(nombre)}</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-size:18px;font-weight:700;color:var(--text)">${data.total}</div>
@@ -288,7 +334,7 @@ function renderStaffMes(){
   list.innerHTML = data.map((d, i) => {
     const bg = i % 2 === 0 ? 'var(--white)' : 'var(--bg)';
     return `<div style="display:grid;grid-template-columns:1fr 55px 55px 70px;padding:10px 14px;gap:4px;background:${bg};border-bottom:1px solid var(--border);align-items:center">
-      <span style="font-size:13px;font-weight:500;color:var(--text)">${d.nombre}</span>
+      <span style="font-size:13px;font-weight:500;color:var(--text)">${escapeHtml(d.nombre)}</span>
       <span style="font-size:14px;font-weight:700;color:var(--ok);text-align:center">${d.entradas}</span>
       <span style="font-size:14px;font-weight:700;color:var(--danger);text-align:center">${d.salidas}</span>
       <span style="font-size:14px;font-weight:600;color:var(--text);text-align:right">$${d.totalDolares.toFixed(0)}</span>
@@ -355,8 +401,8 @@ function renderResumenGeneral(){
         const bg = i % 2 === 0 ? 'var(--card)' : 'var(--bg)';
         return `<div style="display:grid;grid-template-columns:1fr 60px 80px;padding:11px 16px;background:${bg};border-bottom:1px solid var(--border);align-items:center">
           <div>
-            <span style="font-size:13px;font-weight:600;color:var(--text)">${d.nombre}</span>
-            <span style="font-size:10px;color:var(--text2);margin-left:4px">${u?.cargo||''}</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text)">${escapeHtml(d.nombre)}</span>
+            <span style="font-size:10px;color:var(--text2);margin-left:4px">${escapeHtml(u?.cargo||'')}</span>
           </div>
           <span style="font-size:13px;font-weight:600;color:var(--text2);text-align:center">${d.movs}</span>
           <span style="font-size:14px;font-weight:700;color:var(--text);text-align:right">$${d.total.toFixed(2)}</span>
@@ -392,19 +438,20 @@ function renderResumenGeneral(){
       gvList.innerHTML = Object.entries(gvByPerson).map(([nombre, data]) => {
         const detalles = data.items.map(g =>
           `<div style="display:flex;justify-content:space-between;padding:6px 16px 6px 32px;font-size:12px;border-bottom:1px solid var(--border)">
-            <span style="color:var(--text)">${g.desc} <span style="color:var(--text2)">(${g.cat})</span></span>
+            <span style="color:var(--text)">${escapeHtml(g.desc)} <span style="color:var(--text2)">(${escapeHtml(g.cat)})</span></span>
             <span style="font-weight:600;color:#8e44ad">$${g.monto.toFixed(2)}</span>
           </div>`
         ).join('');
+        const gvId = safeDomId('rg-gv', nombre, 0);
         return `<div style="border-bottom:1px solid var(--border)">
-          <div style="display:flex;justify-content:space-between;padding:10px 16px;cursor:pointer;background:var(--card)" onclick="toggleAc('rg-gv-${nombre}')">
-            <span style="font-size:13px;font-weight:600;color:var(--text)">${nombre}</span>
+          <div style="display:flex;justify-content:space-between;padding:10px 16px;cursor:pointer;background:var(--card)" onclick="toggleAc('${gvId}')">
+            <span style="font-size:13px;font-weight:600;color:var(--text)">${escapeHtml(nombre)}</span>
             <div style="display:flex;align-items:center;gap:6px">
               <span style="font-size:13px;font-weight:700;color:#8e44ad">$${data.total.toFixed(2)}</span>
               <span style="font-size:10px;color:var(--text2)">▾</span>
             </div>
           </div>
-          <div class="ac-dia-body" id="rg-gv-${nombre}">${detalles}</div>
+          <div class="ac-dia-body" id="${gvId}">${detalles}</div>
         </div>`;
       }).join('');
     }
@@ -424,39 +471,6 @@ function setFlujoTab(tab, el){
   renderFlujoFinanciero();
 }
 
-function getDiasSemana(){
-  const {start} = getWeekRange();
-  const dias = [];
-  for(let i=0;i<7;i++){
-    const d=new Date(start);d.setDate(start.getDate()+i);
-    const ds=d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
-    dias.push({date:d, dateStr:ds});
-  }
-  return dias;
-}
-
-function getDiasMes(){
-  const now=new Date();
-  const start=new Date(now.getFullYear(),now.getMonth(),1);
-  const end=new Date(now.getFullYear(),now.getMonth()+1,0);
-  const dias=[];
-  for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
-    const ds=d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
-    dias.push({date:new Date(d), dateStr:ds});
-  }
-  return dias;
-}
-
-function getNombreDia(d){
-  const nombres=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-  return nombres[d.getDay()];
-}
-
-function costoMov(m){
-  const prod=productos.find(p=>norm(p.nombre)===norm(m.producto));
-  return (prod?prod.costo:0)*m.cant;
-}
-
 function toggleAc(id){
   const el=document.getElementById(id);
   if(el) el.classList.toggle('open');
@@ -464,148 +478,63 @@ function toggleAc(id){
   if(hdr) hdr.classList.toggle('open');
 }
 
-function renderFlujoFinanciero(){
+async function renderFlujoFinanciero(){
   const container=document.getElementById('rf-acordeon');
   if(!container) return;
-
-  let diasData=[];
-  if(flujoTab==='dia'){
-    const ds=hoy();
-    const d=new Date();
-    diasData=[{date:d,dateStr:ds}];
-  } else if(flujoTab==='semana'){
-    diasData=getDiasSemana();
-  } else {
-    diasData=getDiasMes();
+  container.innerHTML = '<div class="empty" style="padding:20px"><div class="empty-text">Consultando reportes...</div></div>';
+  try{
+    const data = await fetch(sheetUrl({ action:'getReporteFlujoMovimientos', vista: flujoTab })).then(r=>r.json());
+    if(!data.ok) throw new Error(data.error || 'Error de consulta');
+    renderFlujoFinancieroResultado(data);
+  }catch(err){
+    container.innerHTML = `<div class="no-data">Error de consulta: ${escapeHtml(err.message)}</div>`;
   }
+}
 
-  const diasConData=diasData.filter(dia=>{
-    const tieneMovs=movimientos.some(m=>m.fecha===dia.dateStr);
-    const tieneGV=gastosVarios.some(g=>g.fecha===dia.dateStr);
-    return tieneMovs||tieneGV;
-  });
-
-  if(diasConData.length===0){
-    container.innerHTML='<div class="empty" style="padding:20px"><div class="empty-text">Sin movimientos en el período</div></div>';
+function renderFlujoFinancieroResultado(data){
+  const container=document.getElementById('rf-acordeon');
+  if(!container) return;
+  if(data.vista === 'mes'){
+    const meses = data.meses || [];
+    container.innerHTML = meses.length ? meses.map((mes, idx)=>renderMesFlujo_(mes, idx)).join('') : '<div class="no-data">No existen movimientos registrados.</div>';
     return;
   }
+  if(data.vista === 'semana'){
+    const semanas = data.semanas || [];
+    container.innerHTML = semanas.length ? semanas.map((semana, idx)=>renderSemanaFlujo_(semana, 'rf-semana-'+idx)).join('') : '<div class="no-data">No existen movimientos registrados.</div>';
+    return;
+  }
+  const dias = data.dias || [];
+  container.innerHTML = dias.length ? dias.map((dia, idx)=>renderDiaFlujo_(dia, 'rf-dia-'+idx, idx === 0)).join('') : '<div class="no-data">No existen movimientos registrados.</div>';
+}
 
-  container.innerHTML=diasConData.reverse().map((dia,dIdx)=>{
-    const movsDia=movimientos.filter(m=>m.fecha===dia.dateStr);
-    const gvDia=gastosVarios.filter(g=>g.fecha===dia.dateStr);
-    const nombreDia=getNombreDia(dia.date);
-    const fechaCorta=dia.date.getDate()+'/'+(dia.date.getMonth()+1);
-    let totalEntradas=0,totalSalidas=0,totalGV=0;
-    movsDia.forEach(m=>{
-      if(m.tipo==='entrada') totalEntradas+=costoMov(m);
-      else totalSalidas+=costoMov(m);
-    });
-    gvDia.forEach(g=>{totalGV+=g.monto;});
+function renderMesFlujo_(mes, idx){
+  const id = 'rf-mes-'+idx;
+  return `<div class="ac-dia"><div class="ac-dia-header" onclick="toggleAc('${id}')" data-target="${id}"><span>${escapeHtml(mes.etiqueta)}</span><span class="ac-dia-arrow">▾</span></div><div class="ac-dia-body" id="${id}">${(mes.semanas || []).map((s,sIdx)=>renderSemanaFlujo_(s, id+'-s-'+sIdx)).join('')}</div></div>`;
+}
 
-    const byPerson={};
-    movsDia.forEach(m=>{
-      if(!byPerson[m.resp]) byPerson[m.resp]={entradas:[],salidas:[]};
-      if(m.tipo==='entrada') byPerson[m.resp].entradas.push(m);
-      else byPerson[m.resp].salidas.push(m);
-    });
-    const gvByPerson={};
-    gvDia.forEach(g=>{
-      if(!gvByPerson[g.resp]) gvByPerson[g.resp]=[];
-      gvByPerson[g.resp].push(g);
-    });
+function renderSemanaFlujo_(semana, id){
+  return `<div class="ac-sec"><div class="ac-sec-header" onclick="toggleAc('${id}')" data-target="${id}"><span>${escapeHtml(semana.etiqueta)}</span><span style="font-size:11px;color:var(--text2)">▾</span></div><div class="ac-sec-body" id="${id}">${(semana.dias || []).map((d,dIdx)=>renderDiaFlujo_(d, id+'-d-'+dIdx, false)).join('')}</div></div>`;
+}
 
-    const isToday=dia.dateStr===hoy();
-    const diaId='ac-dia-'+dIdx;
-    const personasHtml=Object.entries(byPerson).map(([nombre,data],pIdx)=>{
-      const pId=diaId+'-p-'+pIdx;
-      let pEntradas=0,pSalidas=0;
-      data.entradas.forEach(m=>{pEntradas+=costoMov(m);});
-      data.salidas.forEach(m=>{pSalidas+=costoMov(m);});
-      const prodEntradas={};
-      data.entradas.forEach(m=>{
-        if(!prodEntradas[m.producto]) prodEntradas[m.producto]=0;
-        prodEntradas[m.producto]+=costoMov(m);
-      });
-      const prodSalidas={};
-      data.salidas.forEach(m=>{
-        if(!prodSalidas[m.producto]) prodSalidas[m.producto]=0;
-        prodSalidas[m.producto]+=costoMov(m);
-      });
-      const prodsHtml=[
-        ...Object.entries(prodEntradas).map(([prod,val])=>
-          `<div class="ac-prod-row"><span class="ac-prod-name entrada">+ ${prod}</span><span class="ac-val-e">↑$${val.toFixed(0)}</span></div>`),
-        ...Object.entries(prodSalidas).map(([prod,val])=>
-          `<div class="ac-prod-row"><span class="ac-prod-name salida">- ${prod}</span><span class="ac-val-s">↓$${val.toFixed(0)}</span></div>`)
-      ].join('');
+function renderDiaFlujo_(dia, id, abierto){
+  const staffHtml = (dia.staff || []).map((s,idx)=>renderStaffFlujo_(s, id+'-p-'+idx)).join('');
+  const gvHtml = renderGastosVariosFlujo_(dia, id+'-gv');
+  return `<div class="ac-dia"><div class="ac-dia-header ${abierto?'open':''}" onclick="toggleAc('${id}')" data-target="${id}"><span>${escapeHtml(dia.etiqueta || dia.fecha)}</span><span class="ac-dia-arrow">▾</span></div><div class="ac-dia-body ${abierto?'open':''}" id="${id}"><div class="ac-sec"><div class="ac-sec-header" onclick="toggleAc('${id}-gen')" data-target="${id}-gen"><span>Gastos generales</span><div class="ac-totals">${dia.totalEntradas>0?'<span class="te">↑$'+Number(dia.totalEntradas).toFixed(0)+'</span>':''}${dia.totalSalidas>0?'<span class="ts">↓$'+Number(dia.totalSalidas).toFixed(0)+'</span>':''}<span style="font-size:11px;color:var(--text2)">▾</span></div></div><div class="ac-sec-body" id="${id}-gen">${staffHtml || '<div class="no-data">Sin movimientos de inventario</div>'}<div class="ac-total-row"><span>Total</span><div class="ac-totals"><span class="te">↑$${Number(dia.totalEntradas||0).toFixed(0)}</span><span class="ts">↓$${Number(dia.totalSalidas||0).toFixed(0)}</span></div></div></div></div>${gvHtml}</div></div>`;
+}
 
-      return `<div class="ac-person">
-        <div class="ac-person-header" onclick="toggleAc('${pId}')" data-target="${pId}">
-          <span>${nombre}</span>
-          <div class="ac-totals">
-            ${pEntradas>0?'<span class="te">↑$'+pEntradas.toFixed(0)+'</span>':''}
-            ${pSalidas>0?'<span class="ts">↓$'+pSalidas.toFixed(0)+'</span>':''}
-            <span style="font-size:11px;color:var(--text2)">▾</span>
-          </div>
-        </div>
-        <div class="ac-person-body" id="${pId}">${prodsHtml}</div>
-      </div>`;
-    }).join('');
+function renderStaffFlujo_(staff, id){
+  const movsHtml = (staff.movimientos || []).map(m=>`<div class="ac-prod-row"><span class="ac-prod-name ${m.tipo === 'Entrada' ? 'entrada' : 'salida'}">${escapeHtml(m.tipo)} · ${escapeHtml(m.producto)}</span><span style="font-size:12px;color:var(--text2);margin-right:8px">Cantidad: ${Number(m.cantidad||0)}</span><span class="${m.tipo === 'Entrada' ? 'ac-val-e' : 'ac-val-s'}">$${Number(m.valor||0).toFixed(2)}</span></div>`).join('');
+  return `<div class="ac-person"><div class="ac-person-header" onclick="toggleAc('${id}')" data-target="${id}"><span>${escapeHtml(staff.nombre)}</span><div class="ac-totals">${staff.totalEntradas>0?'<span class="te">↑$'+Number(staff.totalEntradas).toFixed(0)+'</span>':''}${staff.totalSalidas>0?'<span class="ts">↓$'+Number(staff.totalSalidas).toFixed(0)+'</span>':''}<span style="font-size:11px;color:var(--text2)">▾</span></div></div><div class="ac-person-body" id="${id}">${movsHtml}</div></div>`;
+}
 
-    let gvHtml='';
-    if(gvDia.length>0){
-      const gvId=diaId+'-gv';
-      const gvPersonasHtml=Object.entries(gvByPerson).map(([nombre,gastos])=>{
-        const totalP=gastos.reduce((s,g)=>s+g.monto,0);
-        const detalle=gastos.map(g=>
-          `<div class="ac-gv-item"><span class="ac-gv-desc" style="padding-left:16px">${g.desc}</span><span class="ac-gv-val">$${g.monto.toFixed(0)}</span></div>`
-        ).join('');
-        return `<div class="ac-person-header" style="background:#f5f0ff;margin:4px 0" onclick="toggleAc('${gvId}-${nombre}')">
-          <span>${nombre}</span><span class="ac-gv-val">$${totalP.toFixed(0)} ▾</span>
-        </div>
-        <div class="ac-person-body" id="${gvId}-${nombre}">${detalle}</div>`;
-      }).join('');
-
-      gvHtml=`<div class="ac-sec" style="margin-top:6px">
-        <div class="ac-sec-header gv" onclick="toggleAc('${gvId}')">
-          <span>Gastos varios</span>
-          <span class="ac-gv-val">$${totalGV.toFixed(0)} ▾</span>
-        </div>
-        <div class="ac-sec-body" id="${gvId}">${gvPersonasHtml}
-          <div class="ac-total-row"><span>Total</span><span class="ac-gv-val">$${totalGV.toFixed(0)}</span></div>
-        </div>
-      </div>`;
-    }
-
-    return `<div class="ac-dia">
-      <div class="ac-dia-header ${isToday?'open':''}" onclick="toggleAc('${diaId}')" data-target="${diaId}">
-        <span>${nombreDia} ${fechaCorta}</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="ac-dia-arrow">▾</span>
-        </div>
-      </div>
-      <div class="ac-dia-body ${isToday?'open':''}" id="${diaId}">
-        <div class="ac-sec">
-          <div class="ac-sec-header" onclick="toggleAc('${diaId}-gen')">
-            <span>Gastos generales</span>
-            <div class="ac-totals">
-              ${totalEntradas>0?'<span class="te">↑$'+totalEntradas.toFixed(0)+'</span>':''}
-              ${totalSalidas>0?'<span class="ts">↓$'+totalSalidas.toFixed(0)+'</span>':''}
-              <span style="font-size:11px;color:var(--text2)">▾</span>
-            </div>
-          </div>
-          <div class="ac-sec-body" id="${diaId}-gen">
-            ${personasHtml}
-            <div class="ac-total-row">
-              <span>Total</span>
-              <div class="ac-totals">
-                <span class="te">↑$${totalEntradas.toFixed(0)}</span>
-                <span class="ts">↓$${totalSalidas.toFixed(0)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        ${gvHtml}
-      </div>
-    </div>`;
+function renderGastosVariosFlujo_(dia, id){
+  const gastos = dia.gastosVarios || [];
+  if(!gastos.length) return '';
+  const personas = gastos.map((g,idx)=>{
+    const pid = id+'-p-'+idx;
+    const items = (g.items || []).map(item=>`<div class="ac-gv-item"><span class="ac-gv-desc" style="padding-left:16px">${escapeHtml(item.descripcion)} <span style="color:var(--text2)">(${escapeHtml(item.categoria)})</span></span><span class="ac-gv-val">$${Number(item.monto||0).toFixed(2)}</span></div>`).join('');
+    return `<div class="ac-person-header" style="background:#f5f0ff;margin:4px 0" onclick="toggleAc('${pid}')" data-target="${pid}"><span>${escapeHtml(g.nombre)}</span><span class="ac-gv-val">$${Number(g.total||0).toFixed(2)} ▾</span></div><div class="ac-person-body" id="${pid}">${items}</div>`;
   }).join('');
+  return `<div class="ac-sec" style="margin-top:6px"><div class="ac-sec-header gv" onclick="toggleAc('${id}')" data-target="${id}"><span>Gastos varios</span><span class="ac-gv-val">$${Number(dia.totalGastosVarios||0).toFixed(2)} ▾</span></div><div class="ac-sec-body" id="${id}">${personas}<div class="ac-total-row"><span>Total</span><span class="ac-gv-val">$${Number(dia.totalGastosVarios||0).toFixed(2)}</span></div></div></div>`;
 }
