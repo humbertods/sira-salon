@@ -6,7 +6,8 @@ let usuarios = [
   { id: 'keyla', nombre: 'Keyla', rol: 'staff', activo: true, cargo: 'Cajista' },
   { id: 'lesly', nombre: 'Lesly', rol: 'staff', activo: true, cargo: 'Cejista' },
   { id: 'maria', nombre: 'Maria', rol: 'staff', activo: true, cargo: 'Cejista' },
-  { id: 'laura', nombre: 'Laura', rol: 'staff', activo: true, cargo: 'Cosmetóloga' }
+  { id: 'laura', nombre: 'Laura', rol: 'staff', activo: true, cargo: 'Cosmetóloga' },
+  { id: 'melany', nombre: 'Melany', rol: 'staff', activo: true, cargo: 'Cejista' }
 ];
 
 let currentUser = null;
